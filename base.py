@@ -164,7 +164,9 @@ class Neo4jOrchestrator:
         """
         task_id = self._normalize_id(task.id)
         deps = [self._normalize_id(d) for d in task.dependencies]
-        target_output = self._normalize_id(task.target_output)
+        target_output = (
+            self._normalize_id(task.target_output) if getattr(task, "target_output", None) else None
+        )
         parent_task = self._normalize_id(task.parent_task) if task.parent_task else None
 
         query = """
@@ -175,10 +177,13 @@ class Neo4jOrchestrator:
             t.status = $status,
             t.parent_task = $parent_task
 
-        // 2) Output DataNode shell + CREATES edge
-        MERGE (out:DataNode {id: $target_output})
-        ON CREATE SET out.status = 'PENDING'
-        MERGE (t)-[:CREATES]->(out)
+        // 2) Output DataNode shell + CREATES edge (only when target_output is set)
+        WITH t
+        FOREACH (_ IN CASE WHEN $target_output IS NULL THEN [] ELSE [1] END |
+            MERGE (out:DataNode {id: $target_output})
+            ON CREATE SET out.status = 'PENDING'
+            MERGE (t)-[:CREATES]->(out)
+        )
 
         // 3) Parent-child relationship 
         WITH t

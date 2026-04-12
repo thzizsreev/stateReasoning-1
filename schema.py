@@ -29,9 +29,12 @@ class TaskNode(BaseModel):
     instruction: str = Field(
         description="The isolated prompt for the Worker LLM, preserving bracketed IDs."
     )
-    target_output: str = Field(
-        description="The exact bracketed ID of the DataNode this task will create.",
-        default=None
+    target_output: Optional[str] = Field(
+        default=None,
+        description=(
+            "Bracketed ID of the DataNode this task creates; null allowed for DECOMPOSE "
+            "or tasks that do not materialize a single output node."
+        ),
     )
     task_type: Literal["COMPUTE", "DECOMPOSE", "OUTPUT"] = Field(
         description="'COMPUTE' if a Worker can solve this. 'DECOMPOSE' if it needs breakdown."
@@ -55,8 +58,8 @@ class PhasePlan(BaseModel):
     tasks: List[TaskNode]
 
 class query_plan(BaseModel):
-    data_nodes: List[DataNode] = Field(default = None)
-    task_nodes: List[TaskNode] = Field(default = None)
+    data_nodes: Optional[List[DataNode]] = Field(default=None)
+    task_nodes: Optional[List[TaskNode]] = Field(default=None)
 # ==========================================
 # 2. ENFORCEMENT DEMONSTRATION
 # ==========================================
