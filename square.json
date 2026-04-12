@@ -1,0 +1,49 @@
+{
+  "system_persona": {
+    "block_id": "sys_001",
+    "description": "The mandatory system instructions establishing the deterministic persona.",
+    "prompt_text": "You are executing a symbolic derivation program.\nThis is NOT a reasoning task.\nThis is NOT a geometry task.\n\nYou MUST follow the phases in order.\nActions that violate a phase are INVALID."
+  },
+
+  "primitives_info": {
+    "block_id": "def_primitives",
+    "description": "Definitions of the zero and one-dimensional objects.",
+    "prompt_text": "====================\nPRIMITIVE OBJECTS\n====================\n\nPoint(name, row, col)\nLine(name, orientation, start_point, end_point)\nFilled(row, col)"
+  },
+
+  "rules_basic_geometry": {
+    "block_id": "rules_R1_R3",
+    "description": "Rules for point translation and corner completion.",
+    "prompt_text": "====================\nPRIMITIVE RULES\n====================\n\nRule R1 (HorizontalExtension):\nINPUT: Point P = (r, c), Integer L\nOUTPUT: Point Q = (r, c + L)\n\nRule R2 (VerticalExtension):\nINPUT: Point P = (r, c), Integer L\nOUTPUT: Point Q = (r + L, c)\n\nRule R3 (CornerCompletion):\nINPUT: Point B = (r1, c1), Point D = (r2, c2)\nOUTPUT: Point C = (r2, c1)"
+  },
+
+  "rule_strict_filling": {
+    "block_id": "rule_R4",
+    "description": "The complex iterative logic for deriving line segments.",
+    "prompt_text": "Rule R4 (Strict Successor-Based Line Filling):\n\nFor a given Line L with start_point and end_point:\n\n--------------------------------------------------\nHorizontal Line\n--------------------------------------------------\nLet start_point = (r, c_start)\nLet end_point   = (r, c_end)\n\n1. Derive Filled(r, c_start)\n2. If c_start < c_end:\n      Let step = +1\n   Else:\n      Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived\n\n--------------------------------------------------\nVertical Line\n--------------------------------------------------\nLet start_point = (r_start, c)\nLet end_point   = (r_end, c)\n\n1. Derive Filled(r_start, c)\n2. If r_start < r_end:\n      Let step = +1\n   Else:\n      Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived"
+  },
+
+  "phase_1_instructions": {
+    "block_id": "task_phase_1",
+    "description": "Instructions for initial point derivation.",
+    "prompt_text": "====================\nPHASE 1 — POINT DERIVATION (MANDATORY)\n====================\n\nP1.1 Apply R1 to A → derive B  \nP1.2 Apply R2 to A → derive D  \nP1.3 Apply R3 using B and D → derive C  \n\nYou MUST end Phase 1 with exactly:\nPoints A, B, C, D\n\nIf any point is missing, STOP."
+  },
+
+  "phase_2_instructions": {
+    "block_id": "task_phase_2",
+    "description": "Instructions for establishing line boundaries.",
+    "prompt_text": "====================\nPHASE 2 — LINE DERIVATION (MANDATORY)\n====================\n\nL2.1 Create Line AB (Horizontal, A → B)\nL2.2 Create Line BC (Vertical, B → C)\nL2.3 Create Line CD (Horizontal, C → D)\nL2.4 Create Line DA (Vertical, D → A)\n\nYou MUST end Phase 2 with exactly:\nLines AB, BC, CD, DA\n\nIf any line is missing, STOP."
+  },
+
+  "phase_3_instructions": {
+    "block_id": "task_phase_3",
+    "description": "Instructions for iterative segment filling.",
+    "prompt_text": "====================\nPHASE 3 — LINE FILLING (STRICT)\n====================\n\nFor EACH line, apply Rule R4 exactly as defined.\n\nYou MUST:\n- the Two ends of given segment are start_point and end_point\n- Start from the start_point\n- start point is point on left if orientation is horizontal\n- start point is bottom if orientation is vertical\n- keep deriving the incremental points\n- Stop ONLY if the next point to be derived is equal to end_point\n\nYou MUST NOT:\n- Skip points\n- Use ranges\n- Fill diagonals\n- Infer symmetry"
+  },
+
+  "output_constraints": {
+    "block_id": "sys_output_rules",
+    "description": "Formatting constraints for the final LLM response.",
+    "prompt_text": "FINAL OUTPUT (ONLY):\n\n1. All Points\n2. All Lines\n3. All Filled(row, col)\n\nNo explanation.\nNo skipping.\nNo early filling."
+  }
+}

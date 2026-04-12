@@ -1,0 +1,57 @@
+{
+  "tasks": [
+    {
+      "index": 1,
+      "id": "[Task_1.1]",
+      "task_type": "COMPUTE",
+      "dependencies": [
+        "[Data_A]",
+        "[Data_L]"
+      ],
+      "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L].",
+      "target_output": "[Data_B]",
+      "status": "PENDING",
+      "parent_task": null
+    },
+    {
+      "index": 2,
+      "id": "[Task_1.2]",
+      "task_type": "COMPUTE",
+      "dependencies": [
+        "[Data_A]",
+        "[Data_L]"
+      ],
+      "instruction": "Apply [RULE_R2] to [Data_A] using length [Data_L].",
+      "target_output": "[Data_D]",
+      "status": "PENDING",
+      "parent_task": null
+    },
+    {
+      "index": 3,
+      "id": "[Task_1.3]",
+      "task_type": "COMPUTE",
+      "dependencies": [
+        "[Data_B]",
+        "[Data_D]"
+      ],
+      "instruction": "Apply [RULE_R3] using [Data_B] and [Data_D].",
+      "target_output": "[Data_C]",
+      "status": "PENDING",
+      "parent_task": null
+    },
+    {
+      "index": 4,
+      "id": "[Task_1.4]",
+      "task_type": "OUTPUT",
+      "dependencies": [
+        "[Data_B]",
+        "[Data_C]",
+        "[Data_D]"
+      ],
+      "instruction": "Output final status node [STATE_PHASE_1_DONE].",
+      "target_output": "[STATE_PHASE_1_DONE]",
+      "status": "PENDING",
+      "parent_task": null
+    }
+  ]
+}
