@@ -36,9 +36,9 @@ Your objective is to translate human-readable workflow instructions into atomic 
 
 COGNITIVE PROCESSING STEPS:
 1. TASK ISOLATION: Create ONE task block per explicit action requested.
-2. DEPENDENCY EXTRACTION: Extract every bracketed ID that acts as an input. NEVER include the target output in the dependencies array.
+2. DEPENDENCY EXTRACTION (CRITICAL): You must extract EVERY SINGLE bracketed ID present in the task's instruction, EXCEPT the target output. You must treat EVERYTHING in brackets as a dependency, regardless of whether it represents raw data (e.g., [Data_A]), a physical constraint (e.g., [Length_L]), or a method/rule (e.g., [RULE_R1]). If it is in brackets, it goes in the dependencies array.
 3. TARGET EXTRACTION: Identify the bracketed ID for the output.
-4. INSTRUCTIONS: Rewrite the isolated task as a simple command.
+4. INSTRUCTIONS: Rewrite the isolated task as a simple command. Do not use the bracketed IDs in the rewritten instruction if they are already listed in the dependencies.
 5. ROUTING: Evaluate the complexity of the task:
    - "COMPUTE": The task is a single, atomic action (e.g., summarizing, extracting, calculating).
    - "DECOMPOSE": The task is a massive, multi-step project (e.g., "build an app", "design an architecture"). 
@@ -47,18 +47,32 @@ COGNITIVE PROCESSING STEPS:
 
 STRICT SCHEMA ENFORCEMENT (CRITICAL):
 - NO NULL VALUES: You must NEVER output `null` for `target_output` or `instruction`. Every field must be a valid string. If a target output isn't explicitly named, infer a logical bracketed name (e.g., [Derived_Data]).
-- NO INVENTED TYPES: `task_type` must be EXACTLY one of: "COMPUTE", "DECOMPOSE", or "OUTPUT". Do not invent types like "FLAG" or "STATE".
-- JSON ONLY: Output perfectly formatted JSON. no decoration or comments like ```json. should be perfect, ready to parse json.
+- NO INVENTED TYPES: `task_type` must be EXACTLY one of: "COMPUTE", "DECOMPOSE", or "OUTPUT".
+- JSON ONLY: Output perfectly formatted JSON. No decoration or markdown comments like ```json. 
 
-EXAMPLE JSON OUTPUT:
+MULTI-DOMAIN EXAMPLES (Focus strictly on the structure, not the subject matter):
 {
-  "tasks": [
+  "task_nodes": [
     {
-      "id": "Task_1",
-      "dependencies": ["[Raw_File]"],
-      "instruction": "Translate [Raw_File].",
-      "target_output": "[English_File]",
+      "id": "[Task_Kinematics]",
+      "dependencies": ["[Initial_Velocity]", "[Time]", "[Gravity_Constant]", "[Formula_Distance]"],
+      "instruction": "Calculate the total distance traveled using the provided formula.",
+      "target_output": "[Final_Distance]",
       "task_type": "COMPUTE"
+    },
+    {
+      "id": "[Task_Build_Backend]",
+      "dependencies": ["[System_Architecture_Doc]"],
+      "instruction": "Develop the complete microservice backend infrastructure according to the architecture document.",
+      "target_output": "[Deployed_Backend_Code]",
+      "task_type": "DECOMPOSE"
+    },
+    {
+      "id": "[Task_Phase_1_Gate]",
+      "dependencies": ["[Derived_Point_B]", "[Derived_Point_C]", "[Derived_Point_D]"],
+      "instruction": "Mark Phase 1 as successfully completed.",
+      "target_output": "[STATE_PHASE_1_DONE]",
+      "task_type": "OUTPUT"
     }
   ]
 }
@@ -82,35 +96,69 @@ def Extract_datanodes(phase_text: str, llm) -> dict:
     # ---------------------------------------------------------
     # THE DOMAIN-AGNOSTIC SYSTEM PROMPT
     # ---------------------------------------------------------
-    system_prompt = """You are a graph initialization engine. Read the user's natural language query.
-Extract the explicitly provided mathematical variables into Data Nodes.
-Extract the required operations into Task Nodes.
+    system_prompt = """You are the Master Orchestrator for a General Purpose DAG Engine. 
+Your objective is to translate human-readable workflow instructions into atomic computational tasks and extract explicitly provided facts.
 
-STRICT RULES:
-1. DATA NODES: Only extract facts explicitly stated in the text (e.g., coordinates, lengths).
-2. TASK NODES: Define the steps to solve the user's request.
-3. DEPENDENCIES: Use the bracketed IDs.
-4. ROUTING: Evaluate the complexity of the task for task_type:
+COGNITIVE PROCESSING STEPS:
+1. INTENT CLASSIFICATION (CRITICAL): Determine if the user is making an ACTIONABLE REQUEST (asking you to calculate, build, or process something) or a FACTUAL DECLARATION (just providing data, variables, or context). If it is a FACTUAL DECLARATION with no explicit command, you MUST skip task isolation and output an empty `task_nodes` array `[]`.
+2. TASK ISOLATION: Create ONE task block per explicit action requested.
+3. DEPENDENCY EXTRACTION (CRITICAL): You must extract EVERY SINGLE bracketed ID present in the task's instruction, EXCEPT the target output. You must treat EVERYTHING in brackets as a dependency, regardless of whether it represents raw data (e.g., [Data_A]), a physical constraint (e.g., [Length_L]), or a method/rule (e.g., [RULE_R1]). If it is in brackets, it goes in the dependencies array.
+4. TARGET EXTRACTION: Identify the bracketed ID for the output. If the task does not explicitly generate a new data artifact (e.g., a "DECOMPOSE" task), you must set this to `null`.
+5. INSTRUCTIONS: Rewrite the isolated task as a simple command. Do not use the bracketed IDs in the rewritten instruction if they are already listed in the dependencies.
+6. ROUTING: Evaluate the complexity of the task:
    - "COMPUTE": The task is a single, atomic action (e.g., summarizing, extracting, calculating).
    - "DECOMPOSE": The task is a massive, multi-step project (e.g., "build an app", "design an architecture"). 
      CRITICAL RULE FOR DECOMPOSE: Do NOT break the massive project into smaller tasks yourself. Output a SINGLE task block for the massive project and label it "DECOMPOSE". Let the downstream Orchestrator handle the breakdown.
    - "OUTPUT": The task is ONLY setting a final status flag.
-OUTPUT FORMAT (Valid JSON only):
+
+STRICT SCHEMA ENFORCEMENT (CRITICAL):
+- OPTIONAL TARGET OUTPUT: `target_output` can be `null` if the task does not generate a specific piece of data. `id` and `instruction` must always be valid strings. 
+- NO INVENTED TYPES: `task_type` must be EXACTLY one of: "COMPUTE", "DECOMPOSE", or "OUTPUT".
+- EMPTY ARRAYS ARE VALID: If the intent is a FACTUAL DECLARATION, you MUST output `"task_nodes": []`. DO NOT infer implicit goals. DO NOT invent tasks like "Decompose the project" or "Store the data" just to be helpful. If the user didn't ask for an action, do not create one.
+- JSON ONLY: Output perfectly formatted JSON. No decoration or markdown comments like ```json. 
+
+MULTI-DOMAIN EXAMPLES (Focus strictly on the structure, not the subject matter):
 {
   "data_nodes": [
-    {"id": "[Point_A]", "content": {"x": 0, "y": 0}}
+    {
+      "id": "[Example_Known_Data]",
+      "content": 42
+    }
   ],
   "task_nodes": [
     {
-      "id": "[Calc_Area]",
-      "instruction": "Calculate the area of the square.",
-      "dependencies": ["[Side_Length]"],
-      "target_output": "[Square_Area]"
+      "id": "[Task_Kinematics]",
+      "dependencies": ["[Initial_Velocity]", "[Time]", "[Gravity_Constant]", "[Formula_Distance]"],
+      "instruction": "Calculate the total distance traveled using the provided formula.",
+      "target_output": "[Final_Distance]",
       "task_type": "COMPUTE"
+    },
+    {
+      "id": "[Task_Build_Backend]",
+      "dependencies": ["[System_Architecture_Doc]"],
+      "instruction": "Develop the complete microservice backend infrastructure according to the architecture document.",
+      "target_output": null,
+      "task_type": "DECOMPOSE"
+    },
+    {
+      "id": "[Task_Phase_1_Gate]",
+      "dependencies": ["[Derived_Point_B]", "[Derived_Point_C]", "[Derived_Point_D]"],
+      "instruction": "Mark Phase 1 as successfully completed.",
+      "target_output": "[STATE_PHASE_1_DONE]",
+      "task_type": "OUTPUT"
     }
   ]
 }
 
+ANTI-BIAS EXAMPLE (FACTUAL DECLARATION ONLY):
+USER CONTEXT: "The starting coordinates for Point A are x=5, y=10. The length of the side is 4."
+{
+  "data_nodes": [
+    {"id": "[Point_A]", "content": {"x": 5, "y": 10}},
+    {"id": "[Side_Length]", "content": 4}
+  ],
+  "task_nodes": [] 
+}
 """
 
     user_prompt = f"INSTRUCTIONS TO DECOMPOSE:\n{phase_text}"
@@ -188,6 +236,7 @@ def process_datanodes_output(llm_response_dict: dict) -> dict:
     try:
         # Use model_validate() because we are passing a Python dictionary, NOT a string
         plan = query_plan.model_validate(llm_response_dict)
+        print(f"Plan: {plan}")
         return plan
     except ValidationError as e:
         print("❌ VALIDATION FAILED! The LLM broke the schema rules.")
@@ -235,19 +284,23 @@ def print_graph_nodes(plan: PhasePlan):
 
 def print_datanodes_nodes(plan: query_plan):
     """Iterates through the validated Pydantic models and prints them."""
-    print(f"✅ Successfully extracted {len(plan.data_nodes)} Data Nodes:\n")
-    for i, data_node in enumerate(plan.data_nodes, 1):
-        print(f"--- Data Node {i}: {data_node.id} ---")
-        print(f"  Content: {data_node.content}")
-        print(f"  Status: {data_node.status}")
-        print("-" * 40 + "\n")
-    for i, task_node in enumerate(plan.task_nodes, 1):
-        print(f"--- Task Node {i}: {task_node.id} ---")
-        print(f"  Dependencies: {task_node.dependencies}")
-        print(f"  Instruction: {task_node.instruction}")
-        print(f"  Target Output: {task_node.target_output}")
-        print(f"  Status: {task_node.status}")
-        print("-" * 40 + "\n")
+    if(plan.data_nodes is not None and isinstance(plan.data_nodes, list)):
+        for i, data_node in enumerate(plan.data_nodes, 1):
+            print(f"--- Data Node {i}: {data_node.id} ---")
+            print(f"  Content: {data_node.content}")
+            print(f"  Status: {data_node.status}")
+            print("-" * 40 + "\n")
+
+    if(plan.task_nodes is not None and isinstance(plan.task_nodes, list)):
+        for i, task_node in enumerate(plan.task_nodes, 1):
+            print(f"--- Task Node {i}: {task_node.id} ---")
+            print(f"  Dependencies: {task_node.dependencies}")
+            print(f"  Instruction: {task_node.instruction}")
+            print(f"  Target Output: {task_node.target_output}")
+            print(f"  Status: {task_node.status}")
+            print("-" * 40 + "\n")
+        
+    
 
 def insert_tasks_into_graph(plan: PhasePlan, db: Neo4jOrchestrator):
     #db._clear_db()
@@ -258,41 +311,60 @@ def insert_tasks_into_graph(plan: PhasePlan, db: Neo4jOrchestrator):
 
 def insert_datanodes_into_graph(plan: query_plan, db: Neo4jOrchestrator):
     db.ensure_semaphore()
-    for data_node in plan.data_nodes:
-        db.upsert_data_node(data_node)
-    db.recompute_semaphore()
-    for task_node in plan.task_nodes:
-        db.upsert_task(task_node)
-    db.recompute_semaphore()
+    if plan.data_nodes is not None and isinstance(plan.data_nodes, list):
+        for data_node in plan.data_nodes:
+            db.upsert_data_node(data_node)
+        db.recompute_semaphore()
+    # else:
+    #     db.upsert_data_node(plan.data_nodes)
+    #     db.recompute_semaphore()
+
+    if plan.task_nodes is not None and isinstance(plan.task_nodes, list):
+            for task_node in plan.task_nodes:
+                db.upsert_task(task_node)
+            db.recompute_semaphore()
+    # else:
+    #     db.upsert_task(plan.task_nodes)
+    #     db.recompute_semaphore()
 
 # ==========================================
 # 4. EXECUTION
 # ==========================================
-if __name__ == "__main__":
-    #db = Neo4jOrchestrator(password="password") # Change to your Neo4j password
-    
-    # Step 1: Insert Predefined Data & Rules
-    # print("\n--- INJECTING BASE STATE ---")
-    # db.insert_data("DEF_PRIMITIVES", PROMPTS["DEF_PRIMITIVES"])
-    # db.insert_data("RULE_R1", PROMPTS["RULE_R1"])
-    # db.insert_data("RULE_R2", PROMPTS["RULE_R2"])
-    # db.insert_data("RULE_R3", PROMPTS["RULE_R3"])
-    
-    # db.insert_data("Data_A", {"row": 2, "col": 3})
-    # db.insert_data("Data_L", 4)
-    
-    # Step 2: Run Task Division
-    # Initialize the LLM
-    # my_llm = OpenRouterClient(
-    #     model_name=os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.1-8b-instruct"),
-    #     api_key=os.getenv("OPENROUTER_API_KEY"),
-    # )
-    # print(f"OPENROUTER_API_KEY loaded: {bool(os.getenv('OPENROUTER_API_KEY'))}")
+if __name__ == "__main__":    
+
     my_llm = OpenRouterClient()
     db = Neo4jOrchestrator(password="password")
     # Mock data
-    known_keys = ["[DEF_PRIMITIVES]", "[RULE_R1]", "[RULE_R2]", "[RULE_R3]", "[Data_A]", "[Data_L]"]
+    known_keys = ["DEF_PRIMITIVES", "RULE_R1", "RULE_R2", "RULE_R3"]
     phase_text = PROMPTS["TASK_PHASE_1"]
+
+    predef_datanodes = {
+        "data_nodes": [
+            {
+        "id": "[DEF_PRIMITIVES]",
+        "content": PROMPTS["DEF_PRIMITIVES"]
+    }, {
+        "id": "[RULE_R1]",
+        "content": PROMPTS["RULE_R1"]
+    }, {
+        "id": "[RULE_R2]",
+        "content": PROMPTS["RULE_R2"]
+    }, {
+        "id": "[RULE_R3]",
+        "content": PROMPTS["RULE_R3"]
+    }, {
+        "id": "[RULE_R4_HORIZONTAL]",
+        "content": PROMPTS["RULE_R4_HORIZONTAL"]
+    }, {
+        "id": "[RULE_R4_VERTICAL]",
+        "content": PROMPTS["RULE_R4_VERTICAL"]
+    }
+    ],
+    "task_nodes": []
+    }
+    temp = process_datanodes_output(predef_datanodes)
+    insert_datanodes_into_graph(temp, db)
+
 
     query = """construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively"""
     datanodes = Extract_datanodes(query, my_llm)
@@ -305,9 +377,9 @@ if __name__ == "__main__":
     #  Once the web application is fully built, deploy it to AWS to generate a [Live_Production_URL]. Finally, trigger a 
     #  [STATE_DEPLOYMENT_COMPLETE]."""
     plan = divide_phase_into_tasks(phase_text, my_llm)
-    plan = process_plan_output(plan)
-    #print_graph_nodes(plan)
-    insert_tasks_into_graph(plan, db)
+    plan = process_datanodes_output(plan)
+    print_datanodes_nodes(plan)
+    insert_datanodes_into_graph(plan, db)
     
     # Step 3: Loop and Create Nodes
     # print("\n--- INJECTING TASK GRAPH ---")
