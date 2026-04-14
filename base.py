@@ -74,7 +74,7 @@ class DynamicTaskGraph:
 class Neo4jOrchestrator:
     def __init__(self, uri="neo4j://localhost:7687", user="neo4j", password="password"):
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
-        self._clear_db()
+        #self._clear_db()
 
     def _clear_db(self):
         with self.driver.session() as session:
@@ -160,37 +160,35 @@ class Neo4jOrchestrator:
     def upsert_task(self, task) -> None:
         """
         Upserts a TaskNode, draws topology using FOREACH to prevent stream alteration,
-        and safely handles zero-dependency tasks.
+        and safely handles zero-dependency tasks and optional target outputs.
         """
         task_id = self._normalize_id(task.id)
         deps = [self._normalize_id(d) for d in task.dependencies]
         target_output = (
             self._normalize_id(task.target_output) if getattr(task, "target_output", None) else None
         )
-        parent_task = self._normalize_id(task.parent_task) if task.parent_task else None
+        parent_task = self._normalize_id(task.parent_task) if getattr(task, "parent_task", None) else None
 
         query = """
         // 1) Upsert TaskNode and basic properties
         MERGE (t:TaskNode {id: $task_id})
         SET t.instruction = $instruction,
             t.task_type = $task_type,
-            t.status = $status,
-            t.parent_task = $parent_task
+            t.status = $status
 
-        // 2) Output DataNode shell + CREATES edge (only when target_output is set)
+        // 2) Output DataNode shell + GENERATES edge (Only triggers if target_output exists)
         WITH t
         FOREACH (_ IN CASE WHEN $target_output IS NULL THEN [] ELSE [1] END |
             MERGE (out:DataNode {id: $target_output})
-            ON CREATE SET out.status = 'PENDING'
-            MERGE (t)-[:CREATES]->(out)
+            ON CREATE SET out.status = 'UNRESOLVED'
+            MERGE (t)-[:GENERATES]->(out)
         )
 
-        // 3) Parent-child relationship 
+        // 3) Parent-child relationship (Execution Lineage)
         WITH t
         FOREACH (_ IN CASE WHEN $parent_task IS NULL THEN [] ELSE [1] END |
             MERGE (p:TaskNode {id: $parent_task})
-            ON CREATE SET p.status = 'PENDING'
-            MERGE (p)-[:PARENT_OF]->(t)
+            MERGE (p)-[:CREATES]->(t)
         )
 
         // 4) Clean old dependency edges to allow for graph self-correction
@@ -198,12 +196,11 @@ class Neo4jOrchestrator:
         OPTIONAL MATCH (d_old:DataNode)-[r_old:REQUIRES]->(t)
         DELETE r_old
 
-        // 5) SAFE DEPENDENCY INJECTION
-        // Using FOREACH prevents Cartesian explosions and survives empty arrays.
+        // 5) SAFE DEPENDENCY INJECTION (Data Lineage)
         WITH t
         FOREACH (dep_id IN $dependencies |
             MERGE (d:DataNode {id: dep_id})
-            ON CREATE SET d.status = 'PENDING'
+            ON CREATE SET d.status = 'UNRESOLVED'
             MERGE (d)-[:REQUIRES]->(t)
         )
 
@@ -211,10 +208,9 @@ class Neo4jOrchestrator:
         WITH t
         OPTIONAL MATCH (d2:DataNode)-[:REQUIRES]->(t)
         
-        // If d2 IS NULL, it means the task has 0 dependencies, so unresolved = 0.
         WITH t, sum(CASE 
             WHEN d2 IS NULL THEN 0
-            WHEN coalesce(d2.status, 'PENDING') = 'COMPLETE' THEN 0 
+            WHEN coalesce(d2.status, 'UNRESOLVED') = 'COMPLETE' THEN 0 
             ELSE 1 
         END) AS unresolved
         
@@ -227,12 +223,12 @@ class Neo4jOrchestrator:
                 task_id=task_id,
                 instruction=task.instruction,
                 task_type=task.task_type,
-                status=task.status,
+                status=getattr(task, "status", "PENDING"),
                 parent_task=parent_task,
                 target_output=target_output,
                 dependencies=deps,
             )
-        print(f"🟡 INJECTED TASK: {task_id} (Unresolved: calculated natively)")
+        print(f"🟡 INJECTED TASK: {task_id} (Parent: {parent_task})")
 
     def mark_data_complete(self, node_id: str, content: Any) -> None:
         node_id = self._normalize_id(node_id)
@@ -255,3 +251,12 @@ class Neo4jOrchestrator:
             session.run(query, id=node_id, content=content_str)
 
         self.recompute_semaphore()
+
+    def mark_task_complete(self, task_id: str) -> None:
+        task_id = self._normalize_id(task_id)
+        query = """
+        MATCH (t:TaskNode {id: $id})
+        SET t.status = 'COMPLETE'
+        """
+        with self.driver.session() as session:
+            session.run(query, id=task_id)

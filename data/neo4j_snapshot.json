@@ -1,0 +1,2112 @@
+{
+  "meta": {
+    "created_at": "2026-04-14T16:02:40.781996+00:00",
+    "format": "stateReasoning-1.neo4j_snapshot.v1"
+  },
+  "nodes": [
+    {
+      "labels": [
+        "Semaphore"
+      ],
+      "props": {
+        "pending_count": 23,
+        "id": "GLOBAL"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_A]",
+        "content": "{\"x\": 0, \"y\": 0}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_L]",
+        "content": "4",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+        "unresolved_deps": 0,
+        "id": "[Task_Construct_Square]",
+        "task_type": "DECOMPOSE",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[DEF_PRIMITIVES]",
+        "content": "PRIMITIVE OBJECTS:\nPoint(name, row, col)\nLine(name, orientation, start_point, end_point)\nFilled(row, col)",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R1]",
+        "content": "Rule R1 (HorizontalExtension): store this entire rule as a data node.\nthis is a rule that extends a horizontal line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{\nINPUT: A Point P, an Integer Length L.\nOUTPUT: A new Point Q = (P.row, P.col + L).}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R2]",
+        "content": "Rule R2 (VerticalExtension): store this entire rule as a data node.\nthis is a rule that extends a vertical line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Point P, an Integer Length L.\nOUTPUT: A new Point Q = (P.row + L, P.col).}}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R3]",
+        "content": "Rule R3 (CornerCompletion): store this entire rule as a data node.\nthis is a rule that completes a corner of a square by connecting two lines. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (r2, c1).}}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R4_HORIZONTAL]",
+        "content": "Rule R4 (Strict Successor-Based Line Filling) - Horizontal: store this entire rule as a data node.\nthis is a rule that fills a horizontal line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Horizontal Line L with start_point(r, c_start) and end_point(r, c_end).\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R4_VERTICAL]",
+        "content": "Rule R4 (Strict Successor-Based Line Filling) - Vertical: store this entire rule as a data node.\nthis is a rule that fills a vertical line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Vertical Line L with start_point(r_start, c) and end_point(r_end, c).\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].",
+        "unresolved_deps": 0,
+        "id": "[Task_Compute_Data_B]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_B]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].",
+        "unresolved_deps": 0,
+        "id": "[Task_Compute_Data_D]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_D]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Task 1.3: Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].",
+        "unresolved_deps": 2,
+        "id": "[Task_Compute_Data_C]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_C]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE].",
+        "unresolved_deps": 3,
+        "id": "[Task_Compute_State_Phase_1_Done]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[STATE_PHASE_1_DONE]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Task 2.1: Create a Horizontal Line from [Data_A] to [Data_B]. Save output to node ID: [Data_Line_AB].",
+        "unresolved_deps": 1,
+        "id": "[Task_Compute_Data_Line_AB]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_Line_AB]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Task 2.2: Create a Vertical Line from [Data_B] to [Data_C]. Save output to node ID: [Data_Line_BC].",
+        "unresolved_deps": 2,
+        "id": "[Task_Compute_Data_Line_BC]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_Line_BC]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Task 2.3: Create a Horizontal Line from [Data_C] to [Data_D]. Save output to node ID: [Data_Line_CD].",
+        "unresolved_deps": 2,
+        "id": "[Task_Compute_Data_Line_CD]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_Line_CD]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Task 2.4: Create a Vertical Line from [Data_D] to [Data_A]. Save output to node ID: [Data_Line_DA].",
+        "unresolved_deps": 1,
+        "id": "[Task_Compute_Data_Line_DA]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_Line_DA]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Once all 4 lines are successfully derived, output a final status node named: [STATE_PHASE_2_DONE].",
+        "unresolved_deps": 4,
+        "id": "[Task_Compute_State_Phase_2_Done]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[STATE_PHASE_2_DONE]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Task 3.1: Apply [RULE_R4_HORIZONTAL] to [Data_Line_AB]. Save the List of Filled objects to node ID: [Data_Fill_AB].",
+        "unresolved_deps": 1,
+        "id": "[Task_Compute_Data_Fill_AB]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_Fill_AB]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Task 3.2: Apply [RULE_R4_VERTICAL] to [Data_Line_BC]. Save the List of Filled objects to node ID: [Data_Fill_BC].",
+        "unresolved_deps": 1,
+        "id": "[Task_Compute_Data_Fill_BC]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_Fill_BC]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Task 3.3: Apply [RULE_R4_HORIZONTAL] to [Data_Line_CD]. Save the List of Filled objects to node ID: [Data_Fill_CD].",
+        "unresolved_deps": 1,
+        "id": "[Task_Compute_Data_Fill_CD]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_Fill_CD]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Task 3.4: Apply [RULE_R4_VERTICAL] to [Data_Line_DA]. Save the List of Filled objects to node ID: [Data_Fill_DA].",
+        "unresolved_deps": 1,
+        "id": "[Task_Compute_Data_Fill_DA]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_Fill_DA]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE].",
+        "unresolved_deps": 4,
+        "id": "[Task_Compute_State_Phase_3_Done]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[STATE_PHASE_3_DONE]",
+        "status": "UNRESOLVED"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_A]",
+          "content": "{\"x\": 0, \"y\": 0}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_A]",
+          "content": "{\"x\": 0, \"y\": 0}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].",
+          "unresolved_deps": 0,
+          "id": "[Task_Compute_Data_B]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_A]",
+          "content": "{\"x\": 0, \"y\": 0}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].",
+          "unresolved_deps": 0,
+          "id": "[Task_Compute_Data_D]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_A]",
+          "content": "{\"x\": 0, \"y\": 0}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.1: Create a Horizontal Line from [Data_A] to [Data_B]. Save output to node ID: [Data_Line_AB].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Line_AB]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_A]",
+          "content": "{\"x\": 0, \"y\": 0}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.4: Create a Vertical Line from [Data_D] to [Data_A]. Save output to node ID: [Data_Line_DA].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Line_DA]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_L]",
+          "content": "4",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_L]",
+          "content": "4",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].",
+          "unresolved_deps": 0,
+          "id": "[Task_Compute_Data_B]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_L]",
+          "content": "4",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].",
+          "unresolved_deps": 0,
+          "id": "[Task_Compute_Data_D]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].",
+          "unresolved_deps": 0,
+          "id": "[Task_Compute_Data_B]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].",
+          "unresolved_deps": 0,
+          "id": "[Task_Compute_Data_D]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.3: Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].",
+          "unresolved_deps": 2,
+          "id": "[Task_Compute_Data_C]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE].",
+          "unresolved_deps": 3,
+          "id": "[Task_Compute_State_Phase_1_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.1: Create a Horizontal Line from [Data_A] to [Data_B]. Save output to node ID: [Data_Line_AB].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Line_AB]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.2: Create a Vertical Line from [Data_B] to [Data_C]. Save output to node ID: [Data_Line_BC].",
+          "unresolved_deps": 2,
+          "id": "[Task_Compute_Data_Line_BC]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.3: Create a Horizontal Line from [Data_C] to [Data_D]. Save output to node ID: [Data_Line_CD].",
+          "unresolved_deps": 2,
+          "id": "[Task_Compute_Data_Line_CD]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.4: Create a Vertical Line from [Data_D] to [Data_A]. Save output to node ID: [Data_Line_DA].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Line_DA]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once all 4 lines are successfully derived, output a final status node named: [STATE_PHASE_2_DONE].",
+          "unresolved_deps": 4,
+          "id": "[Task_Compute_State_Phase_2_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.1: Apply [RULE_R4_HORIZONTAL] to [Data_Line_AB]. Save the List of Filled objects to node ID: [Data_Fill_AB].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_AB]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.2: Apply [RULE_R4_VERTICAL] to [Data_Line_BC]. Save the List of Filled objects to node ID: [Data_Fill_BC].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_BC]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.3: Apply [RULE_R4_HORIZONTAL] to [Data_Line_CD]. Save the List of Filled objects to node ID: [Data_Fill_CD].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_CD]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.4: Apply [RULE_R4_VERTICAL] to [Data_Line_DA]. Save the List of Filled objects to node ID: [Data_Fill_DA].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_DA]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+          "unresolved_deps": 0,
+          "id": "[Task_Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE].",
+          "unresolved_deps": 4,
+          "id": "[Task_Compute_State_Phase_3_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R1]",
+          "content": "Rule R1 (HorizontalExtension): store this entire rule as a data node.\nthis is a rule that extends a horizontal line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{\nINPUT: A Point P, an Integer Length L.\nOUTPUT: A new Point Q = (P.row, P.col + L).}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].",
+          "unresolved_deps": 0,
+          "id": "[Task_Compute_Data_B]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R2]",
+          "content": "Rule R2 (VerticalExtension): store this entire rule as a data node.\nthis is a rule that extends a vertical line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Point P, an Integer Length L.\nOUTPUT: A new Point Q = (P.row + L, P.col).}}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].",
+          "unresolved_deps": 0,
+          "id": "[Task_Compute_Data_D]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R3]",
+          "content": "Rule R3 (CornerCompletion): store this entire rule as a data node.\nthis is a rule that completes a corner of a square by connecting two lines. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (r2, c1).}}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.3: Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].",
+          "unresolved_deps": 2,
+          "id": "[Task_Compute_Data_C]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R4_HORIZONTAL]",
+          "content": "Rule R4 (Strict Successor-Based Line Filling) - Horizontal: store this entire rule as a data node.\nthis is a rule that fills a horizontal line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Horizontal Line L with start_point(r, c_start) and end_point(r, c_end).\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.1: Apply [RULE_R4_HORIZONTAL] to [Data_Line_AB]. Save the List of Filled objects to node ID: [Data_Fill_AB].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_AB]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R4_HORIZONTAL]",
+          "content": "Rule R4 (Strict Successor-Based Line Filling) - Horizontal: store this entire rule as a data node.\nthis is a rule that fills a horizontal line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Horizontal Line L with start_point(r, c_start) and end_point(r, c_end).\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.3: Apply [RULE_R4_HORIZONTAL] to [Data_Line_CD]. Save the List of Filled objects to node ID: [Data_Fill_CD].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_CD]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R4_VERTICAL]",
+          "content": "Rule R4 (Strict Successor-Based Line Filling) - Vertical: store this entire rule as a data node.\nthis is a rule that fills a vertical line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Vertical Line L with start_point(r_start, c) and end_point(r_end, c).\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.2: Apply [RULE_R4_VERTICAL] to [Data_Line_BC]. Save the List of Filled objects to node ID: [Data_Fill_BC].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_BC]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R4_VERTICAL]",
+          "content": "Rule R4 (Strict Successor-Based Line Filling) - Vertical: store this entire rule as a data node.\nthis is a rule that fills a vertical line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Vertical Line L with start_point(r_start, c) and end_point(r_end, c).\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.4: Apply [RULE_R4_VERTICAL] to [Data_Line_DA]. Save the List of Filled objects to node ID: [Data_Fill_DA].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_DA]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].",
+          "unresolved_deps": 0,
+          "id": "[Task_Compute_Data_B]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_B]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_B]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.3: Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].",
+          "unresolved_deps": 2,
+          "id": "[Task_Compute_Data_C]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_B]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE].",
+          "unresolved_deps": 3,
+          "id": "[Task_Compute_State_Phase_1_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_B]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.1: Create a Horizontal Line from [Data_A] to [Data_B]. Save output to node ID: [Data_Line_AB].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Line_AB]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_B]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.2: Create a Vertical Line from [Data_B] to [Data_C]. Save output to node ID: [Data_Line_BC].",
+          "unresolved_deps": 2,
+          "id": "[Task_Compute_Data_Line_BC]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].",
+          "unresolved_deps": 0,
+          "id": "[Task_Compute_Data_D]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_D]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_D]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.3: Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].",
+          "unresolved_deps": 2,
+          "id": "[Task_Compute_Data_C]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_D]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE].",
+          "unresolved_deps": 3,
+          "id": "[Task_Compute_State_Phase_1_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_D]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.3: Create a Horizontal Line from [Data_C] to [Data_D]. Save output to node ID: [Data_Line_CD].",
+          "unresolved_deps": 2,
+          "id": "[Task_Compute_Data_Line_CD]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_D]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.4: Create a Vertical Line from [Data_D] to [Data_A]. Save output to node ID: [Data_Line_DA].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Line_DA]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 1.3: Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].",
+          "unresolved_deps": 2,
+          "id": "[Task_Compute_Data_C]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_C]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_C]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE].",
+          "unresolved_deps": 3,
+          "id": "[Task_Compute_State_Phase_1_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_C]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.2: Create a Vertical Line from [Data_B] to [Data_C]. Save output to node ID: [Data_Line_BC].",
+          "unresolved_deps": 2,
+          "id": "[Task_Compute_Data_Line_BC]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_C]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.3: Create a Horizontal Line from [Data_C] to [Data_D]. Save output to node ID: [Data_Line_CD].",
+          "unresolved_deps": 2,
+          "id": "[Task_Compute_Data_Line_CD]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE].",
+          "unresolved_deps": 3,
+          "id": "[Task_Compute_State_Phase_1_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[STATE_PHASE_1_DONE]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.1: Create a Horizontal Line from [Data_A] to [Data_B]. Save output to node ID: [Data_Line_AB].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Line_AB]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Line_AB]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Line_AB]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once all 4 lines are successfully derived, output a final status node named: [STATE_PHASE_2_DONE].",
+          "unresolved_deps": 4,
+          "id": "[Task_Compute_State_Phase_2_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Line_AB]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.1: Apply [RULE_R4_HORIZONTAL] to [Data_Line_AB]. Save the List of Filled objects to node ID: [Data_Fill_AB].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_AB]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.2: Create a Vertical Line from [Data_B] to [Data_C]. Save output to node ID: [Data_Line_BC].",
+          "unresolved_deps": 2,
+          "id": "[Task_Compute_Data_Line_BC]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Line_BC]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Line_BC]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once all 4 lines are successfully derived, output a final status node named: [STATE_PHASE_2_DONE].",
+          "unresolved_deps": 4,
+          "id": "[Task_Compute_State_Phase_2_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Line_BC]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.2: Apply [RULE_R4_VERTICAL] to [Data_Line_BC]. Save the List of Filled objects to node ID: [Data_Fill_BC].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_BC]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.3: Create a Horizontal Line from [Data_C] to [Data_D]. Save output to node ID: [Data_Line_CD].",
+          "unresolved_deps": 2,
+          "id": "[Task_Compute_Data_Line_CD]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Line_CD]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Line_CD]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once all 4 lines are successfully derived, output a final status node named: [STATE_PHASE_2_DONE].",
+          "unresolved_deps": 4,
+          "id": "[Task_Compute_State_Phase_2_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Line_CD]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.3: Apply [RULE_R4_HORIZONTAL] to [Data_Line_CD]. Save the List of Filled objects to node ID: [Data_Fill_CD].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_CD]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 2.4: Create a Vertical Line from [Data_D] to [Data_A]. Save output to node ID: [Data_Line_DA].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Line_DA]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Line_DA]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Line_DA]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once all 4 lines are successfully derived, output a final status node named: [STATE_PHASE_2_DONE].",
+          "unresolved_deps": 4,
+          "id": "[Task_Compute_State_Phase_2_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Line_DA]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.4: Apply [RULE_R4_VERTICAL] to [Data_Line_DA]. Save the List of Filled objects to node ID: [Data_Fill_DA].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_DA]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once all 4 lines are successfully derived, output a final status node named: [STATE_PHASE_2_DONE].",
+          "unresolved_deps": 4,
+          "id": "[Task_Compute_State_Phase_2_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[STATE_PHASE_2_DONE]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.1: Apply [RULE_R4_HORIZONTAL] to [Data_Line_AB]. Save the List of Filled objects to node ID: [Data_Fill_AB].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_AB]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Fill_AB]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Fill_AB]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE].",
+          "unresolved_deps": 4,
+          "id": "[Task_Compute_State_Phase_3_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.2: Apply [RULE_R4_VERTICAL] to [Data_Line_BC]. Save the List of Filled objects to node ID: [Data_Fill_BC].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_BC]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Fill_BC]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Fill_BC]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE].",
+          "unresolved_deps": 4,
+          "id": "[Task_Compute_State_Phase_3_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.3: Apply [RULE_R4_HORIZONTAL] to [Data_Line_CD]. Save the List of Filled objects to node ID: [Data_Fill_CD].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_CD]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Fill_CD]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Fill_CD]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE].",
+          "unresolved_deps": 4,
+          "id": "[Task_Compute_State_Phase_3_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Task 3.4: Apply [RULE_R4_VERTICAL] to [Data_Line_DA]. Save the List of Filled objects to node ID: [Data_Fill_DA].",
+          "unresolved_deps": 1,
+          "id": "[Task_Compute_Data_Fill_DA]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Fill_DA]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_Fill_DA]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE].",
+          "unresolved_deps": 4,
+          "id": "[Task_Compute_State_Phase_3_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE].",
+          "unresolved_deps": 4,
+          "id": "[Task_Compute_State_Phase_3_Done]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[STATE_PHASE_3_DONE]",
+          "status": "UNRESOLVED"
+        }
+      }
+    }
+  ]
+}

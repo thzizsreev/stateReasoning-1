@@ -60,6 +60,26 @@ class PhasePlan(BaseModel):
 class query_plan(BaseModel):
     data_nodes: Optional[List[DataNode]] = Field(default=None)
     task_nodes: Optional[List[TaskNode]] = Field(default=None)
+
+class DataNodesList(BaseModel):
+    data_nodes: List[DataNode] = []
+
+class TaskNodesList(BaseModel):
+    task_nodes: List[TaskNode] = []
+
+class FinalPipelinePayload(BaseModel):
+    data_nodes: List[DataNode] = []
+    task_nodes: List[TaskNode] = []
+
+class RouterDecision(BaseModel):
+    requires_data_extraction: bool = Field(description="True if explicit facts/numbers are provided.")
+    data_snippet: str = Field(description="The exact text substring containing the facts. Empty string if none.")
+    
+    requires_decomposition: bool
+    decomposition_snippet: str = Field(description="CRITICAL: Must be a continuous, verbatim substring copied EXACTLY from the prompt. DO NOT summarize. DO NOT use ellipses. If the workflow is 300 words, copy the exact first and last words to encompass it.")
+    
+    requires_computation: bool
+    computation_snippet: str = Field(description="CRITICAL: Must be a continuous, verbatim substring copied EXACTLY from the prompt. DO NOT summarize.")
 # ==========================================
 # 2. ENFORCEMENT DEMONSTRATION
 # ==========================================
