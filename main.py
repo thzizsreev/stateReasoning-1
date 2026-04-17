@@ -443,6 +443,38 @@ def fetch_resolved_dependencies_for_task(db: Neo4jOrchestrator, task_id: str) ->
         return deps
 
 
+def fetch_and_print_fill_outputs(db: Neo4jOrchestrator) -> Dict[str, Any]:
+    """
+    Fetch contents of fill output nodes and print a combined JSON output.
+    """
+    output_ids = ["[Data_Fill_AB]", "[Data_Fill_BC]", "[Data_Fill_CD]", "[Data_Fill_DA]"]
+    combined: Dict[str, Any] = {}
+
+    query = """
+    MATCH (d:DataNode)
+    WHERE d.id IN $ids
+    RETURN d.id AS id, d.content AS content, d.status AS status
+    """
+    with db.driver.session() as session:
+        result = session.run(query, ids=output_ids)
+        for record in result:
+            node_id = record["id"]
+            content_raw = record["content"]
+            try:
+                content = json.loads(content_raw) if isinstance(content_raw, str) else content_raw
+            except Exception:
+                content = content_raw
+            combined[node_id] = {"status": record["status"], "content": content}
+
+    # Ensure keys exist even if missing in DB
+    for oid in output_ids:
+        combined.setdefault(oid, {"status": None, "content": None})
+
+    print("\n=== COMBINED FILL OUTPUTS ===")
+    print(json.dumps(combined, ensure_ascii=False, indent=2))
+    return combined
+
+
 async def run_execution_engine(db: Neo4jOrchestrator, llm, terminal_node: str):
     print("\n🚀 [ENGINE] Booting Runtime Execution Engine...")
     
@@ -551,55 +583,56 @@ if __name__ == "__main__":
     phase_text = PROMPTS["TASK_PHASE_1"]
 
 
-    # db._clear_db()
-    # query = """construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively"""
-    # datanodes = asyncio.run(process_query(query, my_llm))
-    # #datanodes = process_datanodes_output(datanodes)
-    # ##print_datanodes_nodes(datanodes)
-    # insert_datanodes_into_graph(datanodes, db)
-    # # phase_text = """First, analyze the [Client_Requirements_Doc] to extract a core [Feature_List]. Next, take that 
-    # # [Feature_List] and use it to build a full, production-ready [ECommerce_Web_Application]. Building a web application is
-    # #  a massive undertaking that requires designing  a database, writing frontend React code, and configuring backend APIs. 
-    # #  Once the web application is fully built, deploy it to AWS to generate a [Live_Production_URL]. Finally, trigger a 
-    # #  [STATE_DEPLOYMENT_COMPLETE]."""
+    db._clear_db()
+    query = """construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively"""
+    datanodes = asyncio.run(process_query(query, my_llm))
+    #datanodes = process_datanodes_output(datanodes)
+    ##print_datanodes_nodes(datanodes)
+    insert_datanodes_into_graph(datanodes, db)
+    # phase_text = """First, analyze the [Client_Requirements_Doc] to extract a core [Feature_List]. Next, take that 
+    # [Feature_List] and use it to build a full, production-ready [ECommerce_Web_Application]. Building a web application is
+    #  a massive undertaking that requires designing  a database, writing frontend React code, and configuring backend APIs. 
+    #  Once the web application is fully built, deploy it to AWS to generate a [Live_Production_URL]. Finally, trigger a 
+    #  [STATE_DEPLOYMENT_COMPLETE]."""
 
 
-    # # plan = Extract_datanodes(phase_text, my_llm)
-    # # plan = process_datanodes_output(plan)
-    # # print_datanodes_nodes(plan)
-    # # insert_datanodes_into_graph(plan, db)
+    # plan = Extract_datanodes(phase_text, my_llm)
+    # plan = process_datanodes_output(plan)
+    # print_datanodes_nodes(plan)
+    # insert_datanodes_into_graph(plan, db)
     
-    # # Step 3: Loop and Create Nodes
-    # # print("\n--- INJECTING TASK GRAPH ---")
-    # # for task in plan.tasks:
-    # #     db.insert_task(task)
+    # Step 3: Loop and Create Nodes
+    # print("\n--- INJECTING TASK GRAPH ---")
+    # for task in plan.tasks:
+    #     db.insert_task(task)
         
-    # # ========================================================================
-    # # 2. RAG RETRIEVAL & PRIMITIVE INJECTION
-    # # ========================================================================
-    # print("\n=== STAGE 2: FETCHING EXPERIENTIAL MEMORY ===")
-    # # Pass the instruction to the mock RAG. It handles injecting the primitives 
-    # # internally and returns the template we need to decompose.
-    # template_text = mock_RAG(datanodes.task_nodes[0].instruction, db)
+    # ========================================================================
+    # 2. RAG RETRIEVAL & PRIMITIVE INJECTION
+    # ========================================================================
+    print("\n=== STAGE 2: FETCHING EXPERIENTIAL MEMORY ===")
+    # Pass the instruction to the mock RAG. It handles injecting the primitives 
+    # internally and returns the template we need to decompose.
+    template_text = mock_RAG(datanodes.task_nodes[0].instruction, db)
 
-    # # ========================================================================
-    # # 3. TEMPLATE CHUNKING & HIERARCHY CONJUNCTION
-    # # ========================================================================
-    # print("\n=== STAGE 3: DECOMPOSING TEMPLATE & BUILDING HIERARCHY ===")
-    # # Process the returned template, passing the root_task_id so the function 
-    # # natively draws the [:CREATES] edges from the root to these new sub-tasks.
-    # root_task_id = datanodes.task_nodes[0].id
-    # plan_payload = asyncio.run(process_and_upsert_query(template_text, my_llm, db, parent_task_id=root_task_id))
+    # ========================================================================
+    # 3. TEMPLATE CHUNKING & HIERARCHY CONJUNCTION
+    # ========================================================================
+    print("\n=== STAGE 3: DECOMPOSING TEMPLATE & BUILDING HIERARCHY ===")
+    # Process the returned template, passing the root_task_id so the function 
+    # natively draws the [:CREATES] edges from the root to these new sub-tasks.
+    root_task_id = datanodes.task_nodes[0].id
+    plan_payload = asyncio.run(process_and_upsert_query(template_text, my_llm, db, parent_task_id=root_task_id))
     
-    # # ========================================================================
-    # # 4. ADVANCE STATE
-    # # ========================================================================
-    # with db.driver.session() as session:
-    #     session.run("""
-    #         MATCH (t:TaskNode {id: $id}) 
-    #         SET t.status = 'COMPLETE'
-    #     """, id=db._normalize_id(root_task_id))
-    #     print(f"\n🟢 ROOT TASK '{root_task_id}' COMPLETED (Successfully decomposed).")
+    # ========================================================================
+    # 4. ADVANCE STATE
+    # ========================================================================
+    with db.driver.session() as session:
+        session.run("""
+            MATCH (t:TaskNode {id: $id}) 
+            SET t.status = 'COMPLETE'
+        """, id=db._normalize_id(root_task_id))
+        print(f"\n🟢 ROOT TASK '{root_task_id}' COMPLETED (Successfully decomposed).")
 
-    # print("\n✅ Setup Complete. Open Neo4j Browser and run: MATCH (n) RETURN n")
+    print("\n✅ Setup Complete. Open Neo4j Browser and run: MATCH (n) RETURN n")
     asyncio.run(run_execution_engine(db, my_llm, terminal_node="[STATE_PHASE_3_DONE]"))
+    fetch_and_print_fill_outputs(db)

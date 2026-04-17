@@ -86,24 +86,45 @@ Task 1.3: Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node I
 Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE]."""
 
 
+# PROMPTS["TASK_PHASE_2"] = """PHASE 2 — LINE DERIVATION (MANDATORY)
+
+# Task 2.1: Create a Horizontal Line from [Data_A] to [Data_B]. Save output to node ID: [Data_Line_AB].
+# Task 2.2: Create a Vertical Line from [Data_B] to [Data_C]. Save output to node ID: [Data_Line_BC].
+# Task 2.3: Create a Horizontal Line from [Data_C] to [Data_D]. Save output to node ID: [Data_Line_CD].
+# Task 2.4: Create a Vertical Line from [Data_D] to [Data_A]. Save output to node ID: [Data_Line_DA].
+
+# Once all 4 lines are successfully derived, output a final status node named: [STATE_PHASE_2_DONE]."""
+
+
+# PROMPTS["TASK_PHASE_3"] = """PHASE 3 — LINE FILLING (STRICT)
+
+# Task 3.1: Apply rule [RULE_R4_VERTICAL] to input data [Data_Line_AB]. Save the List of Filled objects to node ID: [Data_Fill_AB].
+# Task 3.2: Apply rule [RULE_R4_HORIZONTAL] to input data [Data_Line_BC]. Save the List of Filled objects to node ID: [Data_Fill_BC].
+# Task 3.3: Apply rule [RULE_R4_VERTICAL] to input data [Data_Line_CD]. Save the List of Filled objects to node ID: [Data_Fill_CD].
+# Task 3.4: Apply rule [RULE_R4_VERTICAL] to input data [Data_Line_DA]. Save the List of Filled objects to node ID: [Data_Fill_DA].
+
+# Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE]."""
+
+
 PROMPTS["TASK_PHASE_2"] = """PHASE 2 — LINE DERIVATION (MANDATORY)
 
-Task 2.1: Create a Horizontal Line from [Data_A] to [Data_B]. Save output to node ID: [Data_Line_AB].
-Task 2.2: Create a Vertical Line from [Data_B] to [Data_C]. Save output to node ID: [Data_Line_BC].
-Task 2.3: Create a Horizontal Line from [Data_C] to [Data_D]. Save output to node ID: [Data_Line_CD].
-Task 2.4: Create a Vertical Line from [Data_D] to [Data_A]. Save output to node ID: [Data_Line_DA].
+Task 2.1: Create a  Line from [Data_A] to [Data_B]. Save output to node ID: [Data_Line_AB].
+Task 2.2: Create a  Line from [Data_B] to [Data_C]. Save output to node ID: [Data_Line_BC].
+Task 2.3: Create a  Line from [Data_C] to [Data_D]. Save output to node ID: [Data_Line_CD].
+Task 2.4: Create a  Line from [Data_D] to [Data_A]. Save output to node ID: [Data_Line_DA].
 
 Once all 4 lines are successfully derived, output a final status node named: [STATE_PHASE_2_DONE]."""
 
 
 PROMPTS["TASK_PHASE_3"] = """PHASE 3 — LINE FILLING (STRICT)
 
-Task 3.1: Apply [RULE_R4_HORIZONTAL] to [Data_Line_AB]. Save the List of Filled objects to node ID: [Data_Fill_AB].
-Task 3.2: Apply [RULE_R4_VERTICAL] to [Data_Line_BC]. Save the List of Filled objects to node ID: [Data_Fill_BC].
-Task 3.3: Apply [RULE_R4_HORIZONTAL] to [Data_Line_CD]. Save the List of Filled objects to node ID: [Data_Fill_CD].
-Task 3.4: Apply [RULE_R4_VERTICAL] to [Data_Line_DA]. Save the List of Filled objects to node ID: [Data_Fill_DA].
+Task 3.1: Apply rule [RULE_R4_VERTICAL] to input data [Data_Line_AB]. Save the List of Filled objects to node ID: [Data_Fill_AB].
+Task 3.2: Apply rule [RULE_R4_HORIZONTAL] to input data [Data_Line_BC]. Save the List of Filled objects to node ID: [Data_Fill_BC].
+Task 3.3: Apply rule [RULE_R4_VERTICAL] to input data [Data_Line_CD]. Save the List of Filled objects to node ID: [Data_Fill_CD].
+Task 3.4: Apply rule [RULE_R4_VERTICAL] to input data [Data_Line_DA]. Save the List of Filled objects to node ID: [Data_Fill_DA].
 
 Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE]."""
+
 
 PROMPTS["SQUARE_CONSTRUCTION"] = f"{PROMPTS['TASK_PHASE_1']}\n after phase one is done and creates [STATE_PHASE_1_DONE], we will start phase two:\n {PROMPTS['TASK_PHASE_2']}\n after phase two is done and creates [STATE_PHASE_2_DONE], we will start phase three:\n {PROMPTS['TASK_PHASE_3']}"
 
@@ -160,7 +181,10 @@ COGNITIVE PROCESSING STEPS:
    - Explicit Sequences: If the text contains distinct Phases, Steps, or Milestones, you MUST process it and chunk it.
    - The Root Objective Rule: If the text is a single, high-level imperative goal that inherently requires multiple sub-steps to achieve, capture it as a single DECOMPOSE block.
 2. TASK CHUNKING: Slice the workflow into distinct logical blocks.
-3. DEPENDENCY AWARENESS (INPUTS ONLY): Distinguish between prerequisites and products. Extract ONLY the bracketed IDs explicitly required as INPUTS for each chunk. Do NOT extract IDs that the chunk generates.
+3. DEPENDENCY AWARENESS (INPUTS ONLY): Distinguish between prerequisites and products. Extract ONLY the entities explicitly required as INPUTS for each chunk. Do NOT extract IDs that the chunk generates.
+   - CRITICAL COMPUTATION RULE: If an instruction requires applying a specific logical or mathematical rule (e.g., [RULE_R4], [RULE_HORIZONTAL]), you MUST include that Rule ID in the `dependencies` array. Compute tasks will fail if they are not fed their exact rule definitions.
+   - CRITICAL DATA NODE RULE: The data node if mentioned in the instruction are bounded in Square brackets [], then you ought to check if all the entities. The dependent entities may or may not be in square brackets but if they are, you must extract along with the brsckets!!.
+
 4. DYNAMIC ROUTING & TARGET EXTRACTION (CRITICAL): You must evaluate each chunk you create and assign it the correct `task_type`:
    - If the chunk is a broad milestone containing multiple sub-steps: Assign `task_type: "DECOMPOSE"` and set `target_output: null`.
    - If the chunk is a single, isolated atomic execution (e.g., "Apply [RULE_R1] to [Data_A]..."): Assign `task_type: "COMPUTE"`. You MUST extract the specific output node ID (e.g., "[Data_B]") and assign it to `target_output`.
@@ -278,39 +302,28 @@ USER: "The standard gravity constant [G] is 9.81."
 }
 """
 
-PROMPTS["COMPUTE_EXECUTION_PROMPT"] = """You are the Atomic Execution Worker in a Hierarchical DAG Engine.
-Your ONLY job is to execute a single, isolated logical or mathematical instruction using the exact data provided to you.
+PROMPTS["COMPUTE_EXECUTION_PROMPT"] = """You are the ATOMIC COMPUTE WORKER, a stateless, deterministic execution engine operating at the bottom layer of a Directed Acyclic Graph (DAG). 
 
-COGNITIVE PROCESSING STEPS:
-1. Review the DEPENDENCIES provided in the prompt. This is your absolute ground truth.
-2. Review the INSTRUCTION.
-3. Calculate the result step-by-step using ONLY the provided dependencies.
-4. Output a JSON dictionary containing EXACTLY two keys:
-   - "reasoning": A string explaining your step-by-step logic.
-   - "content": The final computed data payload. This can be a number, a coordinate dictionary, a string, or a list.
+Your sole purpose is to blindly and rigorously apply provided logical/mathematical [RULES] to provided [INPUT DATA]. You have no overarching context of the project. You are a pure mathematical function: f(data, rule) = output.
 
-STRICT CONSTRAINTS:
-- ZERO HALLUCINATION: If you cannot compute the answer with the provided data, state the failure in "reasoning" and set "content" to null.
-- NO EXTRA TEXT: Output ONLY valid JSON matching the exact requested keys.
+### CORE EXECUTION CONSTRAINTS
+1. EPISTEMIC HUMILITY: You must NEVER invent, assume, or hallucinate rules, formulas, or coordinates. If the provided rule does not fit the provided data, you must state exactly why and fail gracefully.
+2. SCHEMA INHERITANCE: You must strictly inherit the data structures, key names, and coordinate systems provided in the input dependencies. If the input uses "x" and "y", your output MUST use "x" and "y". If the input uses "r" and "c", your output MUST use "r" and "c". NEVER arbitrarily rename keys.
+3. ANTI-HASTE PROTOCOL: You are strictly forbidden from rushing to the final answer. You must systematically break down your execution logic using the exact diagnostic steps outlined below. 
 
-EXAMPLE TRIGGER:
-DEPENDENCIES:
+### MANDATORY CHAIN-OF-THOUGHT
+Before generating the final `content` payload, your `reasoning` string MUST explicitly contain and complete the following four diagnostic steps. Do not skip any steps.
+
+Step 1 (Input Analysis): Define the exact shape, keys, and values of the provided data dependencies.
+Step 2 (Rule Verification): State the exact mathematical or logical conditions required by the provided rule.
+Step 3 (Compatibility Check): Explicitly compare the Input (Step 1) against the Rule (Step 2). Are they mathematically compatible? Do the variable names align?
+Step 4 (Execution Trace): Write out the step-by-step transformation or calculation of the data. 
+
+### OUTPUT FORMAT
+You must output valid JSON matching this schema:
 {
-  "[Data_A]": {"x": 0, "y": 0},
-  "[Data_L]": 4,
-  "[RULE_R1]": "Offset Horizontal Vector: Add the length to the X coordinate."
-}
-
-INSTRUCTION:
-Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].
-
-EXPECTED OUTPUT:
-{
-  "reasoning": "Rule R1 requires a horizontal offset. I take the X coordinate of Data_A (0) and add Data_L (4). 0 + 4 = 4. The Y coordinate remains unchanged (0).",
-  "content": {
-    "x": 4,
-    "y": 0
-  }
+  "reasoning": "Step 1: ... Step 2: ... Step 3: ... Step 4: ...",
+  "content": <The final computed data payload in the exact shape required by the rule, or null if incompatible>
 }
 """
 # ==========================================

@@ -23,7 +23,8 @@ def _clear_pydantic_log(path: Path) -> None:
 def _append_pydantic_log(path: Path, payload: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "a", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False, indent=2)
+        # Be tolerant of non-JSON-serializable types (e.g., objects inside `content`)
+        json.dump(payload, f, ensure_ascii=False, indent=2, default=str)
         f.write("\n\n")
 
 
@@ -33,15 +34,19 @@ def log_pydantic_output(label: str, obj: Any) -> None:
     else:
         data = obj
 
-    _append_pydantic_log(
-        PYDANTIC_LOG_PATH,
-        {
-            "ts": datetime.now(timezone.utc).isoformat(),
-            "label": label,
-            "type": getattr(obj, "__class__", type(obj)).__name__,
-            "data": data,
-        },
-    )
+    try:
+        _append_pydantic_log(
+            PYDANTIC_LOG_PATH,
+            {
+                "ts": datetime.now(timezone.utc).isoformat(),
+                "label": label,
+                "type": getattr(obj, "__class__", type(obj)).__name__,
+                "data": data,
+            },
+        )
+    except Exception as e:
+        # Never break execution just because logging failed.
+        print(f"[LOG WARNING] Failed to write Pydantic output ({label}): {e}")
 
 ROUTER_PROMPT = PROMPTS["ROUTER_PROMPT"] 
 DECOMPOSER_PROMPT = PROMPTS["DECOMPOSER_PROMPT"]
@@ -112,7 +117,7 @@ async def run_data_extractor(user_query: str, llm) -> DataNodesList:
     # print("  <- [Fact Extractor] Complete.")
     # return response.choices[0].message.parsed
     user_prompt = f"INSTRUCTIONS TO DECOMPOSE:\n{user_query}"
-    print("Sending prompt to LLM...")
+    print(f"Sending prompt to LLM... {user_prompt}")
     
     try:
         raw_json_dict = llm.generate_json(DATA_EXTRACTOR_PROMPT, user_prompt)
@@ -139,7 +144,7 @@ async def run_task_decomposer(user_query: str, llm) -> TaskNodesList:
     # print("  <- [Task Decomposer] Complete.")
     # return response.choices[0].message.parsed
     user_prompt = f"INSTRUCTIONS TO DECOMPOSE:\n{user_query}"
-    print("Sending prompt to LLM...")
+    print(f"Sending prompt to LLM... {user_prompt}")
     
     try:
         raw_json_dict = llm.generate_json(DECOMPOSER_PROMPT, user_prompt)
@@ -154,7 +159,7 @@ async def run_task_decomposer(user_query: str, llm) -> TaskNodesList:
 async def run_compute_agent(user_query: str, llm) -> TaskNodesList:
     """Child 3: Builds atomic COMPUTE tasks."""
     user_prompt = f"INSTRUCTIONS TO DECOMPOSE:\n{user_query}"
-    print("Sending prompt to LLM...")
+    print(f"Sending prompt to LLM... {user_prompt}")
     
     try:
         raw_json_dict = llm.generate_json(COMPUTE_AGENT_PROMPT, user_prompt)
@@ -247,7 +252,7 @@ async def execute_compute_node(task: dict, dependencies_data: list | dict, db, l
     # 1. Construct the Tunnel-Vision Prompt
     # We place the pre-fetched dependencies at the top as ground truth.
     user_prompt = f"DEPENDENCIES:\n{json.dumps(dependencies_data, indent=2)}\n\nINSTRUCTION:\n{instruction}"
-    print("  -> Sending prompt to LLM Compute Agent...")
+    print(f"  -> Sending prompt to LLM Compute Agent... {user_prompt}")
 
     # 2. Execute using your exact standard pattern
     try:

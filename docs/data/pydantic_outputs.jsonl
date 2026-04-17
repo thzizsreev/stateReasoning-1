@@ -1,23 +1,538 @@
 {
-  "ts": "2026-04-14T16:05:04.468881+00:00",
+  "ts": "2026-04-15T10:55:26.573194+00:00",
+  "label": "RouterDecision",
+  "type": "RouterDecision",
+  "data": {
+    "requires_data_extraction": true,
+    "data_snippet": "construct a square with the point A(0,0) and side length 4.",
+    "requires_decomposition": true,
+    "decomposition_snippet": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+    "requires_computation": false,
+    "computation_snippet": ""
+  }
+}
+
+{
+  "ts": "2026-04-15T10:55:29.092367+00:00",
+  "label": "DataNodesList",
+  "type": "DataNodesList",
+  "data": {
+    "data_nodes": [
+      {
+        "id": "[Data_A]",
+        "content": {
+          "x": 0,
+          "y": 0
+        },
+        "status": "UNRESOLVED"
+      },
+      {
+        "id": "[Data_L]",
+        "content": 4,
+        "status": "UNRESOLVED"
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-15T10:55:46.168356+00:00",
+  "label": "TaskNodesList.decomposer",
+  "type": "TaskNodesList",
+  "data": {
+    "task_nodes": [
+      {
+        "id": "[Task_Define_Point]",
+        "dependencies": [
+          "Data_A"
+        ],
+        "instruction": "construct a square with the point A(0,0).",
+        "target_output": "[Data_A]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Define_Side_Length]",
+        "dependencies": [
+          "Data_L"
+        ],
+        "instruction": "construct a square with the side length 4.",
+        "target_output": "[Data_L]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-15T10:55:46.169776+00:00",
+  "label": "FinalPipelinePayload",
+  "type": "FinalPipelinePayload",
+  "data": {
+    "data_nodes": [
+      {
+        "id": "[Data_A]",
+        "content": {
+          "x": 0,
+          "y": 0
+        },
+        "status": "UNRESOLVED"
+      },
+      {
+        "id": "[Data_L]",
+        "content": 4,
+        "status": "UNRESOLVED"
+      }
+    ],
+    "task_nodes": [
+      {
+        "id": "[Task_Define_Point]",
+        "dependencies": [
+          "Data_A"
+        ],
+        "instruction": "construct a square with the point A(0,0).",
+        "target_output": "[Data_A]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Define_Side_Length]",
+        "dependencies": [
+          "Data_L"
+        ],
+        "instruction": "construct a square with the side length 4.",
+        "target_output": "[Data_L]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-15T10:56:03.749457+00:00",
+  "label": "RouterDecision",
+  "type": "RouterDecision",
+  "data": {
+    "requires_data_extraction": false,
+    "data_snippet": "",
+    "requires_decomposition": true,
+    "decomposition_snippet": "The entire provided text.",
+    "requires_computation": true,
+    "computation_snippet": "The entire text implies computational tasks but lacks explicit equations."
+  }
+}
+
+{
+  "ts": "2026-04-15T10:57:04.487435+00:00",
+  "label": "TaskNodesList.decomposer",
+  "type": "TaskNodesList",
+  "data": {
+    "task_nodes": [
+      {
+        "id": "[Task_Compute_Data_B]",
+        "dependencies": [
+          "[RULE_R1]",
+          "[Data_A]",
+          "[Data_L]"
+        ],
+        "instruction": "Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].",
+        "target_output": "[Data_B]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_D]",
+        "dependencies": [
+          "[RULE_R2]",
+          "[Data_A]",
+          "[Data_L]"
+        ],
+        "instruction": "Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].",
+        "target_output": "[Data_D]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_C]",
+        "dependencies": [
+          "[RULE_R3]",
+          "[Data_B]",
+          "[Data_D]"
+        ],
+        "instruction": "Task 1.3: Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].",
+        "target_output": "[Data_C]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Create_State_Phase_1_Done]",
+        "dependencies": [
+          "[Data_B]",
+          "[Data_C]",
+          "[Data_D]"
+        ],
+        "instruction": "Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE].",
+        "target_output": "[STATE_PHASE_1_DONE]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Line_AB]",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_B]"
+        ],
+        "instruction": "Task 2.1: Create a Line from [Data_A] to [Data_B]. Save output to node ID: [Data_Line_AB].",
+        "target_output": "[Data_Line_AB]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Line_BC]",
+        "dependencies": [
+          "[Data_B]",
+          "[Data_C]"
+        ],
+        "instruction": "Task 2.2: Create a Line from [Data_B] to [Data_C]. Save output to node ID: [Data_Line_BC].",
+        "target_output": "[Data_Line_BC]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Line_CD]",
+        "dependencies": [
+          "[Data_C]",
+          "[Data_D]"
+        ],
+        "instruction": "Task 2.3: Create a Line from [Data_C] to [Data_D]. Save output to node ID: [Data_Line_CD].",
+        "target_output": "[Data_Line_CD]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Line_DA]",
+        "dependencies": [
+          "[Data_D]",
+          "[Data_A]"
+        ],
+        "instruction": "Task 2.4: Create a Line from [Data_D] to [Data_A]. Save output to node ID: [Data_Line_DA].",
+        "target_output": "[Data_Line_DA]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Create_State_Phase_2_Done]",
+        "dependencies": [
+          "[Data_Line_AB]",
+          "[Data_Line_BC]",
+          "[Data_Line_CD]",
+          "[Data_Line_DA]"
+        ],
+        "instruction": "Once all 4 lines are successfully derived, output a final status node named: [STATE_PHASE_2_DONE].",
+        "target_output": "[STATE_PHASE_2_DONE]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Fill_AB]",
+        "dependencies": [
+          "[RULE_R4_VERTICAL]",
+          "[Data_Line_AB]"
+        ],
+        "instruction": "Task 3.1: Apply rule [RULE_R4_VERTICAL] to input data [Data_Line_AB]. Save the List of Filled objects to node ID: [Data_Fill_AB].",
+        "target_output": "[Data_Fill_AB]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Fill_BC]",
+        "dependencies": [
+          "[RULE_R4_HORIZONTAL]",
+          "[Data_Line_BC]"
+        ],
+        "instruction": "Task 3.2: Apply rule [RULE_R4_HORIZONTAL] to input data [Data_Line_BC]. Save the List of Filled objects to node ID: [Data_Fill_BC].",
+        "target_output": "[Data_Fill_BC]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Fill_CD]",
+        "dependencies": [
+          "[RULE_R4_VERTICAL]",
+          "[Data_Line_CD]"
+        ],
+        "instruction": "Task 3.3: Apply rule [RULE_R4_VERTICAL] to input data [Data_Line_CD]. Save the List of Filled objects to node ID: [Data_Fill_CD].",
+        "target_output": "[Data_Fill_CD]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Fill_DA]",
+        "dependencies": [
+          "[RULE_R4_VERTICAL]",
+          "[Data_Line_DA]"
+        ],
+        "instruction": "Task 3.4: Apply rule [RULE_R4_VERTICAL] to input data [Data_Line_DA]. Save the List of Filled objects to node ID: [Data_Fill_DA].",
+        "target_output": "[Data_Fill_DA]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Create_State_Phase_3_Done]",
+        "dependencies": [
+          "[Data_Fill_AB]",
+          "[Data_Fill_BC]",
+          "[Data_Fill_CD]",
+          "[Data_Fill_DA]"
+        ],
+        "instruction": "Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE].",
+        "target_output": "[STATE_PHASE_3_DONE]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-15T10:57:07.455739+00:00",
+  "label": "TaskNodesList.compute",
+  "type": "TaskNodesList",
+  "data": {
+    "task_nodes": []
+  }
+}
+
+{
+  "ts": "2026-04-15T10:57:07.457231+00:00",
+  "label": "FinalPipelinePayload",
+  "type": "FinalPipelinePayload",
+  "data": {
+    "data_nodes": [],
+    "task_nodes": [
+      {
+        "id": "[Task_Compute_Data_B]",
+        "dependencies": [
+          "[RULE_R1]",
+          "[Data_A]",
+          "[Data_L]"
+        ],
+        "instruction": "Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].",
+        "target_output": "[Data_B]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_D]",
+        "dependencies": [
+          "[RULE_R2]",
+          "[Data_A]",
+          "[Data_L]"
+        ],
+        "instruction": "Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].",
+        "target_output": "[Data_D]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_C]",
+        "dependencies": [
+          "[RULE_R3]",
+          "[Data_B]",
+          "[Data_D]"
+        ],
+        "instruction": "Task 1.3: Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].",
+        "target_output": "[Data_C]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Create_State_Phase_1_Done]",
+        "dependencies": [
+          "[Data_B]",
+          "[Data_C]",
+          "[Data_D]"
+        ],
+        "instruction": "Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE].",
+        "target_output": "[STATE_PHASE_1_DONE]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Line_AB]",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_B]"
+        ],
+        "instruction": "Task 2.1: Create a Line from [Data_A] to [Data_B]. Save output to node ID: [Data_Line_AB].",
+        "target_output": "[Data_Line_AB]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Line_BC]",
+        "dependencies": [
+          "[Data_B]",
+          "[Data_C]"
+        ],
+        "instruction": "Task 2.2: Create a Line from [Data_B] to [Data_C]. Save output to node ID: [Data_Line_BC].",
+        "target_output": "[Data_Line_BC]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Line_CD]",
+        "dependencies": [
+          "[Data_C]",
+          "[Data_D]"
+        ],
+        "instruction": "Task 2.3: Create a Line from [Data_C] to [Data_D]. Save output to node ID: [Data_Line_CD].",
+        "target_output": "[Data_Line_CD]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Line_DA]",
+        "dependencies": [
+          "[Data_D]",
+          "[Data_A]"
+        ],
+        "instruction": "Task 2.4: Create a Line from [Data_D] to [Data_A]. Save output to node ID: [Data_Line_DA].",
+        "target_output": "[Data_Line_DA]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Create_State_Phase_2_Done]",
+        "dependencies": [
+          "[Data_Line_AB]",
+          "[Data_Line_BC]",
+          "[Data_Line_CD]",
+          "[Data_Line_DA]"
+        ],
+        "instruction": "Once all 4 lines are successfully derived, output a final status node named: [STATE_PHASE_2_DONE].",
+        "target_output": "[STATE_PHASE_2_DONE]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Fill_AB]",
+        "dependencies": [
+          "[RULE_R4_VERTICAL]",
+          "[Data_Line_AB]"
+        ],
+        "instruction": "Task 3.1: Apply rule [RULE_R4_VERTICAL] to input data [Data_Line_AB]. Save the List of Filled objects to node ID: [Data_Fill_AB].",
+        "target_output": "[Data_Fill_AB]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Fill_BC]",
+        "dependencies": [
+          "[RULE_R4_HORIZONTAL]",
+          "[Data_Line_BC]"
+        ],
+        "instruction": "Task 3.2: Apply rule [RULE_R4_HORIZONTAL] to input data [Data_Line_BC]. Save the List of Filled objects to node ID: [Data_Fill_BC].",
+        "target_output": "[Data_Fill_BC]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Fill_CD]",
+        "dependencies": [
+          "[RULE_R4_VERTICAL]",
+          "[Data_Line_CD]"
+        ],
+        "instruction": "Task 3.3: Apply rule [RULE_R4_VERTICAL] to input data [Data_Line_CD]. Save the List of Filled objects to node ID: [Data_Fill_CD].",
+        "target_output": "[Data_Fill_CD]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Compute_Data_Fill_DA]",
+        "dependencies": [
+          "[RULE_R4_VERTICAL]",
+          "[Data_Line_DA]"
+        ],
+        "instruction": "Task 3.4: Apply rule [RULE_R4_VERTICAL] to input data [Data_Line_DA]. Save the List of Filled objects to node ID: [Data_Fill_DA].",
+        "target_output": "[Data_Fill_DA]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "[Task_Create_State_Phase_3_Done]",
+        "dependencies": [
+          "[Data_Fill_AB]",
+          "[Data_Fill_BC]",
+          "[Data_Fill_CD]",
+          "[Data_Fill_DA]"
+        ],
+        "instruction": "Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE].",
+        "target_output": "[STATE_PHASE_3_DONE]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-15T10:57:12.147157+00:00",
   "label": "DataNode",
   "type": "DataNode",
   "data": {
-    "id": "[Data_B]",
+    "id": "[Data_L]",
     "content": {
-      "x": 4,
-      "y": 0
+      "sideLength": 4,
+      "dimensions": {
+        "rows": 4,
+        "columns": 4
+      }
     },
     "status": "READY"
   }
 }
 
 {
-  "ts": "2026-04-14T16:05:07.931322+00:00",
+  "ts": "2026-04-15T10:57:25.843674+00:00",
   "label": "DataNode",
   "type": "DataNode",
   "data": {
-    "id": "[Data_D]",
+    "id": "[Data_B]",
     "content": {
       "x": 0,
       "y": 4
@@ -27,7 +542,76 @@
 }
 
 {
-  "ts": "2026-04-14T16:05:10.878571+00:00",
+  "ts": "2026-04-15T10:57:28.190836+00:00",
+  "label": "DataNode",
+  "type": "DataNode",
+  "data": {
+    "id": "[Data_D]",
+    "content": {
+      "row": 4,
+      "col": 0
+    },
+    "status": "READY"
+  }
+}
+
+{
+  "ts": "2026-04-15T10:58:04.869857+00:00",
+  "label": "DataNode",
+  "type": "DataNode",
+  "data": {
+    "id": "[Data_Line_DA]",
+    "content": {
+      "line": {
+        "equation": "x = 0",
+        "point1": {
+          "x": 0,
+          "y": 0
+        },
+        "point2": {
+          "x": 0,
+          "y": 4
+        }
+      }
+    },
+    "status": "READY"
+  }
+}
+
+{
+  "ts": "2026-04-15T10:58:28.215684+00:00",
+  "label": "DataNode",
+  "type": "DataNode",
+  "data": {
+    "id": "[Data_Fill_DA]",
+    "content": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 4
+      }
+    ],
+    "status": "READY"
+  }
+}
+
+{
+  "ts": "2026-04-15T10:58:44.060771+00:00",
   "label": "DataNode",
   "type": "DataNode",
   "data": {
@@ -41,7 +625,7 @@
 }
 
 {
-  "ts": "2026-04-14T16:05:14.568986+00:00",
+  "ts": "2026-04-15T10:58:54.566923+00:00",
   "label": "DataNode",
   "type": "DataNode",
   "data": {
@@ -52,28 +636,8 @@
         "y": 0
       },
       "end": {
-        "x": 4,
-        "y": 0
-      }
-    },
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-14T16:05:21.071237+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[Data_Line_DA]",
-    "content": {
-      "start": {
         "x": 0,
         "y": 4
-      },
-      "end": {
-        "x": 0,
-        "y": 0
       }
     },
     "status": "READY"
@@ -81,36 +645,76 @@
 }
 
 {
-  "ts": "2026-04-14T16:05:24.261574+00:00",
+  "ts": "2026-04-15T10:59:02.286402+00:00",
   "label": "DataNode",
   "type": "DataNode",
   "data": {
     "id": "[STATE_PHASE_1_DONE]",
     "content": {
       "id": "[STATE_PHASE_1_DONE]",
-      "status": "completed"
+      "status": "complete"
     },
     "status": "READY"
   }
 }
 
 {
-  "ts": "2026-04-14T16:05:29.453700+00:00",
+  "ts": "2026-04-15T10:59:18.358760+00:00",
   "label": "DataNode",
   "type": "DataNode",
   "data": {
     "id": "[Data_Line_BC]",
     "content": {
-      "x": 4,
-      "y_start": 0,
-      "y_end": 4
+      "equation": "y = 4",
+      "points": [
+        {
+          "x": 0,
+          "y": 4
+        },
+        {
+          "x": 4,
+          "y": 4
+        }
+      ]
     },
     "status": "READY"
   }
 }
 
 {
-  "ts": "2026-04-14T16:05:34.875797+00:00",
+  "ts": "2026-04-15T11:00:25.083775+00:00",
+  "label": "DataNode",
+  "type": "DataNode",
+  "data": {
+    "id": "[Data_Fill_AB]",
+    "content": [
+      {
+        "r": 0,
+        "c": 0
+      },
+      {
+        "r": 1,
+        "c": 0
+      },
+      {
+        "r": 2,
+        "c": 0
+      },
+      {
+        "r": 3,
+        "c": 0
+      },
+      {
+        "r": 4,
+        "c": 0
+      }
+    ],
+    "status": "READY"
+  }
+}
+
+{
+  "ts": "2026-04-15T11:00:44.984172+00:00",
   "label": "DataNode",
   "type": "DataNode",
   "data": {
@@ -130,105 +734,27 @@
 }
 
 {
-  "ts": "2026-04-14T16:05:42.099367+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[Data_Fill_AB]",
-    "content": [
-      {
-        "x": 0,
-        "y": 0
-      },
-      {
-        "x": 1,
-        "y": 0
-      },
-      {
-        "x": 2,
-        "y": 0
-      },
-      {
-        "x": 3,
-        "y": 0
-      },
-      {
-        "x": 4,
-        "y": 0
-      }
-    ],
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-14T16:05:50.640133+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[Data_Fill_DA]",
-    "content": [
-      {
-        "x": 0,
-        "y": 4
-      },
-      {
-        "x": 0,
-        "y": 3
-      },
-      {
-        "x": 0,
-        "y": 2
-      },
-      {
-        "x": 0,
-        "y": 1
-      },
-      {
-        "x": 0,
-        "y": 0
-      }
-    ],
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-14T16:05:53.665255+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[STATE_PHASE_2_DONE]",
-    "content": {
-      "node_id": "[STATE_PHASE_2_DONE]",
-      "status": "DONE"
-    },
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-14T16:05:58.618745+00:00",
+  "ts": "2026-04-15T11:01:14.225266+00:00",
   "label": "DataNode",
   "type": "DataNode",
   "data": {
     "id": "[Data_Fill_BC]",
     "content": [
       {
-        "x": 4,
-        "y": 0
+        "x": 0,
+        "y": 4
       },
       {
-        "x": 4,
-        "y": 1
+        "x": 1,
+        "y": 4
       },
       {
-        "x": 4,
-        "y": 2
+        "x": 2,
+        "y": 4
       },
       {
-        "x": 4,
-        "y": 3
+        "x": 3,
+        "y": 4
       },
       {
         "x": 4,
@@ -240,7 +766,7 @@
 }
 
 {
-  "ts": "2026-04-14T16:06:04.798630+00:00",
+  "ts": "2026-04-15T11:01:39.167214+00:00",
   "label": "DataNode",
   "type": "DataNode",
   "data": {
@@ -272,14 +798,13 @@
 }
 
 {
-  "ts": "2026-04-14T16:06:11.879413+00:00",
+  "ts": "2026-04-15T11:02:16.405604+00:00",
   "label": "DataNode",
   "type": "DataNode",
   "data": {
     "id": "[STATE_PHASE_3_DONE]",
     "content": {
-      "id": "[STATE_PHASE_3_DONE]",
-      "status": "complete"
+      "id": "[STATE_PHASE_3_DONE]"
     },
     "status": "READY"
   }
