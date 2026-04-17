@@ -1,137 +1,120 @@
-import json
+"""
+DSPy test runner (mirrors `cognitive_tasks.py` behavior).
+
+This script:
+- Configures the global DSPy LM from `stateReasoning-1/.env`
+- Runs the DSPy pipeline (`process_query`) to produce a `FinalPipelinePayload`
+- Executes one sample COMPUTE task using `execute_compute_node`
+  against a tiny in-memory mock DB (no Neo4j required)
+"""
+
+from __future__ import annotations
+
+import asyncio
 import sys
-from typing import List
-from string import Template
-from pydantic import ValidationError
-import ollama
+from pathlib import Path
+from typing import Any, Dict, List
 
-# Imports from your local files
-from base import DynamicTaskGraph, TaskDecomposition
-from prompts import PROMPTS
 
-# ==========================================
-# 1. LLM AGENT ROUTERS
-# ==========================================
-def call_llm(system_prompt: str, user_prompt: str, target_model: str = "llama3.1") -> dict:
-    try:
-        response = ollama.chat(
-            model=target_model,
-            messages=[{'role': 'system', 'content': system_prompt}, {'role': 'user', 'content': user_prompt}],
-            options={"temperature": 0.0, "seed": 42},
-            format="json"
-        )
-        return json.loads(response['message']['content'])
-    except Exception as e:
-        print(f"\n❌ LLM ERROR: {e}")
-        sys.exit(1)
-
-def agent_decompose_phase(phase_text: str, current_data_nodes: List[str], available_skills: List[str]) -> TaskDecomposition:
-    print("\n🧠 [DECOMPOSER AGENT] Analyzing Phase Instructions...")
-    
-    system = f"""You are a graph compilation engine. Break the Phase into independent logical steps.
-    You MUST map the 'required_skills' array using ONLY these valid keys: {available_skills}
-    
-    OUTPUT STRICTLY IN JSON matching this schema:
-    {{
-      "phase_name": "String",
-      "tasks": [
-        {{
-          "task_id": "Unique_Task_Name",
-          "instruction": "What specifically to calculate/do",
-          "required_skills": ["VALID_SKILL_KEY"],
-          "dependencies": ["Data_A"], 
-          "output_key": "Data_B"
-        }}
-      ]
-    }}"""
-    
-    user = f"KNOWN DATA NODES IN GRAPH: {current_data_nodes}\n\nPHASE INSTRUCTIONS TO DECOMPOSE:\n{phase_text}"
-    
-    raw_json = call_llm(system, user)
-    try:
-        return TaskDecomposition(**raw_json)
-    except ValidationError as e:
-        print(f"❌ Decomposer schema failed: {e}")
-        sys.exit(1)
-
-def agent_execute_worker(task_id: str, graph: DynamicTaskGraph) -> dict:
-    task_attr = graph.G.nodes[task_id]
-    
-    # Fetch exact Context from Graph
-    deps = [u for u, v, d in graph.G.in_edges(task_id, data=True) if d['relation'] == 'REQUIRES']
-    context = "\n".join([f"{dep} = {json.dumps(graph.G.nodes[dep]['content'])}" for dep in deps])
-    
-    # Fetch exact Skills from PROMPTS dictionary
-    skills = "\n\n".join([PROMPTS.get(s, "") for s in task_attr['skills']])
-    
-    system = f"""{PROMPTS['SYS_001_PERSONA']}
-    {PROMPTS['DEF_PRIMITIVES']}
-    
-    Read the skills, apply them to the context, and output the resultant data.
-    OUTPUT STRICTLY IN JSON FORMAT. Do not nest the JSON inside markdown.
+def _prioritize_site_packages_over_local_dspy_folder() -> None:
     """
-    
-    user = f"AVAILABLE SKILLS:\n{skills}\n\nKNOWN CONTEXT:\n{context}\n\nYOUR TASK:\n{task_attr['instruction']}\n\nGenerate the JSON output for {task_attr['output_key']}."
-    
-    print(f"\n⚙️ [WORKER AGENT] Executing {task_id}...")
-    return call_llm(system, user)
+    Your repo contains a local folder named `stateReasoning-1/dspy/` which is NOT
+    the DSPy library. The actual DSPy library is also imported as `dspy`.
 
-# ==========================================
-# 2. THE MULTI-PHASE PIPELINE
-# ==========================================
-def run_autonomous_pipeline():
-    print("🚀 Initializing Dynamic Agentic Compiler...")
-    graph = DynamicTaskGraph()
-    
-    # 1. Inject Initial State Variables
-    dynamic_vars = {
-        "START_NODE": "A",
-        "LENGTH": "4"
+    To ensure `import dspy` resolves to the installed DSPy library (site-packages),
+    we move the script directory entry to the *end* of sys.path.
+
+    Then we add `stateReasoning-1/dspy/` directly to sys.path so that modules like
+    `pipeline.py` can be imported as `import pipeline`.
+    """
+    base_dir = Path(__file__).resolve().parent
+    dspy_dir = base_dir / "dspy"
+
+    # 1) Move the script directory (and '' = CWD) to end so it won't shadow site-packages `dspy`.
+    while "" in sys.path:
+        sys.path.remove("")
+    sys.path.append("")
+
+    base_str = str(base_dir)
+    while base_str in sys.path:
+        sys.path.remove(base_str)
+    sys.path.append(base_str)
+
+    # 2) Put the local pipeline module directory first.
+    dspy_str = str(dspy_dir)
+    if dspy_str not in sys.path:
+        sys.path.insert(0, dspy_str)
+
+
+class MockDB:
+    """
+    Minimal DB adapter implementing exactly what `ComputeNodeExecutor` needs.
+    """
+
+    def __init__(self) -> None:
+        self.data_nodes: Dict[str, Any] = {}
+        self.completed_tasks: List[str] = []
+
+    def upsert_data_node(self, data) -> None:
+        # `data` is a Pydantic model (DataNode); store by id for inspection
+        self.data_nodes[getattr(data, "id", "UNKNOWN")] = data
+        print(f"[MockDB] upsert_data_node: {data}")
+
+    def mark_task_complete(self, task_id: str) -> None:
+        self.completed_tasks.append(task_id)
+        print(f"[MockDB] mark_task_complete: {task_id}")
+
+
+def main() -> None:
+    _prioritize_site_packages_over_local_dspy_folder()
+
+    try:
+        # Local DSPy-based pipeline modules (stateReasoning-1/dspy/*.py)
+        from config import configure_lm  # type: ignore
+        from pipeline import QueryPipeline, process_query, execute_compute_node  # type: ignore
+    except Exception as e:
+        print("Failed to import the local DSPy pipeline modules.")
+        print("If the error mentions missing `dspy`, install DSPy in your venv:")
+        print(r"  .\venv\Scripts\python.exe -m pip install -U dspy-ai")
+        raise
+
+    # 1) Configure LM once (loads OPENROUTER_* from stateReasoning-1/.env)
+    configure_lm(backend="openrouter")
+
+    # 2) Run pipeline (router + fan-out agents)
+    pipeline = QueryPipeline()
+    query2 = """Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].
+Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].
+Task 1.3: Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].
+
+Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE]."""
+
+    result = asyncio.run(process_query(query2, pipeline))
+    print("\n=== FINAL PAYLOAD (process_query) ===")
+    print(result.model_dump_json(indent=2))
+
+    # 3) Execute a sample compute node (mock DB, no Neo4j)
+    db = MockDB()
+    sample_task = {
+        "id": "[Task_Phase_1_Step_1]",
+        "dependencies": ["[Data_A]", "[Data_L]", "[RULE_R1]"],
+        "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].",
+        "target_output": "[Data_B]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
     }
-    graph.add_data_node("Data_A", {"row": 2, "col": 3})
-    graph.add_data_node("Data_L", 4)
-    
-    # 2. Define execution sequence
-    phases_to_execute = ["TASK_PHASE_1", "TASK_PHASE_2", "TASK_PHASE_3"]
-    valid_skill_keys = list(PROMPTS.keys())
-    
-    # 3. Iterate through each Phase
-    for phase_key in phases_to_execute:
-        print(f"\n{'='*50}\n▶️ INITIATING {phase_key}\n{'='*50}")
-        
-        # Template Substitution
-        raw_phase_text = PROMPTS[phase_key]
-        substituted_phase_text = Template(raw_phase_text).safe_substitute(**dynamic_vars)
-        
-        known_nodes = [n for n, attr in graph.G.nodes(data=True) if attr.get("type") == "DataNode"]
-        
-        # Decompose Phase into DAG
-        decomposition = agent_decompose_phase(substituted_phase_text, known_nodes, valid_skill_keys)
-        graph.spawn_tasks(decomposition)
-        
-        # Resolve the DAG
-        loop_count = 1
-        while True:
-            ready_tasks = graph.get_executable_tasks()
-            
-            if not ready_tasks:
-                print(f"\n✅ DAG RESOLVED FOR {phase_key}: No pending executable tasks remain.")
-                break
-                
-            print(f"\n--- {phase_key} EXECUTION LOOP {loop_count} ---")
-            print(f"Found {len(ready_tasks)} executable tasks: {ready_tasks}")
-            
-            for task_id in ready_tasks:
-                result = agent_execute_worker(task_id, graph)
-                graph.complete_task(task_id, result)
-                
-            loop_count += 1
+    sample_dependencies = {
+        "[Data_A]": {"row": 0, "col": 0},
+        "[Data_L]": 4,
+        "[RULE_R1]": "INPUT: A Point P, an Integer Length L. OUTPUT: A new Point Q = (P.row, P.col + L).",
+    }
 
-    print("\n" + "="*50)
-    print("=== FINAL GRAPH DATA STATE ===")
-    for n, attr in graph.G.nodes(data=True):
-        if attr.get("type") == "DataNode":
-            print(f"{n} -> {attr.get('content')} | Status: {attr.get('status')}")
+    asyncio.run(execute_compute_node(sample_task, sample_dependencies, db))
+
+    print("\n=== MOCK DB STATE ===")
+    print(f"data_nodes keys: {list(db.data_nodes.keys())}")
+    print(f"completed_tasks: {db.completed_tasks}")
+
 
 if __name__ == "__main__":
-    run_autonomous_pipeline()
+    main()

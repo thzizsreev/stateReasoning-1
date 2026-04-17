@@ -12,7 +12,8 @@ from typing import Any, Dict
 from prompts import PROMPTS
 from base import Neo4jOrchestrator
 PYDANTIC_LOG_PATH = Path(__file__).resolve().parent / "docs" / "data" / "pydantic_outputs.jsonl"
-
+from config import configure_lm  # type: ignore
+#from pipeline import QueryPipeline, process_query, execute_compute_node
 
 def _clear_pydantic_log(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -282,10 +283,12 @@ async def execute_compute_node(task: dict, dependencies_data: list | dict, db, l
 
 
 if __name__ == "__main__":
-  PYDANTIC_LOG_PATH = Path(__file__).resolve().parent / "docs" / "data" / "pydantic_outputs.jsonl"
-  _clear_pydantic_log(PYDANTIC_LOG_PATH)
-  my_llm = OpenRouterClient()
-
+#   PYDANTIC_LOG_PATH = Path(__file__).resolve().parent / "docs" / "data" / "pydantic_outputs.jsonl"
+#   _clear_pydantic_log(PYDANTIC_LOG_PATH)
+  #my_llm = OpenRouterClient()
+  configure_lm(backend="openrouter")
+  pipeline = QueryPipeline()
+  
   query = """PHASE 1 — POINT DERIVATION (MANDATORY)
 
 Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].
@@ -312,45 +315,47 @@ Task 3.4: Apply [RULE_R4_VERTICAL] to [Data_Line_DA]. Save the List of Filled ob
 
 Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE]."""
 
+  result = asyncio.run(process_query(query, pipeline))
+  print("\n=== FINAL PAYLOAD (process_query) ===")
+  print(result.model_dump_json(indent=2))
+#   queries = [
+#   """The starting coordinates are [Origin_X]=0 and [Origin_Y]=0. Phase 1: Plot the [Base_Line] using [Rule_Horizontal]. Phase 2: Extrude the square to a 3D cube by applying [Rule_Z_Axis_Depth].""",
+#   #"""The radius of the circle is [Radius_R]=15cm. Calculate the total circumference using [Pi_Constant] and save to [Circle_Circumference].""",
+#   #"""Calculate the hypotenuse of [Triangle_A] and save to [Hypotenuse_Length]. Separately, execute the polygon rendering sequence: first render the [Vertex_List], then apply the [Fill_Shader].""",
+#   #"""Set the [Stroke_Width] to 5px. Calculate the interior angles of the [Hexagon_Shape] and save to [Interior_Angle_Value]. Also, run the fractal generation sequence: first duplicate the [Seed_Triangle], then scale it by [Scale_Factor_Half]."""
+#     ]
+#   test_task = {
+#         "id": "[Task_Phase_1_Step_1]",
+#         "dependencies": ["[Data_A]", "[Data_L]"],
+#         "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B]",
+#         "target_output": "[Data_B]",
+#         "task_type": "COMPUTE",   
+#         "status": "PENDING"
+#     }
 
-  queries = [
-  """The starting coordinates are [Origin_X]=0 and [Origin_Y]=0. Phase 1: Plot the [Base_Line] using [Rule_Horizontal]. Phase 2: Extrude the square to a 3D cube by applying [Rule_Z_Axis_Depth].""",
-  #"""The radius of the circle is [Radius_R]=15cm. Calculate the total circumference using [Pi_Constant] and save to [Circle_Circumference].""",
-  #"""Calculate the hypotenuse of [Triangle_A] and save to [Hypotenuse_Length]. Separately, execute the polygon rendering sequence: first render the [Vertex_List], then apply the [Fill_Shader].""",
-  #"""Set the [Stroke_Width] to 5px. Calculate the interior angles of the [Hexagon_Shape] and save to [Interior_Angle_Value]. Also, run the fractal generation sequence: first duplicate the [Seed_Triangle], then scale it by [Scale_Factor_Half]."""
-    ]
-  test_task = {
-        "id": "[Task_Phase_1_Step_1]",
-        "dependencies": ["[Data_A]", "[Data_L]"],
-        "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B]",
-        "target_output": "[Data_B]",
-        "task_type": "COMPUTE",   
-        "status": "PENDING"
-    }
-
-  test_dependencies = {
-        "[Data_A]": {"row": 0, "col": 0},
-        "[Data_L]": 4,
-        "[RULE_R1]": "INPUT: A Point P, an Integer Length L. OUTPUT: A new Point Q = (P.row, P.col + L)."
-    }
-  test_task_node = TaskNode(
-        id="[Task_Phase_1_Step_1]",
-        dependencies=["[Data_A]", "[Data_L]"],
-        instruction="Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B]",
-        target_output="[Data_B]",
-        task_type="COMPUTE",
-        status="PENDING"
-    )
-  #db = Neo4jOrchestrator(password="password")
-#   db.upsert_task(test_task_node)
-#   result = asyncio.run(execute_compute_node(test_task, test_dependencies, db, my_llm))
-#   print(result)
-#   print("done")
-#   db.close()
+#   test_dependencies = {
+#         "[Data_A]": {"row": 0, "col": 0},
+#         "[Data_L]": 4,
+#         "[RULE_R1]": "INPUT: A Point P, an Integer Length L. OUTPUT: A new Point Q = (P.row, P.col + L)."
+#     }
+#   test_task_node = TaskNode(
+#         id="[Task_Phase_1_Step_1]",
+#         dependencies=["[Data_A]", "[Data_L]"],
+#         instruction="Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B]",
+#         target_output="[Data_B]",
+#         task_type="COMPUTE",
+#         status="PENDING"
+#     )
+#   #db = Neo4jOrchestrator(password="password")
+# #   db.upsert_task(test_task_node)
+# #   result = asyncio.run(execute_compute_node(test_task, test_dependencies, db, my_llm))
+# #   print(result)
+# #   print("done")
+# #   db.close()
   
-  query2= """Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].
-Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].
-Task 1.3: Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].
+#   query2= """Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].
+# Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].
+# Task 1.3: Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].
 
-Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE]."""
-  asyncio.run(process_query(query2, my_llm))
+# Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE]."""
+#   asyncio.run(process_query(query2, my_llm))

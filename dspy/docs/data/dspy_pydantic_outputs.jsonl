@@ -1,0 +1,247 @@
+{
+  "ts": "2026-04-14T20:50:33.773731+00:00",
+  "label": "RouterDecision",
+  "type": "RouterDecision",
+  "data": {
+    "requires_data_extraction": true,
+    "data_snippet": "[Data_A], [Data_L], [Data_B], [Data_D], [Data_C], [Data_Line_AB], [Data_Line_BC], [Data_Line_CD], [Data_Line_DA], [Data_Fill_AB], [Data_Fill_BC], [Data_Fill_CD], [Data_Fill_DA]",
+    "requires_decomposition": true,
+    "decomposition_snippet": "PHASE 1, PHASE 2, PHASE 3",
+    "requires_computation": true,
+    "computation_snippet": "Apply [RULE_R1] to [Data_A] using length [Data_L], Apply [RULE_R2] to [Data_A] using length [Data_L], Apply [RULE_R3] using [Data_B] and [Data_D], Create a Horizontal Line from [Data_A] to [Data_B], Create a Vertical Line from [Data_B] to [Data_C], Create a Horizontal Line from [Data_C] to [Data_D], Create a Vertical Line from [Data_D] to [Data_A], Apply [RULE_R4_HORIZONTAL] to [Data_Line_AB], Apply [RULE_R4_VERTICAL] to [Data_Line_BC], Apply [RULE_R4_HORIZONTAL] to [Data_Line_CD], Apply [RULE_R4_VERTICAL] to [Data_Line_DA]"
+  }
+}
+
+{
+  "ts": "2026-04-14T20:50:38.024693+00:00",
+  "label": "TaskNodesList.compute",
+  "type": "TaskNodesList",
+  "data": {
+    "task_nodes": []
+  }
+}
+
+{
+  "ts": "2026-04-14T20:50:43.198782+00:00",
+  "label": "DataNodesList",
+  "type": "DataNodesList",
+  "data": {
+    "data_nodes": [
+      {
+        "id": "Data_A",
+        "content": "",
+        "status": "READY"
+      },
+      {
+        "id": "Data_L",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_B",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_D",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_C",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Line_AB",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Line_BC",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Line_CD",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Line_DA",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Fill_AB",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Fill_BC",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Fill_CD",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Fill_DA",
+        "content": null,
+        "status": "READY"
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-14T20:50:46.975770+00:00",
+  "label": "TaskNodesList.decomposer",
+  "type": "TaskNodesList",
+  "data": {
+    "task_nodes": [
+      {
+        "id": "PHASE_1",
+        "dependencies": [],
+        "instruction": "POINT DERIVATION",
+        "target_output": null,
+        "task_type": "DECOMPOSE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "PHASE_2",
+        "dependencies": [
+          "PHASE_1"
+        ],
+        "instruction": "LINE DERIVATION",
+        "target_output": null,
+        "task_type": "DECOMPOSE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "PHASE_3",
+        "dependencies": [
+          "PHASE_2"
+        ],
+        "instruction": "LINE FILLING",
+        "target_output": null,
+        "task_type": "DECOMPOSE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-14T20:50:46.976854+00:00",
+  "label": "FinalPipelinePayload",
+  "type": "FinalPipelinePayload",
+  "data": {
+    "data_nodes": [
+      {
+        "id": "Data_A",
+        "content": "",
+        "status": "READY"
+      },
+      {
+        "id": "Data_L",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_B",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_D",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_C",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Line_AB",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Line_BC",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Line_CD",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Line_DA",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Fill_AB",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Fill_BC",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Fill_CD",
+        "content": null,
+        "status": "READY"
+      },
+      {
+        "id": "Data_Fill_DA",
+        "content": null,
+        "status": "READY"
+      }
+    ],
+    "task_nodes": [
+      {
+        "id": "PHASE_1",
+        "dependencies": [],
+        "instruction": "POINT DERIVATION",
+        "target_output": null,
+        "task_type": "DECOMPOSE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "PHASE_2",
+        "dependencies": [
+          "PHASE_1"
+        ],
+        "instruction": "LINE DERIVATION",
+        "target_output": null,
+        "task_type": "DECOMPOSE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "PHASE_3",
+        "dependencies": [
+          "PHASE_2"
+        ],
+        "instruction": "LINE FILLING",
+        "target_output": null,
+        "task_type": "DECOMPOSE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+

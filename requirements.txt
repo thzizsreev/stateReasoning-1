@@ -2,3 +2,4 @@ pydantic
 ollama
 networkx
 neo4j
+openai
