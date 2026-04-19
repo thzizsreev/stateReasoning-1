@@ -14,7 +14,7 @@ from typing import Optional
 
 import dspy
 
-from pipeline import QueryPipeline, ComputeNodeExecutor, process_query, execute_compute_node
+#from pipeline import QueryPipeline, ComputeNodeExecutor, process_query, execute_compute_node
 
 _DEFAULT_DOTENV_PATH = Path(__file__).resolve().parents[1] / ".env"
 
@@ -57,7 +57,7 @@ def configure_lm(backend: str = "openrouter", model: Optional[str] = None):
     """
     if backend == "openrouter":
         _load_dotenv()
-        model = model or os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct")
+        model = "meta-llama/llama-3.1-8b-instruct"
         api_base = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
         if not os.getenv("OPENROUTER_API_KEY"):
             raise RuntimeError(
@@ -76,9 +76,10 @@ def configure_lm(backend: str = "openrouter", model: Optional[str] = None):
             max_tokens=2048,
         )
     elif backend == "ollama":
-        model = model or os.getenv("OLLAMA_MODEL", "mistral")
+        #model = model or os.getenv("OLLAMA_MODEL", "mistral")
         lm = dspy.LM(
-            model=f"ollama/{model}",
+            #model=f"ollama/{model}",
+            model="meta-llama/llama-3.1-8b-instruct",
             api_base="http://localhost:11434",
             temperature=0.0,
             max_tokens=2048,
@@ -99,16 +100,16 @@ def configure_lm(backend: str = "openrouter", model: Optional[str] = None):
     return lm
 
 
-if __name__ == "__main__":
-    configure_lm(backend="openrouter")
-    pipeline = QueryPipeline()
+# if __name__ == "__main__":
+#     configure_lm(backend="openrouter")
+#     pipeline = QueryPipeline()
 
-    query2 = """Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].
-Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].
-Task 1.3: Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].
+#     query2 = """Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].
+# Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].
+# Task 1.3: Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].
 
-Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE]."""
+# Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE]."""
 
-    result = asyncio.run(process_query(query2, pipeline))
-    print("\n=== FINAL PAYLOAD ===")
-    print(result.model_dump_json(indent=2))
+#     result = asyncio.run(process_query(query2, pipeline))
+#     print("\n=== FINAL PAYLOAD ===")
+#     print(result.model_dump_json(indent=2))

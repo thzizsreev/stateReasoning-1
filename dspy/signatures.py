@@ -1,171 +1,313 @@
-"""
-DSPy Signatures for the Multi-Agent Pipeline.
-
-Design contract preserved from original architecture:
-- Tunnel-vision framing: global_context and explicit_target are SEPARATE fields
-- Empty-array / null are valid outputs (not errors) — annotated in field descriptions
-- Named prohibition labels surface as desc= strings
-- Scratchpad only on Router and Execution Worker (not middle agents)
-"""
-
 import dspy
-from typing import Optional
+from typing import List, Literal, Optional, Any
+from schema import DataNode, TaskNode, RouterDecision
+from pydantic import BaseModel, Field
+#from schema import RouterDecision
+# 1. Define the exact JSON shape using Pydantic
 
+
+# 2. The Signature
+class RouterDecision(BaseModel):
+    # ---------------------------------------------------------
+    # 1. THE WORK (Snippets are generated FIRST)
+    # ---------------------------------------------------------
+    decomposition_snippet: str = Field(
+        description="Verbatim extraction of the ENTIRE macro-workflow. Must include all phases and steps without truncation. If not a workflow, output ''."
+    )
+    computation_snippet: str = Field(
+        description=(
+            "Verbatim extraction of an ATOMIC compute task. "
+            "CRITICAL PRIORITY RULE: If you extracted text into decomposition_snippet, this field MUST be an empty string ''. "
+            "Do not extract compute tasks from macro-workflows."
+        )
+    )
+    data_snippet: str = Field(
+        description="Verbatim extraction of static facts or node initializations. Empty string '' if there are no explicit static facts."
+    )
+
+    # ---------------------------------------------------------
+    # 2. THE CLASSIFICATION (Booleans are generated LAST)
+    # ---------------------------------------------------------
+    requires_decomposition: bool = Field(
+        description="MUST be True if decomposition_snippet contains text. MUST be False if it is empty."
+    )
+    requires_computation: bool = Field(
+        description="MUST be True if computation_snippet contains text. MUST be False if decomposition_snippet contains text."
+    )
+    requires_data_extraction: bool = Field(
+        description="MUST be True if data_snippet contains text. MUST be False if empty."
+    )
 
 class SemanticRouterSignature(dspy.Signature):
     """
-    Stage 1 (scan): Read the full query for surface signals.
-    Stage 2 (flag + slice): Set boolean flags and extract verbatim sub-strings.
-    DO NOT MASK INTENTS. Snippets must be verbatim substrings or empty string "".
+    You are the Metacognitive Router for an Autonomous HTN DAG Engine.
+    
+    Your sole purpose is to parse complex, multi-phase user workflows and route the exact text 
+    to three cognitive buckets: Data Extraction, Decomposition, and Computation.
+    
+    ENVIRONMENTAL CONTEXT (ONTOLOGY):
+    - DAG Engine: A system that executes mathematical and logical tasks in strict chronological order.
+    - Nodes (e.g., [Data_A], [STATE_DONE]): Discrete memory units.
+    - Rules (e.g., [RULE_R1]): Functions applied to Nodes.
+    - Decomposition: The act of defining phases and task sequences.
+    
+    THE ANTI-LAZINESS PROTOCOL (MANDATORY):
+    1. NO TRUNCATION: If a workflow contains 3 phases, your extracted snippets MUST contain the text for all 3 phases.
+    2. VERBATIM COPYING: You must copy/paste directly from the input. Do not paraphrase. Do not add commas or brackets that are not in the original text.
+    3. CONTINUOUS BLOCKS: A snippet must be a continuous, unbroken sequence of characters directly from the source text.
     """
+    user_query: str = dspy.InputField(desc="The massive, multi-phase workflow text provided by the environment.")
+    decision: RouterDecision = dspy.OutputField()
 
-    user_query: str = dspy.InputField(
-        desc="The raw user instruction to classify. DO NOT evaluate rules against transformed versions."
-    )
 
-    fact_extraction_scratchpad: str = dspy.OutputField(
-        desc=(
-            "Externalized scratchpad: list every token in user_query that looks like a named "
-            "data binding [Bracket_ID] or an explicit numeric/string literal. "
-            "This is your evidence base before setting flags."
+
+"-------------------------------Decomposer Agent Signature-------------------------------"
+
+ORCHESTRATION_END_ID = "[ORCHESTRATION_END]"
+ 
+ 
+# ============================================================================
+# OUTPUT SCHEMA
+# ============================================================================
+ 
+class DecomposerTaskNode(BaseModel):
+    id: str = Field(
+        description=(
+            "Unique bracketed identifier derived from what this task does. "
+            "Format: [Task_<verb>_<noun>]. Example: [Task_Analyze_Contract]. "
+            "Exception: the final terminal task must always use the reserved ID [Task_Finalize_Orchestration]."
         )
     )
-    requires_data_extraction: bool = dspy.OutputField(
-        desc="True if the query contains explicit named values or literals to extract as DataNodes."
+    instruction: str = Field(
+        description=(
+            "A self-contained instruction with enough context to execute independently. "
+            "Reference dependency outputs by their [BracketedID] where needed. "
+            
+        )
     )
-    requires_decomposition: bool = dspy.OutputField(
-        desc="True if the query contains multi-step workflow phases or sequential task milestones."
+    dependencies: List[str] = Field(
+        description=(
+            "Bracketed IDs this task must wait for before executing. "
+            "Include only what this task genuinely cannot start without. "
+            "it must not fire until all results are ready."
+            "Format: [BracketedID]. Empty list if no prerequisites."
+        )
     )
-    requires_computation: bool = dspy.OutputField(
-        desc="True if the query contains atomic compute steps that apply a rule to produce an output node."
+    task_type: Literal["COMPUTE", "DECOMPOSE", "EXPAND", "OUTPUT"] = Field(
+        description=(
+            "COMPUTE: single atomic action with a deterministic output. "
+            "DECOMPOSE: too broad — needs further breakdown. "
+            "EXPAND: underspecified — missing context that must be elicited. "
+            "OUTPUT: the terminal task that writes [ORCHESTRATION_END] and concludes execution."
+        )
     )
-    data_snippet: str = dspy.OutputField(
-        desc='Verbatim substring of user_query containing only the data/fact portion. "" if requires_data_extraction is False.'
+    target_output: Optional[str] = Field(
+        default=None,
+        description=(
+            "The [BracketedID] this task produces. "
+            "Declare for COMPUTE only. Leave null for DECOMPOSE and EXPAND. "
+            "For OUTPUT task: always declare [ORCHESTRATION_END] here."
+        )
     )
-    decomposition_snippet: str = dspy.OutputField(
-        desc='Verbatim substring of user_query containing only the decomposition/phase portion. "" if requires_decomposition is False.'
+    description: Optional[str] = Field(
+        default=None,
+        description=(
+            "Required only for the OUTPUT terminal task. "
+            "Must explicitly list the [BracketedID]s of every node containing user-facing results. "
+            "Example: 'Concludes orchestration. User results are in [Data_FinalReport] and [Data_Summary].'"
+            "For all other tasks: omit."
+        )
     )
-    computation_snippet: str = dspy.OutputField(
-        desc='Verbatim substring of user_query containing only the atomic compute steps. "" if requires_computation is False.'
+ 
+ 
+class DecomposerDecision(BaseModel):
+    chronological_scratchpad: str = Field(
+        description=(
+            "Plan before producing tasks: "
+            "What is the ultimate goal? "
+            "What distinct pieces of work are needed? "
+            "What depends on what? "
+            "Which pieces are atomic, which need breakdown, which are missing context? "
+            "What are the final user-facing output nodes that must exist before orchestration ends?"
+        )
     )
-
-
-class DataExtractorSignature(dspy.Signature):
+    extracted_tasks: List[DecomposerTaskNode] = Field(
+        description=(
+            "The execution plan as ordered TaskNodes. "
+            "Tasks must appear after their dependencies. "
+            "The final task must always be type OUTPUT, target_output [ORCHESTRATION_END], "
+            "with all user-facing result nodes declared in its dependencies and description. "
+            "Return [] only if the input is already a single atomic action."
+        )
+    )
+ 
+ 
+# ============================================================================
+# DSPY SIGNATURE
+# ============================================================================
+ 
+class DecomposerSignature(dspy.Signature):
     """
-    Cognitive steps:
-    1. Scan for [Bracket_ID]=<value> patterns.
-    2. Scan for plain numeric/string literals bound to a named identifier.
-    3. For each found: id=[Bracket_ID], content=<value>, status="READY".
-    NO EMPTY DATA SHELLS. NO SCHEMA FITTING. Return {data_nodes: []} if nothing found.
+    You are the Decomposer Agent — a Planner for a DAG execution engine.
+ 
+    YOUR JOB: Break any request into an executable plan of interdependent tasks.
+ 
+    BEHAVIORAL GUIDELINES:
+    - Derive task structure from intent. Explicit steps are not required in the input.
+    - Each task must carry one responsibility. Split when in doubt.
+    - Model dependencies honestly — if Task B needs Task A's result, declare it.
+    - Do not execute. You produce instructions, never answers or computed values.
+    - When a piece of work is too vague to plan, mark it EXPAND rather than guessing.
+    - Any domain is valid. Plan with the same rigor for law, geometry, medicine, or code.
+ 
+    TERMINAL TASK (MANDATORY):
+    For the terminal task: instruction must state which output nodes contain the user's results and declare that it will write [ORCHESTRATION_END] to signal completion.
+    Every plan must end with exactly one OUTPUT task that:
+    - Has target_output: [ORCHESTRATION_END]
+    - Lists every user-facing result node in its dependencies
+    - Describes which nodes contain the results the user asked for
+    - The terminal task must list every final user-facing output node as a dependency but not as a dependency itself.   
+    This task signals the orchestration engine to halt. Without it, execution runs forever.
+    
     """
-
-    global_context: str = dspy.InputField(
-        desc="Full original query. FOR REFERENCE ONLY. Do NOT extract from this."
-    )
+ 
     explicit_target: str = dspy.InputField(
-        desc="The scoped data snippet. Apply your extraction rules ONLY to this text."
+        desc="The request to plan. Any domain, any structure — derive the task plan from its intent."
     )
+ 
+    decision: DecomposerDecision = dspy.OutputField()
 
-    data_nodes: list[dict] = dspy.OutputField(
-        desc=(
-            "List of DataNode objects: [{id: str, content: any, status: 'READY'}]. "
-            "content must be the literal parsed value, never a placeholder. "
-            "Return [] if no explicit values are present. NO SCHEMA FITTING."
+# 3. The Module with Assertions
+"-------------------------------Compute Agent Signature-------------------------------"
+class ComputeOutputNode(BaseModel):
+    id: str = Field(
+        description=(
+            "The [BracketedID] of the data node being produced. "
+            "Must match target_output_id exactly."
         )
     )
-
-
-class TaskDecomposerSignature(dspy.Signature):
-    """
-    Cognitive steps:
-    1. Identify top-level phases or milestones.
-    2. For each phase: if it contains sub-tasks → DECOMPOSE. If it IS atomic → COMPUTE.
-    3. Extract dependencies (inputs only, NOT the IDs the task generates).
-    4. target_output: null for DECOMPOSE nodes, required for COMPUTE nodes.
-    5. DO NOT extract STATE_* terminal nodes as tasks.
-    NO INVENTED TYPES. NO SCHEMA FITTING. Return {task_nodes: []} on non-workflow input.
-    """
-
-    global_context: str = dspy.InputField(
-        desc="Full original query. FOR REFERENCE ONLY."
-    )
-    explicit_target: str = dspy.InputField(
-        desc="The scoped decomposition snippet. Apply ONLY to this text."
-    )
-
-    task_nodes: list[dict] = dspy.OutputField(
-        desc=(
-            "List of TaskNode objects: "
-            "[{id: str, instruction: str, dependencies: [str], task_type: 'DECOMPOSE'|'COMPUTE', "
-            "target_output: str|null, status: 'PENDING'}]. "
-            "target_output is null for DECOMPOSE, required for COMPUTE. "
-            "dependencies: input node IDs only — never the node this task will produce. "
-            "Return [] if no workflow structure is present."
+    content: Any = Field(
+        default=None,
+        description=(
+            "The computed result. Any type: number, string, list, dict, expression. "
+            "Null if execution cannot complete — never fabricate a value."
         )
     )
-
-
+    description: str = Field(
+        description=(
+            "One sentence describing what this node holds and how it was derived."
+        )
+    )
+ 
+ 
+class ComputeDecision(BaseModel):
+    reasoning: str = Field(
+        description=(
+            "Full execution trace: identify the operation, bind each dependency to its value, "
+            "show every intermediate step, state the result. "
+            "Be explicit — this is the audit trail."
+        )
+    )
+    output_node: Optional[ComputeOutputNode] = Field(
+        default=None,
+        description=(
+            "The produced DataNode. "
+            "Null if a required dependency is missing or execution fails — halt cleanly."
+        )
+    )
+ 
+ 
+# ============================================================================
+# DSPY SIGNATURE
+# ============================================================================
+ 
 class ComputeAgentSignature(dspy.Signature):
     """
-    Cognitive steps:
-    1. Scan for atomic steps: a single rule applied to inputs → single output node.
-    2. Extract the verbatim instruction text (do not paraphrase).
-    3. Extract input dependency IDs only (not the target_output ID).
-    4. target_output: always required — infer from context if not stated explicitly.
-    5. task_type is always "COMPUTE" for every node produced.
-    NO INVENTED TYPES. NO SCHEMA FITTING. Return {task_nodes: []} on multi-step or pure-fact input.
+    You are the Compute Agent — the Atomic Executor for a DAG execution engine.
+ 
+    YOUR JOB: Execute one instruction using the provided dependency values and produce one DataNode.
+ 
+    BEHAVIORAL GUIDELINES:
+    - Treat injected dependencies as ground truth. Do not assume values not present.
+    - If a required value is missing, return null — do not approximate or skip.
+    - Show your work in reasoning before producing output. The trace matters.
+    - One instruction produces exactly one output node.
+    - Any domain is valid: compute math, format legal text, classify medical data, anything.
     """
-
-    global_context: str = dspy.InputField(
-        desc="Full original query. FOR REFERENCE ONLY."
-    )
-    explicit_target: str = dspy.InputField(
-        desc="The scoped computation snippet. Apply ONLY to this text."
-    )
-
-    task_nodes: list[dict] = dspy.OutputField(
-        desc=(
-            "List of TaskNode objects with task_type always 'COMPUTE': "
-            "[{id: str, instruction: str, dependencies: [str], task_type: 'COMPUTE', "
-            "target_output: str, status: 'PENDING'}]. "
-            "instruction must be verbatim from the target text. "
-            "target_output is always non-null; infer if not explicitly stated. "
-            "Return [] if input is multi-phase or contains only data facts."
-        )
-    )
-
-
-class ExecutionWorkerSignature(dspy.Signature):
-    """
-    Cognitive steps:
-    1. Parse every dependency by its [ID] key — treat values as ground truth.
-    2. Identify the RULE dependency and the DATA dependencies.
-    3. Apply the rule to the data. Show all intermediate steps in reasoning.
-    4. Produce the exact content value for the target_output node.
-    ZERO HALLUCINATION. content: null on failure — no fabrication. NO EXTRA TEXT.
-    """
-
+ 
     dependencies_json: str = dspy.InputField(
         desc=(
-            "JSON object mapping [ID] → value for all pre-fetched dependencies. "
-            "Treat as ground truth. Do not invent values not present here."
+            "JSON object mapping [BracketedID] → value for all pre-fetched dependencies. "
+            "Ground truth — treat every value as exact."
         )
     )
     instruction: str = dspy.InputField(
-        desc="Verbatim instruction string from the TaskNode. Execute exactly this."
+        desc="The single atomic instruction to execute."
     )
+    target_output_id: str = dspy.InputField(
+        desc="The [BracketedID] your output_node.id must match exactly."
+    )
+ 
+    decision: ComputeDecision = dspy.OutputField()
 
-    reasoning: str = dspy.OutputField(
-        desc=(
-            "Step-by-step audit trail: show rule identification, data binding, "
-            "and each computation step. This is your scratchpad — be explicit."
+"-------------------------------Data Extractor Agent Signature-------------------------------"
+class ExtractedDataNode(BaseModel):
+    id: str = Field(
+        description=(
+            "A [BracketedID] label for this value. "
+            "Use the source text's name if one exists. "
+            "Otherwise derive a concise, descriptive label from the value's role. "
+            "Reflect the logical concept, not the primitive type. "
+            "Example: [Data_StartPoint] not [Data_XCoordinate] and [Data_YCoordinate]."
         )
     )
-    content: Optional[str] = dspy.OutputField(
-        desc=(
-            "The computed result to store in the target DataNode. "
-            "Must be a concrete value (number, dict, string). "
-            "null if computation fails or inputs are insufficient. ZERO HALLUCINATION."
+    content: Any = Field(
+        description=(
+            "The value as it exists in the source text. "
+            "Preserve original form — do not normalize, convert, or simplify. "
+            "Grouped values (coordinates, dimensions, ranges, pairs) must be extracted "
+            "as a single compound value (list, dict, or tuple) under one id — not atomized. "
+            "Grouping preference: semantic/logical first, syntactic second "
+            "(parentheses, slashes, brackets are strong grouping signals in mathematical contexts)."
         )
     )
-
+    description: str = Field(
+        description=(
+            "One sentence describing what this value represents in the context of the request."
+        )
+    )
+ 
+ 
+class DataExtractorDecision(BaseModel):
+    extracted_nodes: List[ExtractedDataNode] = Field(
+        description=(
+            "Data nodes extracted from the source text. "
+            "Return [] if no explicit values are present — do not force extraction."
+        )
+    )
+ 
+ 
+# ============================================================================
+# DSPY SIGNATURE
+# ============================================================================
+ 
+class DataExtractorSignature(dspy.Signature):
+    """
+    You are the Data Extractor — a value harvester for a DAG execution engine.
+ 
+    YOUR JOB: Identify and extract explicitly stated values from the input text as DataNodes.
+ 
+    BEHAVIORAL GUIDELINES:
+    - Extract what is given, not what can be derived. If a value requires reasoning to exist, leave it.
+    - Be selective, not exhaustive. Serve the task — do not harvest every token that looks like a number.
+    - When values are logically or semantically linked, treat them as one entity under one ID.
+    - In mathematical or geometric contexts, let syntax guide grouping (parentheses, paired notation).
+    - If nothing is explicitly stated, return empty. Restraint is correct behavior here.
+    - Any domain is valid: mathematics, law, medicine, physics, literature, geometry, and beyond.
+    """
+ 
+    source_text: str = dspy.InputField(
+        desc="The text to extract values from. Any domain, any structure."
+    )
+ 
+    decision: DataExtractorDecision = dspy.OutputField()

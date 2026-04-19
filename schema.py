@@ -14,6 +14,10 @@ class DataNode(BaseModel):
         default=None, 
         description="The dynamic payload. Can be an int, dict, string, etc."
     )
+    description: str = Field(
+        default=None,
+        description="A description of the data node."
+    )
     status: Literal["UNRESOLVED", "READY"] = "UNRESOLVED"
 
 # ==========================================
@@ -72,14 +76,13 @@ class FinalPipelinePayload(BaseModel):
     task_nodes: List[TaskNode] = []
 
 class RouterDecision(BaseModel):
-    requires_data_extraction: bool = Field(description="True if explicit facts/numbers are provided.")
-    data_snippet: str = Field(description="The exact text substring containing the facts. Empty string if none.")
+    requires_data_extraction: bool = Field(description="True if query contains raw variables, constants, or node IDs (e.g., [Data_A]).")
+    requires_decomposition: bool = Field(description="True if query implies multi-step workflows, phases, or chronological dependencies.")
+    requires_computation: bool = Field(description="True if query applies a specific rule or formula to variables to generate a new output.")
     
-    requires_decomposition: bool
-    decomposition_snippet: str = Field(description="CRITICAL: Must be a continuous, verbatim substring copied EXACTLY from the prompt. DO NOT summarize. DO NOT use ellipses. If the workflow is 300 words, copy the exact first and last words to encompass it.")
-    
-    requires_computation: bool
-    computation_snippet: str = Field(description="CRITICAL: Must be a continuous, verbatim substring copied EXACTLY from the prompt. DO NOT summarize.")
+    data_snippet: str = Field(description="Verbatim substring containing ONLY the data/fact declarations. Empty string if none.")
+    decomposition_snippet: str = Field(description="Verbatim substring containing ONLY the structural phases/milestones. Empty string if none.")
+    computation_snippet: str = Field(description="Verbatim substring containing ONLY the atomic math/logic rules. Empty string if none.")
 # ==========================================
 # 2. ENFORCEMENT DEMONSTRATION
 # ==========================================

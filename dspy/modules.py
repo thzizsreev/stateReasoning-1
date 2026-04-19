@@ -1,200 +1,296 @@
-"""
-DSPy Modules for the Multi-Agent Pipeline.
-
-Each agent wraps a DSPy predictor and:
-- Handles tunnel-vision framing (global_context / explicit_target split)
-- Enforces the empty-array / null contract on output
-- Preserves the log_pydantic_output tracing pattern via structured logging
-- Is individually optimizable via dspy.Optimizer
-"""
-
 import dspy
+
+from signatures import SemanticRouterSignature
+#from schema import RouterDecision
+from signatures import RouterDecision, DecomposerSignature, DecomposerDecision
+from signatures import ComputeAgentSignature, ComputeDecision, DataExtractorDecision, DataExtractorSignature, ORCHESTRATION_END_ID
+from schema import DataNode
 import json
 from typing import Optional
 
-from signatures import (
-    SemanticRouterSignature,
-    DataExtractorSignature,
-    TaskDecomposerSignature,
-    ComputeAgentSignature,
-    ExecutionWorkerSignature,
-)
-from pydantic_logging import log_pydantic_output
-from schema import (
-    DataNode,
-    TaskNode,
-    DataNodesList,
-    TaskNodesList,
-    RouterDecision,
-)
+def verify_verbatim_snippets(inputs, outputs, trace=None):
+    # FIX: 'inputs' is passed as a raw dictionary, so use bracket notation
+    query = inputs["user_query"]
+    
+    # 'outputs' is the DSPy prediction object, so dot-notation still works here
+    decision = outputs.decision
+    
+    # If the LLM summarized instead of copying exactly, we return False (Failed).
+    if decision.data_snippet and decision.data_snippet not in query:
+        return False
+    if decision.decomposition_snippet and decision.decomposition_snippet not in query:
+        return False
+    if decision.computation_snippet and decision.computation_snippet not in query:
+        return False
+        
+    return True
 
-
+# 4. The Modern Module
 class SemanticRouter(dspy.Module):
-    """
-    Level 0: Evaluates intent and returns a routing decision with scoped snippets.
-    Uses ChainOfThought because the Router externalizes scratchpad reasoning.
-    """
-
     def __init__(self):
         super().__init__()
-        self.predict = dspy.ChainOfThought(SemanticRouterSignature)
+        
+        # We wrap the predictor in dspy.Refine!
+        # If verify_verbatim_snippets returns False, Refine automatically 
+        # loops back, scolds the LLM, and makes it try again (up to 3 times).
+        # The corrected initialization
+        base_predictor = dspy.ChainOfThought(SemanticRouterSignature)
+        self.route = dspy.Refine(
+            module=base_predictor, 
+            N=3, # Maximum number of self-correction attempts
+            reward_fn=verify_verbatim_snippets,
+            threshold=1.0 # <--- ADD THIS LINE: Stop looping when score reaches 1.0 (True)
+        )
 
     def forward(self, user_query: str) -> RouterDecision:
-        result = self.predict(user_query=user_query)
+        # We must pass the input as an 'example' so the reward_fn can read the original query
+        result = self.route(user_query=user_query)
+        return result.decision
+"- ------------------------------Decomposer Agent Module-------------------------------"
 
-        decision = RouterDecision(
-            requires_data_extraction=bool(result.requires_data_extraction),
-            requires_decomposition=bool(result.requires_decomposition),
-            requires_computation=bool(result.requires_computation),
-            data_snippet=result.data_snippet or "",
-            decomposition_snippet=result.decomposition_snippet or "",
-            computation_snippet=result.computation_snippet or "",
-        )
-
-        log_pydantic_output("RouterDecision", decision)
+def _validate_decision(decision: DecomposerDecision) -> DecomposerDecision:
+    """
+    Enforce structural contracts post-LLM.
+    - COMPUTE nodes must have target_output (warn if missing, don't drop)
+    - DECOMPOSE / EXPAND / OUTPUT nodes must have target_output=None
+    - A node's dependencies must never include its own target_output
+    """
+    cleaned = []
+    for node in decision.extracted_tasks:
+        updates = {}
+ 
+        # Enforce null contract for non-COMPUTE nodes
+        if node.task_type in ("DECOMPOSE", "EXPAND", "OUTPUT") and node.target_output is not None:
+            updates["target_output"] = None
+ 
+        # Warn if COMPUTE node is missing target_output (don't drop — let compiler learn)
+        if node.task_type == "COMPUTE" and not node.target_output:
+            print(f"  ⚠️ COMPUTE node {node.id} missing target_output — will not write to graph.")
+ 
+        # Remove self-reference from dependencies
+        if node.target_output:
+            safe_deps = [d for d in node.dependencies if d != node.target_output]
+            updates["dependencies"] = safe_deps
+ 
+        cleaned.append(node.model_copy(update=updates) if updates else node)
+ 
+    return decision.model_copy(update={"extracted_tasks": cleaned})
+ 
+ 
+# ============================================================================
+# DECOMPOSER MODULE
+# ============================================================================
+ 
+def _validate_decomposer_decision(decision: DecomposerDecision) -> DecomposerDecision:
+    """
+    Enforce structural contracts post-LLM.
+ 
+    Per-node contracts:
+    - COMPUTE: must have target_output (warn if missing)
+    - DECOMPOSE / EXPAND: target_output must be null
+    - OUTPUT: target_output must be [ORCHESTRATION_END], dependencies must be non-empty
+ 
+    Graph-level contracts:
+    - Exactly one OUTPUT node must exist
+    - Self-referencing dependencies are stripped
+    """
+    cleaned = []
+    output_nodes = []
+ 
+    for node in decision.extracted_tasks:
+        updates = {}
+ 
+        if node.task_type == "COMPUTE":
+            if not node.target_output:
+                print(f"  ⚠️ COMPUTE node {node.id} missing target_output — will not write to graph.")
+ 
+        elif node.task_type in ("DECOMPOSE", "EXPAND"):
+            if node.target_output is not None:
+                updates["target_output"] = None
+ 
+        elif node.task_type == "OUTPUT":
+            output_nodes.append(node.id)
+            # Enforce [ORCHESTRATION_END] as target
+            if node.target_output != ORCHESTRATION_END_ID:
+                print(f"  ⚠️ OUTPUT node {node.id} has wrong target_output '{node.target_output}'. "
+                      f"Correcting to {ORCHESTRATION_END_ID}.")
+                updates["target_output"] = ORCHESTRATION_END_ID
+            # Warn if no dependencies — premature halt risk
+            if not node.dependencies:
+                print(f"  ⚠️ OUTPUT node {node.id} has no dependencies — "
+                      f"risks firing before results are ready.")
+ 
+        # Strip self-referencing dependencies
+        if node.target_output or updates.get("target_output"):
+            target = updates.get("target_output", node.target_output)
+            safe_deps = [d for d in node.dependencies if d != target]
+            if safe_deps != node.dependencies:
+                updates["dependencies"] = safe_deps
+ 
+        cleaned.append(node.model_copy(update=updates) if updates else node)
+ 
+    # Graph-level: warn if no OUTPUT node exists
+    if not output_nodes:
+        print(f"  ⚠️ No OUTPUT node found — orchestration will never halt. "
+              f"Compiler must learn to always terminate the plan.")
+ 
+    # Graph-level: warn if multiple OUTPUT nodes exist
+    if len(output_nodes) > 1:
+        print(f"  ⚠️ Multiple OUTPUT nodes found: {output_nodes}. "
+              f"Only one terminal node is permitted.")
+ 
+    return decision.model_copy(update={"extracted_tasks": cleaned})
+ 
+ 
+# ============================================================================
+# DECOMPOSER MODULE
+# ============================================================================
+ 
+class DecomposerAgent(dspy.Module):
+    """
+    The Semantic Slicer.
+ 
+    Receives a scoped explicit_target from the Router.
+    Returns a DecomposerDecision containing ordered TaskNodes.
+ 
+    Uses ChainOfThought — the chronological_scratchpad in the signature
+    serves as the externalized reasoning step before structural output.
+    """
+ 
+    def __init__(self):
+        super().__init__()
+        self.prog = dspy.ChainOfThought(DecomposerSignature)
+ 
+    def forward(self, explicit_target: str) -> DecomposerDecision:
+        prediction = self.prog(explicit_target=explicit_target)
+        decision = prediction.decision
+ 
+        # Enforce structural contracts without touching LLM semantics
+        decision = _validate_decomposer_decision(decision)
+ 
         return decision
 
-
-class DataExtractor(dspy.Module):
+"-------------------------------Compute Agent Module-------------------------------"
+def _validate_compute_decision(decision: ComputeDecision, target_output_id: str) -> ComputeDecision:
     """
-    Child 1: Extracts hard-coded facts as DataNodes.
-    Uses Predict (no scratchpad — structural recognition).
+    Enforce output contracts post-LLM.
+    - output_node.id must match target_output_id exactly
+    - If mismatch: warn and null the node (don't silently write to wrong graph location)
     """
-
-    def __init__(self):
-        super().__init__()
-        self.predict = dspy.Predict(DataExtractorSignature)
-
-    def forward(self, global_context: str, explicit_target: str) -> DataNodesList:
-        result = self.predict(global_context=global_context, explicit_target=explicit_target)
-
-        raw_nodes = result.data_nodes if result.data_nodes else []
-        validated = []
-        for node in raw_nodes:
-            try:
-                validated.append(
-                    DataNode(
-                        id=node["id"],
-                        content=node.get("content"),
-                        status=node.get("status", "READY"),
-                    )
-                )
-            except Exception:
-                pass
-
-        output = DataNodesList(data_nodes=validated)
-        log_pydantic_output("DataNodesList", output)
-        return output
-
-
-class TaskDecomposer(dspy.Module):
-    """
-    Child 2: Slices workflow phases into DECOMPOSE/COMPUTE task blueprints.
-    Uses Predict (no scratchpad — structural recognition).
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.predict = dspy.Predict(TaskDecomposerSignature)
-
-    def forward(self, global_context: str, explicit_target: str) -> TaskNodesList:
-        result = self.predict(global_context=global_context, explicit_target=explicit_target)
-
-        raw_nodes = result.task_nodes if result.task_nodes else []
-        validated = []
-        for node in raw_nodes:
-            try:
-                validated.append(
-                    TaskNode(
-                        id=node["id"],
-                        instruction=node["instruction"],
-                        dependencies=node.get("dependencies", []),
-                        task_type=node.get("task_type", "DECOMPOSE"),
-                        target_output=node.get("target_output"),
-                        status=node.get("status", "PENDING"),
-                    )
-                )
-            except Exception:
-                pass
-
-        output = TaskNodesList(task_nodes=validated)
-        log_pydantic_output("TaskNodesList.decomposer", output)
-        return output
-
-
+    if decision.output_node is None:
+        return decision
+ 
+    if decision.output_node.id != target_output_id:
+        print(
+            f"  ⚠️ output_node.id mismatch: "
+            f"expected '{target_output_id}', got '{decision.output_node.id}'. "
+            f"Nulling output to prevent bad graph write."
+        )
+        return decision.model_copy(update={"output_node": None})
+ 
+    return decision
+ 
+ 
+# ============================================================================
+# COMPUTE AGENT MODULE
+# ============================================================================
+ 
 class ComputeAgent(dspy.Module):
     """
-    Child 3: Builds atomic COMPUTE task blueprints.
-    Uses Predict (no scratchpad — structural recognition).
+    The Atomic Executor.
+ 
+    Receives a resolved TaskNode (instruction + target_output_id) and
+    pre-fetched dependency values as a JSON string.
+ 
+    Returns a DataNode to be upserted into the graph by the orchestrator.
+    Uses ChainOfThought — reasoning scratchpad is mandatory for execution audit.
     """
-
+ 
     def __init__(self):
         super().__init__()
-        self.predict = dspy.Predict(ComputeAgentSignature)
-
-    def forward(self, global_context: str, explicit_target: str) -> TaskNodesList:
-        result = self.predict(global_context=global_context, explicit_target=explicit_target)
-
-        raw_nodes = result.task_nodes if result.task_nodes else []
-        validated = []
-        for node in raw_nodes:
-            try:
-                validated.append(
-                    TaskNode(
-                        id=node["id"],
-                        instruction=node["instruction"],
-                        dependencies=node.get("dependencies", []),
-                        task_type="COMPUTE",
-                        target_output=node.get("target_output"),
-                        status=node.get("status", "PENDING"),
-                    )
-                )
-            except Exception:
-                pass
-
-        output = TaskNodesList(task_nodes=validated)
-        log_pydantic_output("TaskNodesList.compute", output)
-        return output
-
-
-class ExecutionWorker(dspy.Module):
-    """
-    Leaf node executor: stateless, receives pre-fetched deps, writes one DataNode.
-    Uses ChainOfThought because the Worker externalizes reasoning as audit trail.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.predict = dspy.ChainOfThought(ExecutionWorkerSignature)
-
-    def forward(self, task: dict, dependencies_data: dict) -> Optional[DataNode]:
-        task_id = task["id"]
-        instruction = task["instruction"]
-        target_id = task.get("target_output")
-
-        if not target_id:
-            print(f"  ⚠️ Task {task_id} has no target_output. Aborting.")
-            return None
-
-        result = self.predict(
-            dependencies_json=json.dumps(dependencies_data, indent=2),
+        self.prog = dspy.ChainOfThought(ComputeAgentSignature)
+ 
+    def forward(
+        self,
+        instruction: str,
+        target_output_id: str,
+        #dependencies: dict,
+    ) -> Optional[DataNode]:
+        """
+        Args:
+            instruction:      Verbatim instruction string from the TaskNode.
+            target_output_id: The [BracketedID] this execution must produce.
+            dependencies:     Dict mapping [BracketedID] → resolved value.
+ 
+        Returns:
+            DataNode ready for graph upsert, or None if execution failed.
+        """
+        prediction = self.prog(
+            #dependencies_json=json.dumps(dependencies, indent=2),
             instruction=instruction,
+            target_output_id=target_output_id,
         )
-
-        reasoning = getattr(result, "reasoning", None) or "No reasoning provided."
-        content = getattr(result, "content", None)
-
-        print(f"  -> Reasoning: {reasoning}")
-
-        if content is None:
-            print(f"  ⚠️ Worker returned null content for {task_id}. Halting cascade.")
+ 
+        decision: ComputeDecision = prediction.decision
+        print(f"  -> Reasoning: {decision.reasoning}")
+ 
+        decision = _validate_compute_decision(decision, target_output_id)
+ 
+        if decision.output_node is None:
+            print(f"  ⚠️ Compute returned null for {target_output_id}. Cascade halted.")
             return None
-
-        output_node = DataNode(
-            id=target_id,
-            content=content,
-            status="READY",
+ 
+        return DataNode(
+            id=decision.output_node.id,
+            content=decision.output_node.content,
         )
-        log_pydantic_output("DataNode", output_node)
-        return output_node
 
+"-------------------------------Data Extractor Agent Module-------------------------------"
+def _validate_decision(decision: DataExtractorDecision) -> DataExtractorDecision:
+    """
+    Drop structurally invalid nodes.
+    - id must be non-empty
+    - content must not be None (extractor never fabricates)
+    """
+    valid = []
+    for node in decision.extracted_nodes:
+        if not node.id:
+            print(f"  ⚠️ Dropping node with empty id.")
+            continue
+        if node.content is None:
+            print(f"  ⚠️ Dropping node {node.id} with null content — extractor must not fabricate.")
+            continue
+        valid.append(node)
+ 
+    return decision.model_copy(update={"extracted_nodes": valid})
+ 
+ 
+# ============================================================================
+# DATA EXTRACTOR MODULE
+# ============================================================================
+ 
+class DataExtractorAgent(dspy.Module):
+    """
+    The Value Harvester.
+ 
+    Receives source text (full query or scoped snippet).
+    Returns a list of DataNodes ready for graph insertion.
+ 
+    Uses Predict — no scratchpad needed.
+    Extraction is structural recognition: find explicit values, label them, preserve them.
+    """
+ 
+    def __init__(self):
+        super().__init__()
+        self.prog = dspy.Predict(DataExtractorSignature)
+ 
+    def forward(self, source_text: str) -> list[DataNode]:
+        prediction = self.prog(source_text=source_text)
+        decision: DataExtractorDecision = prediction.decision
+ 
+        decision = _validate_decision(decision)
+ 
+        return [
+            DataNode(id=node.id, content=node.content, description=node.description)
+            for node in decision.extracted_nodes
+        ]

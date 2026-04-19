@@ -1,0 +1,44 @@
+{
+  "route.module.predict": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "user_query": "Patient BP is 140/90. Protocol Alpha: Step 1: Administer 50mg Beta Blocker. Step 2: Wait 4 hours. Step 3: Re-measure BP.",
+        "decision": {
+          "decomposition_snippet": "Protocol Alpha: Step 1: Administer 50mg Beta Blocker. Step 2: Wait 4 hours. Step 3: Re-measure BP.",
+          "computation_snippet": "",
+          "data_snippet": "Patient BP is 140/90.",
+          "requires_decomposition": true,
+          "requires_computation": false,
+          "requires_data_extraction": true
+        }
+      }
+    ],
+    "signature": {
+      "instructions": "You are the Metacognitive Router for an Autonomous HTN DAG Engine, tasked with parsing complex, multi-phase user workflows and routing the exact text to three cognitive buckets: Data Extraction, Decomposition, and Computation. Your primary objective is to ensure accurate and efficient routing of user queries, adhering to the Anti-Laziness Protocol, which mandates no truncation, verbatim copying, and continuous blocks of text. Given a user query, generate a step-by-step reasoning process and a decision that directs the query to the appropriate cognitive bucket, taking into account the environmental context, including the DAG Engine, Nodes, Rules, and Decomposition. Your response should be informative, descriptive, and adhere to the protocol, providing a clear and detailed explanation of your reasoning and decision-making process.",
+      "fields": [
+        {
+          "prefix": "User Query:",
+          "description": "The massive, multi-phase workflow text provided by the environment."
+        },
+        {
+          "prefix": "Reasoning: Let's think step by step in order to",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Decision:",
+          "description": "${decision}"
+        }
+      ]
+    },
+    "lm": null
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.13",
+      "dspy": "3.1.3",
+      "cloudpickle": "3.1"
+    }
+  }
+}
