@@ -311,3 +311,125 @@ class DataExtractorSignature(dspy.Signature):
     )
  
     decision: DataExtractorDecision = dspy.OutputField()
+"------------------------------------ expander agent signature ------------------------------------"
+class ExpanderTaskNode(BaseModel):
+    id: str = Field(
+        description=(
+            "Unique bracketed identifier for this task. "
+            "Format: [Task_<verb>_<noun>]. "
+            "Derive from what the task does, not what it needs."
+        )
+    )
+    instruction: str = Field(
+        description=(
+            "Self-contained instruction referencing all inputs and declaring its output. "
+            "Follow the contract: Action + Input [BracketedIDs] + 'store as [Output_ID]'. "
+            "Node IDs mentioned in the parent instruction already exist in the graph — "
+            "do not create tasks to produce them. "
+            "Node IDs not mentioned anywhere must be produced by a FETCH or COMPUTE task "
+            "before any task that needs them can declare them as a dependency."
+        )
+    )
+    dependencies: List[str] = Field(
+        description=(
+            "Bracketed IDs this task must wait for before executing. "
+            "Only include IDs that will exist when this task fires — "
+            "either present in the parent instruction or declared as target_output "
+            "by a prior task in this sub-graph. "
+            "Listing a phantom ID here causes permanent deadlock."
+        )
+    )
+    task_type: Literal["COMPUTE", "FETCH", "EXPAND", "DECOMPOSE"] = Field(
+        description=(
+            "COMPUTE: execute logic on already-present values to produce one output node. "
+            "FETCH: retrieve information not present in the graph from external sources "
+            "(RAG, databases, tools). Has no input dependencies — reaches outward only. "
+            "EXPAND: sub-goal is still too abstract or cognitively heavy — "
+            "pawn responsibility to a child sub-graph. "
+            "DECOMPOSE: instruction contains multiple distinct actions requiring structural breakdown."
+        )
+    )
+    target_output: Optional[str] = Field(
+        default=None,
+        description=(
+            "The [BracketedID] this task will produce and write to the graph. "
+            "COMPUTE: always declare. "
+            "FETCH: always declare — this is the node RAG results are stored in. "
+            "EXPAND: declare the container ID this sub-graph promises to fill. "
+            "DECOMPOSE: leave null — output resolved downstream."
+        )
+    )
+    description: Optional[str] = Field(
+        default=None,
+        description=(
+            "Required for the final inheritor task only. "
+            "Must state: which node ID is the container output this sub-graph fulfills, "
+            "and what it will contain when complete. "
+            "This is how the parent graph knows what to wait for. "
+            "Example: 'Final inheritor. Produces [Data_GwenAvgBill] — "
+            "the average of all bills, taxes, and fees for user Gwen.'"
+        )
+    )
+ 
+ 
+class ExpanderDecision(BaseModel):
+    reasoning: str = Field(
+        description=(
+            "Think through the goal before producing tasks: "
+            "What is being asked? "
+            "What information already exists (referenced in the instruction)? "
+            "What information is absent and must be fetched or derived? "
+            "What is the minimum viable path to fulfill the container output? "
+            "Is there any risk of cyclic dependency in the plan?"
+        )
+    )
+    extracted_tasks: List[ExpanderTaskNode] = Field(
+        description=(
+            "The sub-graph as ordered ExpanderTaskNodes. "
+            "Tasks must appear after their dependencies. "
+            "FETCH tasks first — they have no dependencies and unblock everything else. "
+            "Final task must declare the container output ID in its target_output and description. "
+            "Return [] only if a cyclic dependency makes execution impossible."
+        )
+    )
+    halt_reason: Optional[str] = Field(
+        default=None,
+        description=(
+            "Populated only when extracted_tasks is empty due to cyclic dependency detection. "
+            "Describe the cycle precisely: which nodes form the loop and why it cannot be resolved. "
+            "Leave null in all other cases — missing context is a task, not a halt condition."
+        )
+    )
+ 
+ 
+# ============================================================================
+# DSPY SIGNATURE
+# ============================================================================
+ 
+class ExpanderSignature(dspy.Signature):
+    """
+    You are the Expander Agent — a Sub-Graph Architect for a DAG execution engine.
+ 
+    YOUR JOB: Take an abstract or cognitively heavy goal and unroll it into
+    an executable sub-graph of interdependent tasks that collectively fulfill it.
+ 
+    BEHAVIORAL GUIDELINES:
+    - Identify what already exists: node IDs referenced in the instruction are present in the graph.
+    - Identify what is absent: anything not referenced must be fetched or derived before use.
+    - Prefer FETCH for external information, COMPUTE for logic on present values.
+    - Build the minimum viable path — do not over-architect.
+    - If a piece of work is still too abstract or heavy, spawn a child EXPAND rather than guessing.
+    - The final task in your sub-graph is the sole inheritor — it fulfills the container output.
+    - You never end global orchestration. You only build forward.
+    - Halt only if you detect a cyclic dependency that makes execution structurally impossible.
+    """
+ 
+    explicit_target: str = dspy.InputField(
+        desc=(
+            "The abstract goal or EXPAND task instruction to fulfill. "
+            "Node IDs mentioned here already exist in the graph. "
+            "Derive what needs to be fetched, computed, or further expanded from this context alone."
+        )
+    )
+ 
+    decision: ExpanderDecision = dspy.OutputField()

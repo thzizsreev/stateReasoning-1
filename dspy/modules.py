@@ -3,10 +3,12 @@ import dspy
 from signatures import SemanticRouterSignature
 #from schema import RouterDecision
 from signatures import RouterDecision, DecomposerSignature, DecomposerDecision
-from signatures import ComputeAgentSignature, ComputeDecision, DataExtractorDecision, DataExtractorSignature, ORCHESTRATION_END_ID
+from signatures import ComputeAgentSignature, ComputeDecision, DataExtractorDecision, DataExtractorSignature
+from signatures import ORCHESTRATION_END_ID, ExpanderDecision, ExpanderSignature, ExpanderTaskNode
 from schema import DataNode
 import json
 from typing import Optional
+from collections import defaultdict, deque
 
 def verify_verbatim_snippets(inputs, outputs, trace=None):
     # FIX: 'inputs' is passed as a raw dictionary, so use bracket notation
@@ -294,3 +296,149 @@ class DataExtractorAgent(dspy.Module):
             DataNode(id=node.id, content=node.content, description=node.description)
             for node in decision.extracted_nodes
         ]
+"-------------------------------Expander Agent Module-------------------------------"
+# ============================================================================
+# CYCLE DETECTION
+# ============================================================================
+ 
+def _has_cycle(tasks: list[ExpanderTaskNode]) -> Optional[str]:
+    """
+    Topological sort via Kahn's algorithm.
+    Returns a description of the cycle if found, None if graph is acyclic.
+    """
+    id_to_node = {t.id: t for t in tasks}
+    in_degree = defaultdict(int)
+    dependents = defaultdict(list)
+ 
+    for task in tasks:
+        for dep in task.dependencies:
+            if dep in id_to_node:
+                dependents[dep].append(task.id)
+                in_degree[task.id] += 1
+ 
+    queue = deque([t.id for t in tasks if in_degree[t.id] == 0])
+    visited = 0
+ 
+    while queue:
+        node = queue.popleft()
+        visited += 1
+        for dependent in dependents[node]:
+            in_degree[dependent] -= 1
+            if in_degree[dependent] == 0:
+                queue.append(dependent)
+ 
+    if visited != len(tasks):
+        cycle_nodes = [t.id for t in tasks if in_degree[t.id] > 0]
+        return (
+            f"Cyclic dependency detected among nodes: {cycle_nodes}. "
+            f"These nodes are waiting on each other and will never resolve."
+        )
+    return None
+ 
+ 
+# ============================================================================
+# VALIDATION HELPER
+# ============================================================================
+ 
+def _validate_decision(decision: ExpanderDecision) -> ExpanderDecision:
+    """
+    Enforce structural contracts post-LLM.
+ 
+    Per-node:
+    - FETCH: must have target_output, must have empty dependencies
+    - COMPUTE: must have target_output
+    - EXPAND: must have target_output (container promise)
+    - No task may target [ORCHESTRATION_END]
+    - Self-referencing dependencies stripped
+ 
+    Graph-level:
+    - Cycle detection — if found, null extracted_tasks and populate halt_reason
+    - Mutual exclusion: tasks XOR halt_reason
+    """
+    cleaned = []
+ 
+    for node in decision.extracted_tasks:
+        updates = {}
+ 
+        # No task may claim [ORCHESTRATION_END] — global singleton, Decomposer only
+        if node.target_output == ORCHESTRATION_END_ID:
+            print(f"  ⚠️ Node {node.id} attempted to write {ORCHESTRATION_END_ID}. "
+                  f"Expander does not have this power. Nulling target_output.")
+            updates["target_output"] = None
+ 
+        if node.task_type == "FETCH":
+            # FETCH reaches outward — no input dependencies
+            if node.dependencies:
+                print(f"  ⚠️ FETCH node {node.id} has dependencies {node.dependencies}. "
+                      f"FETCH nodes must have empty dependencies. Clearing.")
+                updates["dependencies"] = []
+            if not node.target_output and "target_output" not in updates:
+                print(f"  ⚠️ FETCH node {node.id} missing target_output — "
+                      f"RAG result has nowhere to land.")
+ 
+        elif node.task_type == "COMPUTE":
+            if not node.target_output and "target_output" not in updates:
+                print(f"  ⚠️ COMPUTE node {node.id} missing target_output.")
+ 
+        elif node.task_type == "EXPAND":
+            if not node.target_output and "target_output" not in updates:
+                print(f"  ⚠️ EXPAND node {node.id} missing container target_output — "
+                      f"parent graph has nothing to wait for.")
+ 
+        # Strip self-referencing dependencies
+        effective_target = updates.get("target_output", node.target_output)
+        if effective_target:
+            safe_deps = [d for d in node.dependencies if d != effective_target]
+            if safe_deps != node.dependencies:
+                updates["dependencies"] = safe_deps
+ 
+        cleaned.append(node.model_copy(update=updates) if updates else node)
+ 
+    # Cycle detection on cleaned graph
+    cycle_description = _has_cycle(cleaned)
+    if cycle_description:
+        print(f"  🔴 CYCLE DETECTED: {cycle_description}")
+        print(f"  🔴 Rejecting entire sub-graph. LLM must restructure.")
+        return decision.model_copy(update={
+            "extracted_tasks": [],
+            "halt_reason": cycle_description,
+        })
+ 
+    # Mutual exclusion enforcement
+    if cleaned and decision.halt_reason:
+        print(f"  ⚠️ Both extracted_tasks and halt_reason populated. "
+              f"Clearing halt_reason — tasks take precedence.")
+        return decision.model_copy(update={
+            "extracted_tasks": cleaned,
+            "halt_reason": None,
+        })
+ 
+    return decision.model_copy(update={"extracted_tasks": cleaned})
+ 
+ 
+# ============================================================================
+# EXPANDER MODULE
+# ============================================================================
+ 
+class ExpanderAgent(dspy.Module):
+    """
+    The Sub-Graph Architect.
+ 
+    Receives an abstract goal as explicit_target.
+    Returns an ExpanderDecision containing a forward-only sub-graph.
+ 
+    Uses ChainOfThought — reasoning scratchpad forces the LLM to map
+    existing vs absent nodes before producing tasks.
+    """
+ 
+    def __init__(self):
+        super().__init__()
+        self.prog = dspy.ChainOfThought(ExpanderSignature)
+ 
+    def forward(self, explicit_target: str) -> ExpanderDecision:
+        prediction = self.prog(explicit_target=explicit_target)
+        decision = prediction.decision
+ 
+        decision = _validate_decision(decision)
+ 
+        return decision
