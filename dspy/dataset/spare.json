@@ -1,0 +1,1337 @@
+[
+    {
+      "domain": "medicine",
+      "query": {
+        "instruction": "Parse 47 patient lab reports. Map each by anomaly type, reduce into frequency clusters, then consolidate a ranked internal triage summary held in namespace.",
+        "description": "Triage 47 lab reports.",
+        "dependencies": [
+          {
+            "id": "[Triage_Rules]",
+            "content": "Anomaly codes, severity bands, and clustering thresholds."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Patient_Lab_Reports]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw lab report data before any processing can begin. The 47 patient lab reports exist outside the current namespace � they are not provided inline in the prompt. I have enough context to initiate a FETCH task. I am pre-declaring [Raw_Lab_Reports_47].",
+            "dependencies": [],
+            "instruction": "Retrieve all 47 patient lab reports from the source data store and output as [Raw_Lab_Reports_47].",
+            "target_output": "[Raw_Lab_Reports_47]",
+            "description": "Fetches the 47 raw patient lab reports from the external data source into the namespace."
+          },
+          {
+            "id": "[Task_Decompose_Lab_Reports]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): 47 patient lab reports almost certainly exceed 2,000 words in aggregate and contain more than 10 distinct items. Feeding all 47 reports simultaneously into an 8B compute node would obliterate the context window and cause hallucination. I must spawn a DECOMPOSE task to delegate this volume to a chunking sub-router that can process reports in safe batches.",
+            "dependencies": [
+              "[Raw_Lab_Reports_47]",
+              "[Triage_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_Lab_Reports_47] into safe batches, parse each batch against the anomaly codes in [Triage_Rules] to extract and label every anomaly instance per patient, and output as [Parsed_Anomaly_Map].",
+            "target_output": "[Parsed_Anomaly_Map]",
+            "description": "Delegates high-volume parsing of 47 lab reports into a chunked sub-router, producing a per-patient anomaly map."
+          },
+          {
+            "id": "[Task_Expand_Cluster_And_Rank]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): The remaining pipeline requires more than two distinct transformations: (1) grouping anomalies by type across all patients, (2) applying frequency clustering using the thresholds in [Triage_Rules], (3) applying severity band scoring, and (4) ranking clusters into a consolidated triage summary. This is four chained logical transformations � well above the two-step threshold for an 8B compute node. I must spawn an EXPAND task to delegate this multi-step reasoning to a child cognitive architect.",
+            "dependencies": [
+              "[Parsed_Anomaly_Map]",
+              "[Triage_Rules]"
+            ],
+            "instruction": "Analyze the [Parsed_Anomaly_Map] using the severity bands and clustering thresholds in [Triage_Rules] to: (1) group anomalies by type, (2) reduce into frequency clusters, (3) score each cluster by severity band, and (4) produce a ranked consolidated triage summary, then output as [Ranked_Triage_Summary].",
+            "target_output": "[Ranked_Triage_Summary]",
+            "description": "Delegates multi-step anomaly clustering, severity scoring, and triage ranking to a child cognitive architect."
+          },
+          {
+            "id": "[Task_Compute_Persist_Triage_Summary]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): The [Ranked_Triage_Summary] is fully formed. The final step is a simple 1-to-1 write operation � persisting the ranked summary into the internal namespace as specified by the user. Context load is minimal and cognitive load is trivial. A COMPUTE node is appropriate here.",
+            "dependencies": [
+              "[Ranked_Triage_Summary]"
+            ],
+            "instruction": "Persist the [Ranked_Triage_Summary] into the internal namespace as the canonical triage record and output as [Namespace_Triage_Record].",
+            "target_output": "[Namespace_Triage_Record]",
+            "description": "Writes the finalized ranked triage summary into the internal namespace for downstream access."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "linguistics",
+      "query": {
+        "instruction": "Parse 38 multilingual transcripts: detect code-switching patterns, classify by syntactic shift type, score each for grammatical deviation frequency, then consolidate ranked findings into the internal namespace.",
+        "description": "Analyze 38 transcripts deeply.",
+        "dependencies": [
+          {
+            "id": "[Linguistics_Rules]",
+            "content": "Code-switching taxonomy, syntactic deviation scoring rubric."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_38_Transcripts]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw transcript data before any analysis can begin. The 38 multilingual transcripts exist outside the current namespace � they are not provided inline. I have a clear cardinality (38 transcripts) to pre-declare the output. I am spawning a FETCH task with no dependencies to retrieve them and pre-declaring [Raw_Multilingual_Transcripts].",
+            "dependencies": [],
+            "instruction": "Retrieve all 38 multilingual transcripts from the source repository or data store and output as [Raw_Multilingual_Transcripts].",
+            "target_output": "[Raw_Multilingual_Transcripts]",
+            "description": "Fetches all 38 raw multilingual transcripts from external storage into the namespace."
+          },
+          {
+            "id": "[Task_Decompose_Transcripts_Into_Chunks]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): 38 multilingual transcripts is a massive corpus � almost certainly exceeding 2,000 words and containing far more than 10 distinct items. Feeding all 38 transcripts simultaneously into an 8B compute node would obliterate the context window and cause hallucination. I must spawn a DECOMPOSE task to delegate chunking to a map-reduce sub-router that processes transcripts individually or in small batches.",
+            "dependencies": [
+              "[Raw_Multilingual_Transcripts]"
+            ],
+            "instruction": "Chunk the [Raw_Multilingual_Transcripts] into individual transcript units (one per chunk), route each chunk through isolated processing pipelines, and output as [Chunked_Transcript_Units].",
+            "target_output": "[Chunked_Transcript_Units]",
+            "description": "Breaks the 38-transcript corpus into individually processable units to prevent context window overflow."
+          },
+          {
+            "id": "[Task_Expand_Per_Transcript_Analysis]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): For each transcript chunk, the required work involves THREE distinct transformations: (1) detect code-switching patterns, (2) classify each pattern by syntactic shift type using the taxonomy in [Linguistics_Rules], and (3) score each transcript for grammatical deviation frequency using the rubric in [Linguistics_Rules]. This is well beyond the two-transformation threshold for an 8B compute node. I must spawn an EXPAND task to delegate this multi-step per-transcript reasoning to a child cognitive architect.",
+            "dependencies": [
+              "[Chunked_Transcript_Units]",
+              "[Linguistics_Rules]"
+            ],
+            "instruction": "For each unit in [Chunked_Transcript_Units]: (1) detect all code-switching patterns present, (2) classify each detected pattern by syntactic shift type using the taxonomy in [Linguistics_Rules], (3) score the transcript for grammatical deviation frequency using the scoring rubric in [Linguistics_Rules], and output as [Per_Transcript_Analysis_Results].",
+            "target_output": "[Per_Transcript_Analysis_Results]",
+            "description": "Delegates the three-stage per-transcript linguistic analysis (detect, classify, score) to a child architect for each chunked unit."
+          },
+          {
+            "id": "[Task_Compute_Consolidate_Ranked_Findings]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): With [Per_Transcript_Analysis_Results] fully populated for all 38 transcripts, the remaining work is a single aggregation and ranking operation � sorting transcripts by their grammatical deviation scores and consolidating the classified findings into a unified ranked report. This is a 1-to-1 mapping with low cognitive and context load. A COMPUTE node is appropriate here.",
+            "dependencies": [
+              "[Per_Transcript_Analysis_Results]"
+            ],
+            "instruction": "Aggregate all entries in [Per_Transcript_Analysis_Results], rank transcripts in descending order by grammatical deviation frequency score, consolidate the code-switching classifications and syntactic shift types into a unified structured report, and output as [Ranked_Linguistics_Findings].",
+            "target_output": "[Ranked_Linguistics_Findings]",
+            "description": "Aggregates and ranks all per-transcript analysis results into a single consolidated findings report for the internal namespace."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "software",
+      "query": {
+        "instruction": "Analyze 3 attached error logs. Identify root causes, rank by severity, and store the final diagnostic report in the internal namespace.",
+        "description": "Diagnose 3 logs internally.",
+        "dependencies": [
+          {
+            "id": "[Severity_Rules]",
+            "content": "Critical, High, Medium severity thresholds for software errors."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Error_Log_1]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw content of the first attached error log before any analysis can begin. The log exists outside the current namespace as an attachment. I am deploying a FETCH task to retrieve it and pre-declaring [Raw_Error_Log_1].",
+            "dependencies": [],
+            "instruction": "Retrieve the first attached error log file and output as [Raw_Error_Log_1].",
+            "target_output": "[Raw_Error_Log_1]",
+            "description": "Fetches the raw content of attached error log #1."
+          },
+          {
+            "id": "[Task_Fetch_Error_Log_2]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw content of the second attached error log. It exists outside the current namespace as a separate attachment. I am deploying a FETCH task to retrieve it and pre-declaring [Raw_Error_Log_2].",
+            "dependencies": [],
+            "instruction": "Retrieve the second attached error log file and output as [Raw_Error_Log_2].",
+            "target_output": "[Raw_Error_Log_2]",
+            "description": "Fetches the raw content of attached error log #2."
+          },
+          {
+            "id": "[Task_Fetch_Error_Log_3]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw content of the third attached error log. It exists outside the current namespace as a separate attachment. I am deploying a FETCH task to retrieve it and pre-declaring [Raw_Error_Log_3].",
+            "dependencies": [],
+            "instruction": "Retrieve the third attached error log file and output as [Raw_Error_Log_3].",
+            "target_output": "[Raw_Error_Log_3]",
+            "description": "Fetches the raw content of attached error log #3."
+          },
+          {
+            "id": "[Task_Decompose_Log_1]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): An error log can easily exceed 2,000 words and contain hundreds of distinct stack trace entries, timestamps, and error codes. I cannot safely feed a raw log directly to an 8B compute node without risking context window collapse. I must spawn a DECOMPOSE task to chunk and extract structured error signals from Log 1.",
+            "dependencies": [
+              "[Raw_Error_Log_1]"
+            ],
+            "instruction": "Chunk [Raw_Error_Log_1] into logical segments (e.g., by error event or timestamp block), extract the distinct error types, stack traces, and contextual metadata from each chunk, then compile the structured findings and output as [Structured_Errors_Log_1].",
+            "target_output": "[Structured_Errors_Log_1]",
+            "description": "Decomposes raw error log #1 into structured, chunked error records to prevent context overflow."
+          },
+          {
+            "id": "[Task_Decompose_Log_2]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): Same reasoning applies to Log 2. A raw error log of unknown size risks exceeding the 8B model's context threshold. I must spawn a DECOMPOSE task to safely chunk and extract structured error signals from Log 2.",
+            "dependencies": [
+              "[Raw_Error_Log_2]"
+            ],
+            "instruction": "Chunk [Raw_Error_Log_2] into logical segments (e.g., by error event or timestamp block), extract the distinct error types, stack traces, and contextual metadata from each chunk, then compile the structured findings and output as [Structured_Errors_Log_2].",
+            "target_output": "[Structured_Errors_Log_2]",
+            "description": "Decomposes raw error log #2 into structured, chunked error records to prevent context overflow."
+          },
+          {
+            "id": "[Task_Decompose_Log_3]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): Same reasoning applies to Log 3. A raw error log of unknown size risks exceeding the 8B model's context threshold. I must spawn a DECOMPOSE task to safely chunk and extract structured error signals from Log 3.",
+            "dependencies": [
+              "[Raw_Error_Log_3]"
+            ],
+            "instruction": "Chunk [Raw_Error_Log_3] into logical segments (e.g., by error event or timestamp block), extract the distinct error types, stack traces, and contextual metadata from each chunk, then compile the structured findings and output as [Structured_Errors_Log_3].",
+            "target_output": "[Structured_Errors_Log_3]",
+            "description": "Decomposes raw error log #3 into structured, chunked error records to prevent context overflow."
+          },
+          {
+            "id": "[Task_Expand_Root_Cause_Analysis]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): The next step requires: (1) analyzing structured errors from all three logs to identify root causes, (2) cross-referencing those root causes against the [Severity_Rules] to classify each, and (3) ranking all findings by severity tier. This is at minimum three distinct transformations � Analyze, Classify, Rank � which exceeds the 2-transformation threshold for an 8B compute node. I must spawn an EXPAND task to delegate this multi-step reasoning to a child cognitive architect.",
+            "dependencies": [
+              "[Structured_Errors_Log_1]",
+              "[Structured_Errors_Log_2]",
+              "[Structured_Errors_Log_3]",
+              "[Severity_Rules]"
+            ],
+            "instruction": "Analyze [Structured_Errors_Log_1], [Structured_Errors_Log_2], and [Structured_Errors_Log_3] to identify the root cause of each distinct error pattern, classify each root cause against the [Severity_Rules] (Critical, High, Medium), rank all identified root causes from highest to lowest severity, and output as [Ranked_Root_Cause_Analysis].",
+            "target_output": "[Ranked_Root_Cause_Analysis]",
+            "description": "Delegates multi-step root cause identification, severity classification, and ranking to a child architect."
+          },
+          {
+            "id": "[Task_Compute_Compile_Diagnostic_Report]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): I now have the fully analyzed and ranked findings in [Ranked_Root_Cause_Analysis]. The remaining task is a straightforward 1-to-1 formatting operation � assembling the ranked findings into a final structured diagnostic report document. Context load is bounded and cognitive load is a single transformation. A COMPUTE node is appropriate here.",
+            "dependencies": [
+              "[Ranked_Root_Cause_Analysis]"
+            ],
+            "instruction": "Format the [Ranked_Root_Cause_Analysis] into a structured final diagnostic report including an executive summary, per-log root cause breakdown, and the full severity-ranked findings list, and output as [Final_Diagnostic_Report].",
+            "target_output": "[Final_Diagnostic_Report]",
+            "description": "Compiles the ranked root cause analysis into a formatted final diagnostic report."
+          },
+          {
+            "id": "[Task_Compute_Store_Diagnostic_Report]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): The user explicitly requested the final report be stored in the internal namespace. This is a single direct write/store operation � a 1-to-1 transmission. Context and cognitive loads are minimal. A COMPUTE node is appropriate to execute the storage action.",
+            "dependencies": [
+              "[Final_Diagnostic_Report]"
+            ],
+            "instruction": "Store the [Final_Diagnostic_Report] in the internal namespace under a persistent diagnostic record key, and output as [Storage_Confirmation].",
+            "target_output": "[Storage_Confirmation]",
+            "description": "Persists the final diagnostic report to the internal namespace as requested."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "medicine",
+      "query": {
+        "instruction": "Process 38 patient lab reports: extract anomalies, cross-reference against baseline ranges, rank by severity score, then compile a differential diagnosis summary held in internal namespace.",
+        "description": "Analyze 38 lab reports.",
+        "dependencies": [
+          {
+            "id": "[Clinical_Rules]",
+            "content": "Baseline ranges, severity thresholds, and diagnosis classification codes."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Patient_Lab_Reports]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw lab report data before any processing can begin. The user references 38 patient lab reports that exist outside the current namespace. I have no explicit database URI or endpoint provided, but the reports are described as a concrete, retrievable set. I will spawn a FETCH task to retrieve them and pre-declare [Raw_Lab_Reports_38].",
+            "dependencies": [],
+            "instruction": "Retrieve all 38 patient lab reports from the internal clinical data store and output as [Raw_Lab_Reports_38].",
+            "target_output": "[Raw_Lab_Reports_38]",
+            "description": "Retrieves the full set of 38 raw patient lab reports from the internal namespace data store."
+          },
+          {
+            "id": "[Task_Decompose_Lab_Reports_Chunking]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): 38 distinct patient lab reports will far exceed the ~2,000-word context threshold for an 8B compute node. Each report contains multiple panels, values, and metadata fields. Feeding all 38 simultaneously would cause hallucination and dropped data. I must spawn a DECOMPOSE task to delegate this to a map-reduce sub-router that can chunk the reports into manageable batches (e.g., 5�6 reports per chunk) and extract anomalies from each batch independently.",
+            "dependencies": [
+              "[Raw_Lab_Reports_38]",
+              "[Clinical_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_Lab_Reports_38] into batches of no more than 6 reports each, extract all out-of-range values from each batch by comparing against the baseline ranges in [Clinical_Rules], tag each anomaly with its patient ID and lab panel, and output as [Extracted_Anomalies_All].",
+            "target_output": "[Extracted_Anomalies_All]",
+            "description": "Delegates high-volume anomaly extraction across 38 reports to a chunked map-reduce sub-router to avoid context window collapse."
+          },
+          {
+            "id": "[Task_Expand_Severity_Ranking_And_CrossRef]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): The next phase requires more than two distinct transformations: (1) cross-referencing each extracted anomaly against the severity thresholds in [Clinical_Rules], (2) computing a composite severity score per patient, and (3) ranking all patients by that score. This is a multi-step analytical pipeline that chains scoring logic, threshold comparison, and ordered ranking. An 8B compute node cannot reliably chain these three transformations in a single prompt. I am spawning an EXPAND task to delegate this to a child cognitive architect.",
+            "dependencies": [
+              "[Extracted_Anomalies_All]",
+              "[Clinical_Rules]"
+            ],
+            "instruction": "Using [Extracted_Anomalies_All] and the severity thresholds in [Clinical_Rules], cross-reference each anomaly against its clinical severity tier, compute a composite severity score per patient, rank all 38 patients from highest to lowest severity score, and output as [Severity_Ranked_Patient_List].",
+            "target_output": "[Severity_Ranked_Patient_List]",
+            "description": "Delegates multi-step severity scoring, threshold cross-referencing, and patient ranking to a child cognitive architect."
+          },
+          {
+            "id": "[Task_Expand_Differential_Diagnosis_Compilation]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): Compiling a differential diagnosis summary requires: (1) mapping each patient's anomaly profile to diagnosis classification codes from [Clinical_Rules], (2) generating candidate differential diagnoses per patient based on their ranked anomalies, and (3) assembling a structured summary document across all patients ordered by severity. This is at minimum three distinct transformations requiring clinical reasoning chains. I cannot collapse this into a single COMPUTE node. I am spawning a second EXPAND task to delegate this to a child cognitive architect.",
+            "dependencies": [
+              "[Severity_Ranked_Patient_List]",
+              "[Extracted_Anomalies_All]",
+              "[Clinical_Rules]"
+            ],
+            "instruction": "For each patient in [Severity_Ranked_Patient_List], map their anomaly profile from [Extracted_Anomalies_All] to the diagnosis classification codes in [Clinical_Rules], generate a ranked list of differential diagnoses per patient, and compile a structured differential diagnosis summary ordered by patient severity score, then output as [Differential_Diagnosis_Summary].",
+            "target_output": "[Differential_Diagnosis_Summary]",
+            "description": "Delegates clinical diagnosis code mapping, differential generation, and structured summary compilation to a child cognitive architect."
+          },
+          {
+            "id": "[Task_Compute_Store_Summary_To_Namespace]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): At this stage I have the fully compiled [Differential_Diagnosis_Summary]. The user specified the final output should be held in the internal namespace. This is a simple 1-to-1 write/store operation with no additional transformation required. Context and cognitive loads are both safe. I am delegating a COMPUTE task to execute the namespace commit.",
+            "dependencies": [
+              "[Differential_Diagnosis_Summary]"
+            ],
+            "instruction": "Persist the [Differential_Diagnosis_Summary] to the internal clinical namespace under a timestamped record key, confirm the write operation, and output as [Namespace_Commit_Receipt].",
+            "target_output": "[Namespace_Commit_Receipt]",
+            "description": "Commits the finalized differential diagnosis summary to the internal namespace and confirms successful storage."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "software",
+      "query": {
+        "instruction": "Parse 38 error logs: classify by severity, map to code modules, calculate recurrence frequency, then draft a ranked internal defect summary held in namespace.",
+        "description": "Analyze 38 error logs.",
+        "dependencies": [
+          {
+            "id": "[Severity_Rules]",
+            "content": "Critical, high, medium, low thresholds and module registry."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Error_Logs]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw error log data before any processing can begin. The 38 error logs exist outside the current namespace � they have not been provided inline. I am deploying a FETCH task to retrieve them and pre-declaring [Raw_Error_Logs].",
+            "dependencies": [],
+            "instruction": "Retrieve all 38 error logs from the target log repository or storage system and output as [Raw_Error_Logs].",
+            "target_output": "[Raw_Error_Logs]",
+            "description": "Retrieves the 38 raw error logs from external storage into the namespace."
+          },
+          {
+            "id": "[Task_Decompose_Error_Logs]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): 38 distinct error log entries, each potentially containing stack traces, timestamps, and metadata, will likely exceed 2,000 words in aggregate and contain well over 10 distinct items. Feeding this entire corpus to an 8B compute node in one shot risks context window collapse and hallucination. I must spawn a DECOMPOSE task to chunk the logs into manageable batches for parallel processing.",
+            "dependencies": [
+              "[Raw_Error_Logs]",
+              "[Severity_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_Error_Logs] into batches of no more than 8 logs each, apply the [Severity_Rules] thresholds and module registry to classify each log by severity and map it to its corresponding code module, then compile all batch results and output as [Classified_Log_Batches].",
+            "target_output": "[Classified_Log_Batches]",
+            "description": "Delegates high-volume log classification and module mapping to a map-reduce sub-router to avoid context window overflow."
+          },
+          {
+            "id": "[Task_Compute_Recurrence_Frequency]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): With the logs already classified and mapped in [Classified_Log_Batches], calculating recurrence frequency is a single, well-defined aggregation � count duplicate error signatures grouped by module and severity. This is a 1-to-1 transformation with low cognitive load. A COMPUTE node is appropriate here.",
+            "dependencies": [
+              "[Classified_Log_Batches]"
+            ],
+            "instruction": "Aggregate the [Classified_Log_Batches] to calculate the recurrence frequency of each unique error signature, grouped by severity level and code module, and output as [Recurrence_Frequency_Table].",
+            "target_output": "[Recurrence_Frequency_Table]",
+            "description": "Computes how often each error type recurs across the classified log dataset."
+          },
+          {
+            "id": "[Task_Expand_Defect_Summary]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): Drafting a ranked internal defect summary requires at minimum three distinct transformations: (1) synthesizing severity classifications with recurrence data to determine ranking priority, (2) applying editorial judgment to structure findings into a coherent internal report format, and (3) producing ranked narrative descriptions per defect. This exceeds the two-transformation threshold. I must spawn an EXPAND task to delegate this multi-step reasoning to a child cognitive architect.",
+            "dependencies": [
+              "[Classified_Log_Batches]",
+              "[Recurrence_Frequency_Table]",
+              "[Severity_Rules]"
+            ],
+            "instruction": "Analyze the [Classified_Log_Batches] and [Recurrence_Frequency_Table] against the [Severity_Rules] to synthesize a ranked internal defect summary � ordering defects by combined severity and recurrence priority, providing per-defect descriptions, affected modules, and recommended triage actions � and output as [Ranked_Defect_Summary].",
+            "target_output": "[Ranked_Defect_Summary]",
+            "description": "Delegates multi-step synthesis and editorial ranking logic to a child architect to produce the final defect summary."
+          },
+          {
+            "id": "[Task_Compute_Store_Summary_To_Namespace]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): The [Ranked_Defect_Summary] is fully formed. The final step is a simple write operation � persisting the completed summary into the namespace. Context and cognitive loads are minimal. A COMPUTE node is appropriate to execute this direct transmission.",
+            "dependencies": [
+              "[Ranked_Defect_Summary]"
+            ],
+            "instruction": "Persist the [Ranked_Defect_Summary] into the orchestration namespace as a finalized internal defect report and output as [Namespace_Defect_Report].",
+            "target_output": "[Namespace_Defect_Report]",
+            "description": "Stores the completed ranked defect summary into the namespace for downstream access."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "literature",
+      "query": {
+        "instruction": "Analyze 35 classic novel excerpts: classify by narrative voice, score emotional tone, cross-reference recurring motifs, then synthesize a ranked thematic index stored in internal namespace.",
+        "description": "Rank 35 literary excerpts.",
+        "dependencies": [
+          {
+            "id": "[Literary_Rules]",
+            "content": "Canonical motif codes and narrative voice taxonomy definitions."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Novel_Excerpts]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw source material before any analysis can begin. The 35 classic novel excerpts exist outside the current namespace � they have not been provided inline. I am deploying a FETCH task to retrieve all 35 excerpts and pre-declaring [Raw_Novel_Excerpts]. This node takes no dependencies as it is pulling from an external corpus.",
+            "dependencies": [],
+            "instruction": "Retrieve all 35 classic novel excerpts from the designated literary corpus or document store and output as [Raw_Novel_Excerpts].",
+            "target_output": "[Raw_Novel_Excerpts]",
+            "description": "Fetches all 35 raw novel excerpts from the external source before any processing begins."
+          },
+          {
+            "id": "[Task_Decompose_Excerpt_Corpus]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): 35 novel excerpts is a massive volume of text � easily exceeding 2,000 words and representing more than 10 distinct items. Feeding all 35 excerpts simultaneously into an 8B compute node would obliterate the context window and cause hallucination. I must spawn a DECOMPOSE task to delegate this to a chunking sub-router that can process excerpts in manageable batches (e.g., 5�7 excerpts per chunk), applying the [Literary_Rules] taxonomy to each chunk independently.",
+            "dependencies": [
+              "[Raw_Novel_Excerpts]",
+              "[Literary_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_Novel_Excerpts] into batches of no more than 7 excerpts each, apply the [Literary_Rules] taxonomy to each batch to classify narrative voice and score emotional tone per excerpt, then compile all batch results and output as [Per_Excerpt_Classification_Scores].",
+            "target_output": "[Per_Excerpt_Classification_Scores]",
+            "description": "Delegates the high-volume excerpt corpus to a map-reduce sub-router to prevent context window collapse during per-excerpt classification and scoring."
+          },
+          {
+            "id": "[Task_Expand_Motif_CrossReference]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): Cross-referencing recurring motifs across 35 classified excerpts requires multiple distinct transformations: (1) Extract motif signals from each excerpt's classification data, (2) Identify co-occurrence and recurrence patterns across the full set, (3) Map each motif to its canonical code from [Literary_Rules]. That is three distinct transformations � exceeding the 2-step threshold. An 8B node cannot chain this reasoning reliably in a single prompt. I am spawning an EXPAND task to delegate this multi-step motif analysis to a child cognitive architect.",
+            "dependencies": [
+              "[Per_Excerpt_Classification_Scores]",
+              "[Literary_Rules]"
+            ],
+            "instruction": "Analyze the [Per_Excerpt_Classification_Scores] to extract motif signals per excerpt, identify recurring and co-occurring motifs across all 35 excerpts, map each identified motif to its canonical code defined in [Literary_Rules], and output as [Motif_CrossReference_Map].",
+            "target_output": "[Motif_CrossReference_Map]",
+            "description": "Delegates multi-step motif extraction, recurrence detection, and canonical code mapping to a child cognitive architect."
+          },
+          {
+            "id": "[Task_Expand_Thematic_Synthesis]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): Synthesizing a ranked thematic index from the combined classification scores and motif cross-reference map requires multiple distinct transformations: (1) Aggregate narrative voice classifications, emotional tone scores, and motif frequencies into a unified thematic profile per excerpt, (2) Apply a ranking algorithm weighting motif recurrence, emotional intensity, and voice type, (3) Format the final ranked index for namespace storage. This is three distinct transformations � exceeding the 2-step threshold. I must spawn another EXPAND task to delegate this synthesis to a child cognitive architect.",
+            "dependencies": [
+              "[Per_Excerpt_Classification_Scores]",
+              "[Motif_CrossReference_Map]",
+              "[Literary_Rules]"
+            ],
+            "instruction": "Aggregate the [Per_Excerpt_Classification_Scores] and [Motif_CrossReference_Map] into unified thematic profiles per excerpt, apply a weighted ranking algorithm using motif recurrence, emotional tone scores, and narrative voice classifications as defined in [Literary_Rules], then format the result as a fully ranked thematic index and output as [Ranked_Thematic_Index].",
+            "target_output": "[Ranked_Thematic_Index]",
+            "description": "Delegates multi-step thematic aggregation, weighted ranking, and index formatting to a child cognitive architect."
+          },
+          {
+            "id": "[Task_Compute_Store_Thematic_Index]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): The [Ranked_Thematic_Index] is fully synthesized and ready. The only remaining action is a direct 1-to-1 write operation � storing the completed index into the internal namespace. Context load is minimal (a single structured document) and cognitive load is trivial (no transformation required). I am delegating a COMPUTE task to execute the storage operation.",
+            "dependencies": [
+              "[Ranked_Thematic_Index]"
+            ],
+            "instruction": "Persist the [Ranked_Thematic_Index] into the internal namespace under the key 'thematic_index_classic_novels' and output as [Namespace_Storage_Confirmation].",
+            "target_output": "[Namespace_Storage_Confirmation]",
+            "description": "Executes the final write of the ranked thematic index into the internal namespace for persistent storage."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "economics",
+      "query": {
+        "instruction": "Process 48 quarterly GDP indicators: map each into growth/contraction/stagnation segments, reduce by averaging segment scores, then consolidate a ranked internal summary table held in namespace.",
+        "description": "Map-reduce 48 indicators.",
+        "dependencies": [
+          {
+            "id": "[Econ_Rules]",
+            "content": "GDP thresholds: growth >2%, stagnation 0-2%, contraction <0%."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_48_GDP_Indicators]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw 48 quarterly GDP indicator values before any processing can begin. This data exists outside the current namespace � it has not been provided inline. I am deploying a FETCH task to retrieve all 48 quarterly GDP indicators and pre-declaring [Raw_48_GDP_Indicators]. No dependencies are required for a FETCH node.",
+            "dependencies": [],
+            "instruction": "Retrieve all 48 quarterly GDP indicator values from the economic data source and output as [Raw_48_GDP_Indicators].",
+            "target_output": "[Raw_48_GDP_Indicators]",
+            "description": "Fetches the complete set of 48 raw quarterly GDP indicator values from the external data source."
+          },
+          {
+            "id": "[Task_Decompose_Segment_Mapping]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): I have 48 distinct quarterly indicators to classify. This exceeds the 10-item threshold for a single 8B compute node � feeding all 48 values plus the classification rules into one prompt risks hallucination and dropped items. I must spawn a DECOMPOSE task to delegate this to a chunking sub-router that can process the indicators in safe batches, applying the [Econ_Rules] thresholds (growth >2%, stagnation 0�2%, contraction <0%) to each item and labeling it accordingly.",
+            "dependencies": [
+              "[Raw_48_GDP_Indicators]",
+              "[Econ_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_48_GDP_Indicators] into safe batches, apply the segment classification rules from [Econ_Rules] (growth >2%, stagnation 0�2%, contraction <0%) to each indicator, label every indicator with its segment, and output as [Segmented_GDP_Indicators].",
+            "target_output": "[Segmented_GDP_Indicators]",
+            "description": "Delegates the bulk classification of all 48 indicators into growth/contraction/stagnation segments via a map-reduce sub-router to avoid context window overflow."
+          },
+          {
+            "id": "[Task_Compute_Reduce_Segment_Averages]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): With the [Segmented_GDP_Indicators] already labeled, the reduction step is a straightforward single transformation � group by segment and compute the arithmetic mean for each group (growth, stagnation, contraction). This is a 1-to-1 aggregation with no branching logic. Context load is safe since the segmented output is a compact labeled list. I am delegating a COMPUTE task.",
+            "dependencies": [
+              "[Segmented_GDP_Indicators]"
+            ],
+            "instruction": "Group the [Segmented_GDP_Indicators] by their segment labels (growth, stagnation, contraction), compute the arithmetic average score for each segment group, and output as [Segment_Averaged_Scores].",
+            "target_output": "[Segment_Averaged_Scores]",
+            "description": "Reduces the segmented indicators by computing the average score per segment, producing three aggregate values."
+          },
+          {
+            "id": "[Task_Compute_Consolidate_Ranked_Summary_Table]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): I now have the [Segment_Averaged_Scores] and the original [Segmented_GDP_Indicators]. The final step is a single formatting transformation � rank the segments by their averaged scores and consolidate all data into a structured summary table held in namespace. The cognitive load is low (one transformation: rank + format) and the context load is compact. I am delegating a COMPUTE task to execute this consolidation.",
+            "dependencies": [
+              "[Segmented_GDP_Indicators]",
+              "[Segment_Averaged_Scores]"
+            ],
+            "instruction": "Using the [Segmented_GDP_Indicators] and [Segment_Averaged_Scores], rank the three segments (growth, stagnation, contraction) by their average scores in descending order, consolidate all indicator-to-segment mappings and segment averages into a structured ranked summary table held in namespace, and output as [Ranked_GDP_Summary_Table].",
+            "target_output": "[Ranked_GDP_Summary_Table]",
+            "description": "Consolidates the segment averages and all indicator mappings into a final ranked internal summary table stored in the orchestration namespace."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "medicine",
+      "query": {
+        "instruction": "Parse 47 patient lab reports. Map each to risk tier, reduce by aggregating critical outliers per condition, then consolidate a ranked internal triage summary held in namespace.",
+        "description": "Triage 47 lab reports.",
+        "dependencies": [
+          {
+            "id": "[Risk_Rules]",
+            "content": "Critical thresholds per biomarker and condition codes."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Patient_Lab_Reports]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw lab report data before any processing can begin. The 47 patient lab reports exist outside the current namespace � they are not provided inline. I am deploying a FETCH task to retrieve them and pre-declaring [Raw_Lab_Reports_47].",
+            "dependencies": [],
+            "instruction": "Retrieve all 47 patient lab reports from the source data store and output as [Raw_Lab_Reports_47].",
+            "target_output": "[Raw_Lab_Reports_47]",
+            "description": "Fetches the 47 raw patient lab reports from the external data source into the namespace."
+          },
+          {
+            "id": "[Task_Decompose_Lab_Reports_Parsing]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): 47 patient lab reports will almost certainly exceed 2,000 words and contain well over 10 distinct items. Feeding all 47 reports simultaneously into an 8B compute node will collapse the context window and cause hallucination. I must spawn a DECOMPOSE task to chunk the reports into manageable batches for parallel parsing.",
+            "dependencies": [
+              "[Raw_Lab_Reports_47]",
+              "[Risk_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_Lab_Reports_47] into individual patient records, parse each record against the [Risk_Rules] to extract biomarker values and condition codes, assign a preliminary risk tier (Critical / High / Moderate / Low) to each patient, and output as [Parsed_Risk_Tiered_Records].",
+            "target_output": "[Parsed_Risk_Tiered_Records]",
+            "description": "Delegates the high-volume parsing of 47 lab reports to a map-reduce sub-router, producing per-patient risk-tiered records."
+          },
+          {
+            "id": "[Task_Expand_Outlier_Aggregation_And_Reduction]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): The next phase requires more than two distinct transformations: (1) filter and isolate Critical-tier records, (2) group outliers by condition code, (3) aggregate statistical or threshold-breach patterns per condition, and (4) reduce the grouped data into a condensed critical-outlier summary. This is a multi-step analytical pipeline that exceeds what a single 8B compute node can reliably chain. I am spawning an EXPAND task to delegate this logic to a child cognitive architect.",
+            "dependencies": [
+              "[Parsed_Risk_Tiered_Records]",
+              "[Risk_Rules]"
+            ],
+            "instruction": "Analyze the [Parsed_Risk_Tiered_Records] using the [Risk_Rules] to: (1) isolate all Critical and High risk-tier patients, (2) group them by condition code, (3) aggregate biomarker outlier patterns per condition group, and (4) reduce the grouped data into a concise critical-outlier summary per condition, and output as [Critical_Outlier_Aggregation].",
+            "target_output": "[Critical_Outlier_Aggregation]",
+            "description": "Delegates multi-step outlier filtering, grouping, aggregation, and reduction logic to a child architect to produce a condition-level critical outlier summary."
+          },
+          {
+            "id": "[Task_Compute_Ranked_Triage_Summary]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): At this point I have the [Critical_Outlier_Aggregation] and the full [Parsed_Risk_Tiered_Records]. The final step is a straightforward ranked consolidation � ordering patients and condition groups by severity into a single triage summary. This is a 1-to-1 formatting and ranking operation with low cognitive and context load. A COMPUTE node is appropriate here.",
+            "dependencies": [
+              "[Parsed_Risk_Tiered_Records]",
+              "[Critical_Outlier_Aggregation]"
+            ],
+            "instruction": "Merge the [Parsed_Risk_Tiered_Records] and [Critical_Outlier_Aggregation] into a single ranked internal triage summary, ordering entries from most critical to least critical by risk tier and condition severity, and output as [Ranked_Triage_Summary].",
+            "target_output": "[Ranked_Triage_Summary]",
+            "description": "Consolidates all parsed and aggregated data into a final ranked triage summary held in the namespace."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "history",
+      "query": {
+        "instruction": "Parse 48 historical battle records. Map each by century and casualty range, reduce into ranked conflict clusters, then consolidate a weighted significance index held in namespace.",
+        "description": "Cluster 48 battles internally.",
+        "dependencies": [
+          {
+            "id": "[History_Rules]",
+            "content": "Century codes, casualty thresholds, and significance weighting criteria."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Battle_Records]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw source data before any processing can begin. The 48 historical battle records exist outside the current namespace � they are not provided inline in the prompt. I am deploying a FETCH task to retrieve them and pre-declaring [Raw_Battle_Records]. This node takes no dependencies as it is pulling from an external source.",
+            "dependencies": [],
+            "instruction": "Retrieve all 48 historical battle records from the source data store and output as [Raw_Battle_Records].",
+            "target_output": "[Raw_Battle_Records]",
+            "description": "Fetches the complete set of 48 raw historical battle records from the external data source."
+          },
+          {
+            "id": "[Task_Decompose_Battle_Records]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): 48 distinct battle records is well above the 10-item threshold for an 8B model. Feeding all 48 records simultaneously into a single compute node would obliterate the context window and cause hallucination. I must spawn a DECOMPOSE task to delegate this volume to a chunking sub-router that can process the records in manageable batches � for example, chunked by century groupings � before reassembling the parsed output.",
+            "dependencies": [
+              "[Raw_Battle_Records]",
+              "[History_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_Battle_Records] into century-based batches, apply the century codes and casualty thresholds from [History_Rules] to parse and tag each battle record with its century code and casualty range classification, then reassemble all tagged records and output as [Parsed_Battle_Records].",
+            "target_output": "[Parsed_Battle_Records]",
+            "description": "Delegates the high-volume parsing of 48 battle records into century-tagged, casualty-classified entries via a map-reduce sub-router to avoid context window collapse."
+          },
+          {
+            "id": "[Task_Expand_Cluster_And_Rank]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): The next phase requires more than two distinct transformations: (1) grouping the parsed records into conflict clusters by shared century and casualty range, (2) ranking those clusters against each other using the significance weighting criteria from [History_Rules], and (3) structuring the ranked output into a well-formed cluster schema. This is three chained cognitive transformations � well above the two-step threshold for a single 8B compute node. I am spawning an EXPAND task to delegate this multi-step reasoning to a child cognitive architect.",
+            "dependencies": [
+              "[Parsed_Battle_Records]",
+              "[History_Rules]"
+            ],
+            "instruction": "Analyze the [Parsed_Battle_Records] to group battles into conflict clusters by shared century code and casualty range, rank each cluster using the significance weighting criteria in [History_Rules], and output as [Ranked_Conflict_Clusters].",
+            "target_output": "[Ranked_Conflict_Clusters]",
+            "description": "Delegates the multi-step clustering, grouping, and ranking logic to a child architect to avoid cognitive overload on the 8B execution node."
+          },
+          {
+            "id": "[Task_Compute_Weighted_Significance_Index]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): At this stage I have the fully ranked conflict clusters and the weighting criteria. The remaining operation is a single direct transformation: consolidate the ranked clusters into a single weighted significance index score per cluster and hold it in the namespace. Context load is bounded (one ranked list) and cognitive load is a 1-to-1 aggregation mapping. This is safe for a COMPUTE node.",
+            "dependencies": [
+              "[Ranked_Conflict_Clusters]",
+              "[History_Rules]"
+            ],
+            "instruction": "Consolidate the [Ranked_Conflict_Clusters] by applying the significance weighting criteria from [History_Rules] to compute a final weighted significance index for each cluster, then compile all index values into a single structured significance index document and output as [Weighted_Significance_Index].",
+            "target_output": "[Weighted_Significance_Index]",
+            "description": "Executes the final aggregation step, producing a consolidated weighted significance index across all ranked conflict clusters and holding it in the namespace."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "history",
+      "query": {
+        "instruction": "Analyze 4 attached battle summaries. Rank by casualty count, tag dominant tactic, and store final comparison table in internal namespace.",
+        "description": "Rank 4 battles internally.",
+        "dependencies": [
+          {
+            "id": "[Battle_Rules]",
+            "content": "Casualty thresholds and recognized tactic classifications list."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Battle_Summaries]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw source material before any analysis can begin. The user references '4 attached battle summaries' but these documents exist outside the current namespace � they are not inline in the prompt. I must spawn a FETCH task to retrieve all four documents and pre-declare [Raw_Battle_Summaries]. No dependencies are required for a FETCH node.",
+            "dependencies": [],
+            "instruction": "Retrieve all 4 attached battle summary documents from the input payload or document store and output as [Raw_Battle_Summaries].",
+            "target_output": "[Raw_Battle_Summaries]",
+            "description": "Retrieves the 4 raw battle summary documents required for downstream analysis."
+          },
+          {
+            "id": "[Task_Decompose_Battle_Summaries]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): I now have 4 battle summaries of unknown length. Even at moderate length, 4 distinct documents processed simultaneously alongside [Battle_Rules] risks exceeding the 2,000-word context threshold for an 8B model. Each document must be chunked and processed independently before aggregation. I must spawn a DECOMPOSE task to delegate this to a map-reduce sub-router that processes each battle summary as a discrete chunk.",
+            "dependencies": [
+              "[Raw_Battle_Summaries]",
+              "[Battle_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_Battle_Summaries] into 4 individual battle documents, process each chunk independently against the [Battle_Rules] to extract casualty counts and identify the dominant tactic per battle using the recognized tactic classifications list, then compile all extracted records and output as [Extracted_Battle_Records].",
+            "target_output": "[Extracted_Battle_Records]",
+            "description": "Delegates multi-document extraction to a chunking sub-router, producing per-battle casualty counts and tactic tags."
+          },
+          {
+            "id": "[Task_Compute_Rank_And_Tag]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): With [Extracted_Battle_Records] already structured � each battle having a casualty count and a dominant tactic tag � the remaining work is a single, well-defined transformation: sort 4 records by casualty count descending and confirm tactic tags against [Battle_Rules] thresholds. This is a 1-to-1 mapping with low cognitive load and minimal context volume. A COMPUTE node is appropriate here.",
+            "dependencies": [
+              "[Extracted_Battle_Records]",
+              "[Battle_Rules]"
+            ],
+            "instruction": "Sort the 4 battle records in [Extracted_Battle_Records] by casualty count in descending order, validate each dominant tactic tag against the recognized classifications in [Battle_Rules], assign a rank (1 = highest casualties) to each battle, and output as [Ranked_Battle_Table].",
+            "target_output": "[Ranked_Battle_Table]",
+            "description": "Sorts and ranks the 4 battles by casualty count and validates tactic classifications into a structured comparison table."
+          },
+          {
+            "id": "[Task_Compute_Store_Comparison_Table]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): The [Ranked_Battle_Table] is fully formed. The final instruction is to store it in the internal namespace. This is a direct, single-action transmission with no transformation required. Context and cognitive loads are minimal. A COMPUTE node executing a namespace write operation is the correct choice.",
+            "dependencies": [
+              "[Ranked_Battle_Table]"
+            ],
+            "instruction": "Persist the [Ranked_Battle_Table] to the internal namespace under the key 'battle_comparison_table' and output as [Namespace_Store_Confirmation].",
+            "target_output": "[Namespace_Store_Confirmation]",
+            "description": "Writes the final ranked battle comparison table into the internal namespace for persistent storage."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "mathematics",
+      "query": {
+        "instruction": "Process 48 integer sequences: map each for prime factorization, reduce by grouping shared factor patterns, then consolidate a ranked frequency table held in internal namespace.",
+        "description": "Factor 48 sequences internally.",
+        "dependencies": [
+          {
+            "id": "[Math_Rules]",
+            "content": "Prime factorization bounds and grouping threshold criteria."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_48_Integer_Sequences]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw 48 integer sequences before any processing can begin. They exist outside the current namespace and have not been provided inline. I am deploying a FETCH task to retrieve them and pre-declaring [Raw_48_Integer_Sequences]. This node takes no dependencies.",
+            "dependencies": [],
+            "instruction": "Retrieve all 48 integer sequences from the internal data store and output as [Raw_48_Integer_Sequences].",
+            "target_output": "[Raw_48_Integer_Sequences]",
+            "description": "Fetches the 48 raw integer sequences required for downstream factorization processing."
+          },
+          {
+            "id": "[Task_Decompose_Prime_Factorization_Map]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): 48 distinct integer sequences is well above the 10-item threshold. Feeding all 48 sequences simultaneously into an 8B compute node will collapse the context window and cause hallucination. I must spawn a DECOMPOSE task to delegate this to a chunking sub-router that can process sequences in safe batches (e.g., 8 sequences per chunk across 6 parallel chunks), applying prime factorization to each integer in each sequence.",
+            "dependencies": [
+              "[Raw_48_Integer_Sequences]",
+              "[Math_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_48_Integer_Sequences] into batches of 8 sequences each, apply prime factorization to every integer in each batch using the bounds defined in [Math_Rules], and output the complete per-sequence factorization results as [Factorized_Sequence_Map].",
+            "target_output": "[Factorized_Sequence_Map]",
+            "description": "Delegates the high-volume prime factorization mapping across all 48 sequences to a map-reduce sub-router to avoid context window overflow."
+          },
+          {
+            "id": "[Task_Expand_Reduce_Group_Factor_Patterns]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): The reduction step requires more than two distinct transformations: (1) Extract shared prime factor signatures from [Factorized_Sequence_Map], (2) Apply grouping threshold criteria from [Math_Rules] to cluster sequences by pattern similarity, and (3) Aggregate cluster memberships into a structured grouped representation. This exceeds the 2-transformation limit for an 8B compute node. I am spawning an EXPAND task to delegate this multi-step logic to a child cognitive architect.",
+            "dependencies": [
+              "[Factorized_Sequence_Map]",
+              "[Math_Rules]"
+            ],
+            "instruction": "Analyze the [Factorized_Sequence_Map] to extract shared prime factor signatures across all 48 sequences, apply the grouping threshold criteria from [Math_Rules] to cluster sequences by shared factor patterns, and output the grouped cluster structure as [Factor_Pattern_Groups].",
+            "target_output": "[Factor_Pattern_Groups]",
+            "description": "Delegates multi-step pattern extraction, threshold-based clustering, and group aggregation to a child architect to avoid cognitive overload on the 8B node."
+          },
+          {
+            "id": "[Task_Compute_Ranked_Frequency_Table]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): With [Factor_Pattern_Groups] fully resolved, the final step is a straightforward frequency count of each factor pattern group followed by a descending rank sort. This is a 1-to-1 mapping with low context and cognitive load � a single transformation. I am delegating a COMPUTE task to execute this consolidation and store the result in the internal namespace.",
+            "dependencies": [
+              "[Factor_Pattern_Groups]"
+            ],
+            "instruction": "Count the frequency of each factor pattern group in [Factor_Pattern_Groups], rank them in descending order of frequency, consolidate the result into a structured ranked frequency table held in the internal namespace, and output as [Ranked_Factor_Frequency_Table].",
+            "target_output": "[Ranked_Factor_Frequency_Table]",
+            "description": "Produces the final ranked frequency table of shared prime factor patterns across all 48 sequences and stores it in the internal namespace."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "biology",
+      "query": {
+        "instruction": "Process 38 gene expression profiles: normalize raw values, cluster by pathway activity, rank clusters by anomaly score, then synthesize a comparative deviation report held in namespace.",
+        "description": "Analyze 38 gene profiles.",
+        "dependencies": [
+          {
+            "id": "[Bio_Rules]",
+            "content": "Pathway maps, normalization thresholds, and anomaly scoring criteria."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Gene_Expression_Profiles]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw gene expression data before any processing can begin. The prompt references 38 gene expression profiles as the primary input, but they exist outside the current namespace � they have not been passed in as a dependency. I must spawn a FETCH task to retrieve them and pre-declare [Raw_Gene_Expression_Profiles]. This node takes no dependencies.",
+            "dependencies": [],
+            "instruction": "Retrieve all 38 raw gene expression profiles from the source data repository and output as [Raw_Gene_Expression_Profiles].",
+            "target_output": "[Raw_Gene_Expression_Profiles]",
+            "description": "Fetches the 38 raw gene expression profiles from the external data source into the namespace."
+          },
+          {
+            "id": "[Task_Decompose_Normalize_Profiles]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): I have 38 gene expression profiles. Each profile contains a dense array of raw numeric values across potentially thousands of gene loci. Feeding all 38 profiles simultaneously into an 8B compute node would catastrophically exceed the context window. I must spawn a DECOMPOSE task to delegate this to a chunking sub-router that can normalize each profile individually or in small batches against the [Bio_Rules] normalization thresholds, then reassemble the results.",
+            "dependencies": [
+              "[Raw_Gene_Expression_Profiles]",
+              "[Bio_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_Gene_Expression_Profiles] into individual or small-batch units, apply the normalization thresholds defined in [Bio_Rules] to each chunk to produce standardized expression values, reassemble all normalized results, and output as [Normalized_Gene_Profiles].",
+            "target_output": "[Normalized_Gene_Profiles]",
+            "description": "Delegates high-volume normalization of 38 gene profiles to a map-reduce sub-router to avoid context window collapse."
+          },
+          {
+            "id": "[Task_Expand_Cluster_And_Rank]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): The next phase requires two distinct and non-trivial transformations: (1) clustering the normalized profiles by pathway activity using the pathway maps in [Bio_Rules], and (2) ranking the resulting clusters by anomaly score using the anomaly scoring criteria in [Bio_Rules]. This is at minimum a two-step analytical pipeline � cluster assignment followed by scoring and ranking � which exceeds the two-transformation threshold for a single 8B compute node. I must spawn an EXPAND task to delegate this compound logic to a child cognitive architect.",
+            "dependencies": [
+              "[Normalized_Gene_Profiles]",
+              "[Bio_Rules]"
+            ],
+            "instruction": "Using the pathway maps in [Bio_Rules], cluster the [Normalized_Gene_Profiles] by pathway activity into distinct groups, then apply the anomaly scoring criteria from [Bio_Rules] to each cluster, rank all clusters from highest to lowest anomaly score, and output as [Ranked_Pathway_Clusters].",
+            "target_output": "[Ranked_Pathway_Clusters]",
+            "description": "Delegates the compound clustering-by-pathway and anomaly-score-ranking logic to a child architect to prevent multi-step reasoning failure."
+          },
+          {
+            "id": "[Task_Expand_Synthesize_Deviation_Report]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): Synthesizing a comparative deviation report requires multiple distinct transformations: (1) extracting the deviation signature of each ranked cluster relative to baseline norms defined in [Bio_Rules], (2) performing cross-cluster comparative analysis to identify relative deviations, and (3) formatting the findings into a structured comparative report. This is a three-step reasoning chain that far exceeds what a single 8B compute node can reliably execute. I must spawn an EXPAND task to delegate this synthesis to a child cognitive architect.",
+            "dependencies": [
+              "[Ranked_Pathway_Clusters]",
+              "[Normalized_Gene_Profiles]",
+              "[Bio_Rules]"
+            ],
+            "instruction": "Analyze the [Ranked_Pathway_Clusters] against the baseline norms in [Bio_Rules], compute per-cluster deviation signatures, perform cross-cluster comparative analysis using [Normalized_Gene_Profiles] as the reference base, and synthesize all findings into a structured comparative deviation report, outputting as [Comparative_Deviation_Report].",
+            "target_output": "[Comparative_Deviation_Report]",
+            "description": "Delegates multi-step deviation extraction, cross-cluster comparison, and report synthesis to a child cognitive architect."
+          },
+          {
+            "id": "[Task_Compute_Hold_Report_In_Namespace]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): The [Comparative_Deviation_Report] is fully synthesized. The final instruction is to hold it in the namespace � this is a direct, single-step operation: register the completed report as a persistent namespace artifact. Context load is minimal (one document) and cognitive load is trivial (no transformation required). A COMPUTE node is appropriate here.",
+            "dependencies": [
+              "[Comparative_Deviation_Report]"
+            ],
+            "instruction": "Register the [Comparative_Deviation_Report] as a persistent artifact in the orchestration namespace, confirm successful storage, and output as [Namespace_Stored_Report].",
+            "target_output": "[Namespace_Stored_Report]",
+            "description": "Persists the final comparative deviation report into the orchestration namespace for downstream access."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "linguistics",
+      "query": {
+        "instruction": "Parse 38 multilingual transcripts: detect morpheme boundaries, classify syntactic patterns, score semantic drift across dialects, then consolidate a ranked divergence index held in namespace.",
+        "description": "Rank dialect divergence internally.",
+        "dependencies": [
+          {
+            "id": "[Linguistics_Rules]",
+            "content": "IPA chart, morpheme tags, dialect region codes."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Multilingual_Transcripts]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw transcript data before any linguistic processing can begin. The 38 multilingual transcripts exist outside the current namespace and must be retrieved. I have no URLs or identifiers provided in the prompt, but the transcripts are referenced as a concrete corpus. I am spawning a FETCH task to retrieve them and pre-declaring [Raw_Multilingual_Transcripts].",
+            "dependencies": [],
+            "instruction": "Retrieve all 38 multilingual transcripts from the source corpus repository and output as [Raw_Multilingual_Transcripts].",
+            "target_output": "[Raw_Multilingual_Transcripts]",
+            "description": "Fetches the full set of 38 multilingual transcripts required for downstream linguistic analysis."
+          },
+          {
+            "id": "[Task_Decompose_Transcript_Chunking]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): 38 multilingual transcripts almost certainly exceed 2,000 words in aggregate and represent more than 10 distinct items. Feeding all 38 transcripts simultaneously into an 8B compute node would obliterate the context window and cause hallucination. I must spawn a DECOMPOSE task to delegate chunking to a map-reduce sub-router that processes transcripts individually or in small dialect-grouped batches.",
+            "dependencies": [
+              "[Raw_Multilingual_Transcripts]",
+              "[Linguistics_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_Multilingual_Transcripts] into individual or dialect-grouped transcript units using the [Linguistics_Rules] region codes, pre-segment each unit for morphological processing, and output as [Chunked_Transcript_Units].",
+            "target_output": "[Chunked_Transcript_Units]",
+            "description": "Delegates the 38-transcript corpus into manageable, dialect-grouped chunks to prevent context window collapse in downstream nodes."
+          },
+          {
+            "id": "[Task_Expand_Morpheme_And_Syntax_Analysis]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): This step requires at minimum THREE distinct transformations: (1) detect morpheme boundaries using IPA chart and morpheme tags, (2) classify syntactic patterns per chunk, and (3) annotate each unit with structured linguistic metadata. This exceeds the two-transformation threshold for an 8B compute node. I am spawning an EXPAND task to delegate this multi-step linguistic reasoning to a child cognitive architect.",
+            "dependencies": [
+              "[Chunked_Transcript_Units]",
+              "[Linguistics_Rules]"
+            ],
+            "instruction": "For each unit in [Chunked_Transcript_Units], detect morpheme boundaries using the IPA chart and morpheme tags from [Linguistics_Rules], classify the syntactic patterns present, annotate each unit with structured morphosyntactic metadata, and output as [Morphosyntactic_Annotations].",
+            "target_output": "[Morphosyntactic_Annotations]",
+            "description": "Delegates multi-step morpheme boundary detection and syntactic pattern classification to a child architect to avoid cognitive overload."
+          },
+          {
+            "id": "[Task_Expand_Semantic_Drift_Scoring]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): Scoring semantic drift across dialects requires at minimum THREE distinct transformations: (1) extract semantic feature vectors per dialect group from the annotations, (2) compute pairwise or reference-relative drift scores using dialect region codes, and (3) normalize and rank the drift scores into a comparable scale. This is abstract, multi-step reasoning that exceeds the 8B threshold. I am spawning an EXPAND task to delegate this to a child cognitive architect.",
+            "dependencies": [
+              "[Morphosyntactic_Annotations]",
+              "[Linguistics_Rules]"
+            ],
+            "instruction": "Using the [Morphosyntactic_Annotations] and dialect region codes from [Linguistics_Rules], extract semantic feature vectors per dialect group, compute pairwise semantic drift scores across dialects, normalize the scores into a comparable scale, and output as [Semantic_Drift_Scores].",
+            "target_output": "[Semantic_Drift_Scores]",
+            "description": "Delegates multi-step semantic drift computation and normalization across dialect groups to a child architect."
+          },
+          {
+            "id": "[Task_Compute_Consolidate_Divergence_Index]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): At this stage I have fully processed [Morphosyntactic_Annotations] and [Semantic_Drift_Scores]. The remaining task is a single consolidation: merge the morphosyntactic and semantic signals, rank dialects by divergence, and write the final index into the namespace. This is a 1-to-1 mapping with low cognitive and context load. A COMPUTE node is appropriate here.",
+            "dependencies": [
+              "[Morphosyntactic_Annotations]",
+              "[Semantic_Drift_Scores]"
+            ],
+            "instruction": "Merge the [Morphosyntactic_Annotations] and [Semantic_Drift_Scores] to produce a ranked dialect divergence index, ordering dialects from highest to lowest divergence, and output as [Ranked_Divergence_Index].",
+            "target_output": "[Ranked_Divergence_Index]",
+            "description": "Consolidates morphosyntactic and semantic signals into a final ranked divergence index held in the namespace."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "mathematics",
+      "query": {
+        "instruction": "Analyze 35 polynomial equations: factor each, identify root multiplicities, classify by degree distribution, then store a ranked complexity report in the internal namespace.",
+        "description": "Factor 35 polynomials internally.",
+        "dependencies": [
+          {
+            "id": "[Math_Rules]",
+            "content": "Degree thresholds, multiplicity criteria, and complexity ranking weights."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Polynomial_Equations]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw set of 35 polynomial equations before any analysis can begin. They are not present in the current namespace � only the [Math_Rules] dependency was provided. I must spawn a FETCH task to retrieve the actual equation data and pre-declare [Raw_Polynomial_Set].",
+            "dependencies": [],
+            "instruction": "Retrieve the full set of 35 polynomial equations from the internal data store and output as [Raw_Polynomial_Set].",
+            "target_output": "[Raw_Polynomial_Set]",
+            "description": "Retrieves the 35 raw polynomial equations required for all downstream analysis tasks."
+          },
+          {
+            "id": "[Task_Decompose_Polynomial_Chunking]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): 35 distinct polynomial equations is well above the 10-item threshold. Feeding all 35 equations simultaneously into an 8B compute node risks context window collapse and hallucinated factorizations. I must spawn a DECOMPOSE task to delegate chunking to a map-reduce sub-router that processes the equations in smaller batches (e.g., 5�7 per chunk).",
+            "dependencies": [
+              "[Raw_Polynomial_Set]",
+              "[Math_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_Polynomial_Set] into batches of no more than 7 equations each, apply the factoring and root-multiplicity rules from [Math_Rules] to each batch, and output the per-batch factored results as [Chunked_Factored_Results].",
+            "target_output": "[Chunked_Factored_Results]",
+            "description": "Delegates the high-volume factoring workload across batched sub-tasks to prevent context overload."
+          },
+          {
+            "id": "[Task_Expand_Analysis_Pipeline]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): The remaining work requires more than two distinct transformations: (1) extract root multiplicities from [Chunked_Factored_Results], (2) classify each polynomial by degree distribution using [Math_Rules], and (3) apply complexity ranking weights to produce a ranked report. Three chained transformations exceed what a single 8B compute node can reliably execute. I must spawn an EXPAND task to delegate this multi-step reasoning pipeline to a child cognitive architect.",
+            "dependencies": [
+              "[Chunked_Factored_Results]",
+              "[Math_Rules]"
+            ],
+            "instruction": "Using [Chunked_Factored_Results] and [Math_Rules]: (1) identify and annotate root multiplicities for each factored polynomial, (2) classify each polynomial by its degree distribution category, (3) apply the complexity ranking weights from [Math_Rules] to score each polynomial, and output the fully ranked and classified analysis as [Ranked_Complexity_Analysis].",
+            "target_output": "[Ranked_Complexity_Analysis]",
+            "description": "Delegates the three-stage analytical pipeline � multiplicity extraction, degree classification, and complexity scoring � to a child architect."
+          },
+          {
+            "id": "[Task_Compute_Store_Complexity_Report]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): With [Ranked_Complexity_Analysis] fully prepared, the final step is a straightforward 1-to-1 write operation � formatting the analysis into a final report structure and storing it in the internal namespace. Context load is low (one consolidated document) and cognitive load is minimal (no transformation logic required). A COMPUTE node is appropriate here.",
+            "dependencies": [
+              "[Ranked_Complexity_Analysis]"
+            ],
+            "instruction": "Format the [Ranked_Complexity_Analysis] into a structured complexity report document and store it in the internal namespace, then output as [Stored_Complexity_Report].",
+            "target_output": "[Stored_Complexity_Report]",
+            "description": "Persists the final ranked complexity report into the internal namespace as the terminal deliverable."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "economics",
+      "query": {
+        "instruction": "Take 4 GDP values, adjust each for inflation, rank them lowest to highest, and store the final ordered list in the internal namespace.",
+        "description": "Rank 4 GDP values.",
+        "dependencies": [
+          {
+            "id": "[Inflation_Rules]",
+            "content": "Base year 2020, CPI deflator rates provided."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_GDP_Values]",
+            "task_type": "FETCH",
+            "reasoning": "I need the 4 raw GDP values to begin processing. They exist outside the current namespace and must be retrieved before any computation can begin. I am deploying a FETCH task with no dependencies and pre-declaring [Raw_GDP_Values].",
+            "dependencies": [],
+            "instruction": "Retrieve the 4 raw GDP values from the source data store and output as [Raw_GDP_Values].",
+            "target_output": "[Raw_GDP_Values]",
+            "description": "Fetches the 4 raw GDP values required for inflation adjustment and ranking."
+          },
+          {
+            "id": "[Task_Expand_Adjust_And_Rank_GDP]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): This step requires more than two distinct transformations: (1) Parse each of the 4 GDP values, (2) Apply the CPI deflator rates from [Inflation_Rules] to adjust each value to the 2020 base year, (3) Rank the adjusted values from lowest to highest. That is three chained cognitive operations. A single 8B COMPUTE node cannot reliably chain these without hallucination risk. I must spawn an EXPAND task to delegate this multi-step logic to a child cognitive architect.",
+            "dependencies": [
+              "[Raw_GDP_Values]",
+              "[Inflation_Rules]"
+            ],
+            "instruction": "Using the [Inflation_Rules] (base year 2020, CPI deflator rates provided), apply inflation adjustment to each of the 4 values in [Raw_GDP_Values], then rank all adjusted values from lowest to highest, and output as [Inflation_Adjusted_GDP_Ranked].",
+            "target_output": "[Inflation_Adjusted_GDP_Ranked]",
+            "description": "Delegates the multi-step inflation adjustment and ranking logic to a child architect to avoid cognitive overload on the 8B execution node."
+          },
+          {
+            "id": "[Task_Compute_Store_Ranked_List]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): I now have the fully processed and ranked list in [Inflation_Adjusted_GDP_Ranked]. The only remaining operation is a direct 1-to-1 write of this result into the internal namespace. Context load is minimal and cognitive load is trivial. A COMPUTE node is appropriate here.",
+            "dependencies": [
+              "[Inflation_Adjusted_GDP_Ranked]"
+            ],
+            "instruction": "Store the [Inflation_Adjusted_GDP_Ranked] ordered list into the internal namespace and output as [Stored_GDP_Ranked_List].",
+            "target_output": "[Stored_GDP_Ranked_List]",
+            "description": "Persists the final inflation-adjusted, lowest-to-highest ranked GDP list into the internal namespace."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "software",
+      "query": {
+        "instruction": "Scan 3 attached API response payloads. Parse error codes, rank by severity, and store final severity report in internal namespace.",
+        "description": "Rank 3 API errors.",
+        "dependencies": [
+          {
+            "id": "[Severity_Rules]",
+            "content": "Error code classifications: critical, warning, info thresholds."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_API_Payloads]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw API response payloads before any parsing or ranking can begin. The user references '3 attached API response payloads' but they exist outside the current namespace � they have not been inlined into the instruction or dependencies. I must spawn a FETCH task to retrieve all three payloads and pre-declare [Raw_API_Payloads]. No dependencies are required for a FETCH node.",
+            "dependencies": [],
+            "instruction": "Retrieve the 3 attached API response payloads from the source and output as [Raw_API_Payloads].",
+            "target_output": "[Raw_API_Payloads]",
+            "description": "Retrieves the three raw API response payloads that are the subject of the error analysis."
+          },
+          {
+            "id": "[Task_Decompose_Parse_Error_Codes]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): I have 3 distinct API response payloads. Each payload may contain nested JSON structures, multiple error fields, and verbose metadata. Feeding all three simultaneously into an 8B compute node risks context overload and hallucinated extractions. I must spawn a DECOMPOSE task to chunk each payload individually, extract its error codes, and consolidate the results. This map-reduce approach ensures each chunk stays within safe context limits.",
+            "dependencies": [
+              "[Raw_API_Payloads]"
+            ],
+            "instruction": "Chunk the [Raw_API_Payloads] into one segment per payload, extract all error codes from each segment individually, consolidate the extracted error codes into a unified list, and output as [Extracted_Error_Codes].",
+            "target_output": "[Extracted_Error_Codes]",
+            "description": "Safely decomposes the three payloads into per-payload chunks and extracts all error codes from each before consolidating."
+          },
+          {
+            "id": "[Task_Compute_Rank_By_Severity]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): With the error codes already extracted and consolidated into [Extracted_Error_Codes], the remaining operation is a straightforward 1-to-1 classification mapping � each error code is looked up against the [Severity_Rules] thresholds (critical, warning, info) and assigned a rank. This is a single transformation with low cognitive load and bounded context. A COMPUTE node is appropriate here.",
+            "dependencies": [
+              "[Extracted_Error_Codes]",
+              "[Severity_Rules]"
+            ],
+            "instruction": "Cross-reference each error code in [Extracted_Error_Codes] against the [Severity_Rules] classifications (critical, warning, info), assign a severity tier to each, rank all errors from highest to lowest severity, and output as [Ranked_Severity_Report].",
+            "target_output": "[Ranked_Severity_Report]",
+            "description": "Applies the severity classification rules to all extracted error codes and produces a ranked severity report."
+          },
+          {
+            "id": "[Task_Compute_Store_Severity_Report]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): The [Ranked_Severity_Report] is fully formed. The final step is a simple write operation � storing the report into the internal namespace. This is a direct 1-to-1 transmission with no transformation required. A COMPUTE node is the correct choice. No external credentials or unknown endpoints are involved; the target is the internal namespace, which is within the engine's operational scope.",
+            "dependencies": [
+              "[Ranked_Severity_Report]"
+            ],
+            "instruction": "Store the [Ranked_Severity_Report] into the internal namespace under the key 'severity_report' and output as [Namespace_Store_Confirmation].",
+            "target_output": "[Namespace_Store_Confirmation]",
+            "description": "Persists the final ranked severity report into the internal namespace and confirms successful storage."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "history",
+      "query": {
+        "instruction": "Process 35 historical battle records: classify by era, identify tactical patterns, cross-reference casualty ratios, rank strategic outcomes by impact, and store final analysis in internal namespace.",
+        "description": "Analyze 35 battle records.",
+        "dependencies": [
+          {
+            "id": "[History_Rules]",
+            "content": "Era classifications, tactical categories, and impact scoring rubric."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Battle_Records]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw battle records before any analysis can begin. The user references 35 historical battle records that exist outside the current namespace. I am deploying a FETCH task to retrieve them and pre-declaring [Raw_Battle_Records]. This node takes no dependencies as the data must be pulled from an external source.",
+            "dependencies": [],
+            "instruction": "Retrieve all 35 historical battle records from the source repository and output as [Raw_Battle_Records].",
+            "target_output": "[Raw_Battle_Records]",
+            "description": "Fetches the 35 raw historical battle records from the external data source."
+          },
+          {
+            "id": "[Task_Decompose_Battle_Records]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): 35 distinct battle records is well above the 10-item threshold. Feeding all 35 records simultaneously into an 8B compute node will collapse the context window and cause hallucination. I must spawn a DECOMPOSE task to delegate this volume to a chunking sub-router that can process records in safe batches.",
+            "dependencies": [
+              "[Raw_Battle_Records]",
+              "[History_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_Battle_Records] into safe batches, apply the era classifications and tactical categories from [History_Rules] to each batch, extract casualty ratio data per record, and output as [Chunked_Battle_Annotations].",
+            "target_output": "[Chunked_Battle_Annotations]",
+            "description": "Delegates the 35-record volume to a map-reduce sub-router to prevent context window collapse, producing annotated per-record data."
+          },
+          {
+            "id": "[Task_Expand_Strategic_Analysis]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): The remaining pipeline requires more than two distinct transformations: (1) identify tactical patterns across all annotated records, (2) cross-reference and normalize casualty ratios, (3) rank strategic outcomes by impact score using the rubric in [History_Rules], and (4) synthesize a final ranked analysis. This is four chained reasoning steps � far beyond the 2-transformation threshold for an 8B node. I must spawn an EXPAND task to delegate this multi-step logic to a child cognitive architect.",
+            "dependencies": [
+              "[Chunked_Battle_Annotations]",
+              "[History_Rules]"
+            ],
+            "instruction": "Analyze the [Chunked_Battle_Annotations] to identify recurring tactical patterns across eras, cross-reference casualty ratios to surface correlations, apply the impact scoring rubric from [History_Rules] to rank all 35 battles by strategic outcome, and output as [Strategic_Analysis_Report].",
+            "target_output": "[Strategic_Analysis_Report]",
+            "description": "Delegates multi-step tactical pattern identification, casualty cross-referencing, and impact ranking to a child cognitive architect."
+          },
+          {
+            "id": "[Task_Compute_Store_Final_Analysis]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): The [Strategic_Analysis_Report] is fully formed. The final step is a single 1-to-1 operation: write the completed report into the internal namespace. Context load is minimal and cognitive load is trivial � this is a direct storage transmission. A COMPUTE node is appropriate here.",
+            "dependencies": [
+              "[Strategic_Analysis_Report]"
+            ],
+            "instruction": "Store the [Strategic_Analysis_Report] into the internal namespace under the designated analysis registry and output as [Final_Analysis_Stored].",
+            "target_output": "[Final_Analysis_Stored]",
+            "description": "Persists the completed strategic analysis report into the internal namespace storage."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "literature",
+      "query": {
+        "instruction": "Parse 35 novel excerpts: identify narrative voice, map thematic recurrence, score emotional arc intensity, then synthesize a ranked comparative index held in namespace.",
+        "description": "Rank 35 excerpts internally.",
+        "dependencies": [
+          {
+            "id": "[Literary_Rules]",
+            "content": "Voice taxonomy, theme codes, arc scoring rubric."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Novel_Excerpts]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw content of the 35 novel excerpts before any analysis can begin. This data exists outside the current namespace � it has not been provided inline. I am deploying a FETCH task to retrieve all 35 excerpts and pre-declaring [Raw_Novel_Excerpts]. No dependencies are required for a FETCH node.",
+            "dependencies": [],
+            "instruction": "Retrieve all 35 novel excerpts from the source repository or document store and output as [Raw_Novel_Excerpts].",
+            "target_output": "[Raw_Novel_Excerpts]",
+            "description": "Fetches the full set of 35 novel excerpts required for downstream analysis."
+          },
+          {
+            "id": "[Task_Decompose_Excerpt_Chunking]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): 35 novel excerpts fed simultaneously into an 8B compute node will obliterate the context window. Each excerpt may itself be hundreds of words, and collectively they far exceed the ~2,000-word threshold. I must spawn a DECOMPOSE task to delegate this volume to a map-reduce sub-router that chunks the corpus into individual excerpt units, each processed independently before results are aggregated.",
+            "dependencies": [
+              "[Raw_Novel_Excerpts]",
+              "[Literary_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_Novel_Excerpts] into 35 individual excerpt units, apply the [Literary_Rules] taxonomy and rubric to each unit independently to extract narrative voice, thematic codes, and emotional arc intensity score, then aggregate all per-excerpt results and output as [Per_Excerpt_Analysis_Set].",
+            "target_output": "[Per_Excerpt_Analysis_Set]",
+            "description": "Delegates the high-volume 35-excerpt corpus to a chunked map-reduce sub-router, producing a structured per-excerpt analysis set."
+          },
+          {
+            "id": "[Task_Expand_Comparative_Synthesis]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): Synthesizing a ranked comparative index from 35 analyzed excerpts requires more than two distinct transformations: (1) cross-comparing narrative voice patterns across all excerpts, (2) mapping thematic recurrence frequencies and co-occurrence clusters, (3) normalizing and weighting emotional arc intensity scores, and (4) producing a final ranked index with justification. This is a deeply multi-step reasoning chain that exceeds what a single 8B compute node can handle without hallucination. I am spawning an EXPAND task to delegate this logic to a child cognitive architect.",
+            "dependencies": [
+              "[Per_Excerpt_Analysis_Set]",
+              "[Literary_Rules]"
+            ],
+            "instruction": "Analyze the [Per_Excerpt_Analysis_Set] using the [Literary_Rules] rubric to cross-compare narrative voices, map thematic recurrence and co-occurrence, normalize emotional arc intensity scores, and synthesize a fully ranked comparative index of all 35 excerpts with justification for each ranking, then output as [Ranked_Comparative_Index].",
+            "target_output": "[Ranked_Comparative_Index]",
+            "description": "Delegates the multi-step cross-excerpt comparative synthesis and ranking logic to a child cognitive architect."
+          },
+          {
+            "id": "[Task_Compute_Persist_Index_To_Namespace]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): With the [Ranked_Comparative_Index] fully synthesized, the final step is a straightforward 1-to-1 write operation � persisting the completed index into the active namespace. Context load is minimal (one structured document) and cognitive load is trivial (no transformation required). A COMPUTE node is appropriate here.",
+            "dependencies": [
+              "[Ranked_Comparative_Index]"
+            ],
+            "instruction": "Persist the [Ranked_Comparative_Index] into the active orchestration namespace as a retrievable, labeled artifact and output as [Namespace_Persisted_Index].",
+            "target_output": "[Namespace_Persisted_Index]",
+            "description": "Writes the final ranked comparative index into the namespace for downstream retrieval and reference."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "literature",
+      "query": {
+        "instruction": "Parse 35 literary excerpts: identify narrative voice, map thematic recurrence, score emotional arc intensity, then synthesize a ranked motif index held in namespace.",
+        "description": "Analyze 35 literary excerpts.",
+        "dependencies": [
+          {
+            "id": "[Literary_Rules]",
+            "content": "Voice taxonomy, thematic tags, emotional scoring rubric."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Literary_Excerpts]",
+            "task_type": "FETCH",
+            "reasoning": "I need the 35 literary excerpts to begin any analysis. They exist outside the current namespace and have not been provided inline. I am deploying a FETCH task to retrieve them and pre-declaring [Raw_Literary_Excerpts].",
+            "dependencies": [],
+            "instruction": "Retrieve all 35 literary excerpts from the source repository or document store and output as [Raw_Literary_Excerpts].",
+            "target_output": "[Raw_Literary_Excerpts]",
+            "description": "Retrieves the 35 raw literary excerpts required for downstream analysis."
+          },
+          {
+            "id": "[Task_Decompose_Excerpt_Chunks]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): 35 literary excerpts almost certainly exceed 2,000 words in aggregate and represent more than 10 distinct items. Feeding all 35 simultaneously into an 8B compute node will collapse the context window and cause hallucination. I must spawn a DECOMPOSE task to chunk the corpus into manageable batches � ideally 5�7 excerpts per chunk � so each downstream compute node operates within safe context limits.",
+            "dependencies": [
+              "[Raw_Literary_Excerpts]"
+            ],
+            "instruction": "Partition the [Raw_Literary_Excerpts] into batches of no more than 5 excerpts each, preserving excerpt identifiers and ordering metadata, and output as [Chunked_Excerpt_Batches].",
+            "target_output": "[Chunked_Excerpt_Batches]",
+            "description": "Splits the 35-excerpt corpus into context-safe batches for parallel per-batch analysis."
+          },
+          {
+            "id": "[Task_Expand_Per_Batch_Analysis]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): For each batch, the pipeline must perform THREE distinct transformations: (1) identify narrative voice using the voice taxonomy, (2) map thematic recurrence using thematic tags, and (3) score emotional arc intensity using the emotional scoring rubric. Three chained transformations per batch exceed the 2-transformation threshold for an 8B node. I must spawn an EXPAND task to delegate this multi-step per-batch reasoning to a child cognitive architect that will produce structured per-excerpt records.",
+            "dependencies": [
+              "[Chunked_Excerpt_Batches]",
+              "[Literary_Rules]"
+            ],
+            "instruction": "For each batch in [Chunked_Excerpt_Batches], apply the [Literary_Rules] to: (1) identify the narrative voice of each excerpt using the voice taxonomy, (2) map all thematic recurrences using the thematic tags, and (3) score the emotional arc intensity using the emotional scoring rubric � then compile all per-excerpt structured records and output as [Per_Excerpt_Analysis_Records].",
+            "target_output": "[Per_Excerpt_Analysis_Records]",
+            "description": "Delegates the three-stage per-excerpt analytical pipeline (voice, theme, emotion) to a child architect operating over each safe-sized batch."
+          },
+          {
+            "id": "[Task_Expand_Motif_Index_Synthesis]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): Synthesizing a ranked motif index from 35 sets of per-excerpt records requires: (1) aggregating thematic recurrence frequencies across all excerpts, (2) weighting motifs by emotional arc intensity scores, and (3) ranking and formatting the final motif index. This is three distinct transformations on a dataset that spans all 35 excerpts, exceeding both the cognitive and context thresholds for a single 8B compute node. I must spawn a second EXPAND task to delegate this synthesis to a child architect.",
+            "dependencies": [
+              "[Per_Excerpt_Analysis_Records]",
+              "[Literary_Rules]"
+            ],
+            "instruction": "Using the [Per_Excerpt_Analysis_Records] and the thematic/scoring criteria in [Literary_Rules]: (1) aggregate thematic recurrence frequencies across all 35 excerpts, (2) weight each motif by its associated emotional arc intensity scores, and (3) produce a ranked motif index ordered from highest to lowest composite significance � then output as [Ranked_Motif_Index].",
+            "target_output": "[Ranked_Motif_Index]",
+            "description": "Delegates the three-stage cross-corpus motif aggregation, weighting, and ranking synthesis to a child cognitive architect."
+          },
+          {
+            "id": "[Task_Compute_Persist_Motif_Index]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): The [Ranked_Motif_Index] is fully formed. The final step is a simple 1-to-1 write operation � persisting the ranked motif index into the orchestration namespace so it is accessible to downstream consumers. Context load is minimal and cognitive load is trivial. A COMPUTE node is appropriate here.",
+            "dependencies": [
+              "[Ranked_Motif_Index]"
+            ],
+            "instruction": "Persist the [Ranked_Motif_Index] into the orchestration namespace as a durable, queryable record and output as [Namespace_Motif_Index_Confirmed].",
+            "target_output": "[Namespace_Motif_Index_Confirmed]",
+            "description": "Writes the final ranked motif index into the namespace, completing the orchestration pipeline."
+          }
+        ]
+      }
+    },
+    {
+      "domain": "history",
+      "query": {
+        "instruction": "Analyze 4 attached battle summaries. Extract casualty counts, rank by severity, and store final comparison table in internal namespace.",
+        "description": "Rank 4 battles internally.",
+        "dependencies": [
+          {
+            "id": "[Battle_Rules]",
+            "content": "Severity scale: casualties, territory lost, strategic impact."
+          }
+        ]
+      },
+      "decision": {
+        "extracted_tasks": [
+          {
+            "id": "[Task_Fetch_Battle_Summaries]",
+            "task_type": "FETCH",
+            "reasoning": "I need the raw battle summary documents before any analysis can begin. The user references '4 attached battle summaries' but their content does not exist in the current namespace � only [Battle_Rules] has been provided. I must spawn a FETCH task to retrieve all four documents and pre-declare [Raw_Battle_Summaries].",
+            "dependencies": [],
+            "instruction": "Retrieve all 4 attached battle summary documents from the source repository and output as [Raw_Battle_Summaries].",
+            "target_output": "[Raw_Battle_Summaries]",
+            "description": "Retrieves the 4 raw battle summary documents required for downstream analysis."
+          },
+          {
+            "id": "[Task_Decompose_Battle_Summaries]",
+            "task_type": "DECOMPOSE",
+            "reasoning": "Evaluating Hierarchy (Context Load): I have 4 battle summaries of unknown length. Each summary may individually exceed the 2,000-word threshold, and processing all 4 simultaneously would risk context window collapse on an 8B model. I must spawn a DECOMPOSE task to chunk each summary individually and extract structured data (casualty counts, territory lost, strategic impact) per document before aggregation.",
+            "dependencies": [
+              "[Raw_Battle_Summaries]",
+              "[Battle_Rules]"
+            ],
+            "instruction": "Chunk the [Raw_Battle_Summaries] into individual battle documents, apply the severity criteria from [Battle_Rules] (casualties, territory lost, strategic impact) to each chunk, extract structured data fields per battle, and output as [Structured_Battle_Data].",
+            "target_output": "[Structured_Battle_Data]",
+            "description": "Decomposes 4 battle summaries into individually processed structured records to avoid context overload."
+          },
+          {
+            "id": "[Task_Expand_Severity_Ranking]",
+            "task_type": "EXPAND",
+            "reasoning": "Evaluating Hierarchy (Cognitive Load): Ranking the battles by severity requires more than two distinct transformations: (1) normalize extracted values across different scales, (2) apply the multi-dimensional severity rubric from [Battle_Rules] (casualties + territory + strategic impact), and (3) produce a ranked ordering with justification. This exceeds the 2-step cognitive threshold for an 8B node. I must spawn an EXPAND task to delegate this multi-step reasoning to a child cognitive architect.",
+            "dependencies": [
+              "[Structured_Battle_Data]",
+              "[Battle_Rules]"
+            ],
+            "instruction": "Analyze the [Structured_Battle_Data] using the severity criteria in [Battle_Rules], normalize all metrics across the 4 battles, apply weighted severity scoring, rank the battles from most to least severe with justification, and output as [Ranked_Battle_Analysis].",
+            "target_output": "[Ranked_Battle_Analysis]",
+            "description": "Delegates multi-dimensional severity scoring and ranking logic to a child architect."
+          },
+          {
+            "id": "[Task_Compute_Build_Comparison_Table]",
+            "task_type": "COMPUTE",
+            "reasoning": "Evaluating Hierarchy (Execution): With the ranked analysis complete, I now have all structured inputs needed to assemble the final comparison table. The task is a straightforward 1-to-1 formatting operation � mapping [Ranked_Battle_Analysis] fields into a tabular structure. Context and cognitive loads are both within safe limits for a single COMPUTE node.",
+            "dependencies": [
+              "[Ranked_Battle_Analysis]"
+            ],
+            "instruction": "Format the [Ranked_Battle_Analysis] into a structured comparison table with columns for Battle Name, Casualty Count, Territory Lost, Strategic Impact, and Severity Rank, then store it in the internal namespace and output as [Battle_Comparison_Table].",
+            "target_output": "[Battle_Comparison_Table]",
+            "description": "Compiles the final ranked comparison table and stores it in the internal namespace."
+          }
+        ]
+      }
+    }
+  ]

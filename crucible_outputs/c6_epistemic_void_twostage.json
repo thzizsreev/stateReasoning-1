@@ -1,0 +1,132 @@
+[
+  {
+    "domain": "mathematics",
+    "query": {
+      "instruction": "Decompose prime factorization table.",
+      "description": "Analyze the 42 integers from 1 to 1000. Ignore the 500 unrelated Fibonacci sequence numbers. For the integers, perform prime factorization, map the results to a hash table, and reduce the table to a single column of unique prime factors.",
+      "dependencies": [
+        {
+          "id": "Prime_Factor_Algorithm",
+          "content": "C++ code implementing the Pollard's rho algorithm for prime factorization"
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        {
+          "id": "[Task_Decompose_Prime_Factorization]",
+          "task_type": "DECOMPOSE",
+          "reasoning": "Step 0 (Noise): I am explicitly dropping the 500 Fibonacci sequence numbers from the DAG entirely. I will not FETCH them. Step 1 (Hierarchy): The required target data is 42 integers, which exceeds the >10 item threshold. Since [Raw_Integers] was not provided in the initial dependencies, I will assume it is an external source and spawn a FETCH task to retrieve it. However, since the instruction does not require the Fibonacci sequence, I will not include it in the FETCH task. Since [Prime_Factor_Algorithm] was provided in the initial dependencies, I am spawning a DECOMPOSE task to chunk the integers.",
+          "dependencies": [
+            "[Raw_Integers]"
+          ],
+          "instruction": "Chunk the 42 integers from 1 to 1000 into batches of 10, outputting as [Chunked_Integers].",
+          "target_output": "[Chunked_Integers]",
+          "description": "Drops Fibonacci noise and chunks the target integer data."
+        },
+        {
+          "id": "[Task_Expand_Prime_Factorization]",
+          "task_type": "EXPAND",
+          "reasoning": "Step 2 (Hierarchy): The prompt asks to perform prime factorization, map the results to a hash table, and reduce the table to a single column of unique prime factors. This multi-step extraction exceeds the >2 logic steps limit. I am deploying a terminal EXPAND node to delegate this complex logic to a child architect using the provided [Prime_Factor_Algorithm].",
+          "dependencies": [
+            "[Chunked_Integers]",
+            "[Prime_Factor_Algorithm]"
+          ],
+          "instruction": "For each chunk in [Chunked_Integers], use the [Prime_Factor_Algorithm] to perform prime factorization, map the results to a hash table, and reduce the table to a single column of unique prime factors. Consolidate into a final report outputting as [Final_Prime_Factors].",
+          "target_output": "[Final_Prime_Factors]",
+          "description": "Delegates the multi-step prime factorization and analysis."
+        }
+      ]
+    }
+  },
+  {
+    "domain": "biology",
+    "query": {
+      "instruction": "Generate the species phylogeny tree summary.",
+      "description": "Hey, we need the tree of life data for the conference presentation. Can you grab the 45 protein sequences from the database? Ignore the 2000 GenBank records in the same folder, we're not using those. For the 45 sequences, I need you to run BLAST, map the results to a graph, and then reduce the graph to a single tree structure.",
+      "dependencies": [
+        {
+          "id": "BLAST_Algorithm",
+          "content": "Python script implementing the basic local alignment search tool."
+        },
+        {
+          "id": "Graph_Reduction_Algorithm",
+          "content": "Java library for graph clustering and tree reduction."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        {
+          "id": "[Task_Decompose_GenBank_Records]",
+          "task_type": "DECOMPOSE",
+          "reasoning": "Step 0 (Noise): I am explicitly dropping the 2000 GenBank records from the DAG entirely. I will not FETCH them. Step 1 (Hierarchy): The required target data is 45 protein sequences, which exceeds the >10 item threshold. Since [Raw_Protein_Sequences] was provided in the initial dependencies, I am spawning a DECOMPOSE task to chunk them.",
+          "dependencies": [
+            "[Raw_Protein_Sequences]"
+          ],
+          "instruction": "Chunk the 45 items in [Raw_Protein_Sequences] into batches of 10, outputting as [Chunked_Protein_Sequences].",
+          "target_output": "[Chunked_Protein_Sequences]",
+          "description": "Drops GenBank noise and chunks the target protein sequence data."
+        },
+        {
+          "id": "[Task_Expand_BLAST_Analysis]",
+          "task_type": "EXPAND",
+          "reasoning": "Step 2 (Hierarchy): The prompt asks to run BLAST, map results to a graph, and then reduce the graph to a single tree structure. This multi-step analysis exceeds the >2 logic steps limit. I am deploying a terminal EXPAND node to delegate this complex logic to a child architect using the provided [BLAST_Algorithm] and [Graph_Reduction_Algorithm].",
+          "dependencies": [
+            "[Chunked_Protein_Sequences]",
+            "[BLAST_Algorithm]",
+            "[Graph_Reduction_Algorithm]"
+          ],
+          "instruction": "For each chunk in [Chunked_Protein_Sequences], use [BLAST_Algorithm] to run BLAST, then use [Graph_Reduction_Algorithm] to map the results to a graph and reduce it to a single tree structure. Consolidate into a final report outputting as [Final_Species_Phylogeny_Tree].",
+          "target_output": "[Final_Species_Phylogeny_Tree]",
+          "description": "Delegates the multi-step BLAST analysis and graph reduction."
+        }
+      ]
+    }
+  },
+  {
+    "domain": "biology",
+    "query": {
+      "instruction": "DECOMPOSE protein structures.",
+      "description": "Hey, we need to break down the 46 newly sequenced proteins. Can you grab the aligned sequences and ignore that 3000 raw transcriptome dataset on the drive? For the 46 proteins, I need you to run the local alignment, map the returned scores to a heatmap, and then apply the MapReduce algorithm to segment the heatmap into 4 distinct regions.",
+      "dependencies": [
+        {
+          "id": "aligner.py",
+          "content": "def run_local_alignment(seq, target_db):\n    return scores\n\ndef create_heatmap(scores):\n    pass"
+        },
+        {
+          "id": "map_reduce.py",
+          "content": "def map_function(scores):\n    pass\n\ndef reduce_function(results):\n    return segments"
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        {
+          "id": "[Task_Decompose_Proteins]",
+          "task_type": "DECOMPOSE",
+          "reasoning": "Step 0 (Noise): I am explicitly dropping the 3000 raw transcriptome dataset from the DAG entirely. I will not FETCH it. Step 1 (Hierarchy): The required target data is 46 aligned protein sequences, which exceeds the >10 item threshold. Since [Aligned_Proteins] was not provided in the initial dependencies, I will not create a FETCH task. Instead, I will spawn a DECOMPOSE task to chunk the provided [Raw_Proteins] into batches of 10.",
+          "dependencies": [
+            "[Raw_Proteins]"
+          ],
+          "instruction": "Chunk the 46 items in [Raw_Proteins] into batches of 10, outputting as [Chunked_Proteins].",
+          "target_output": "[Chunked_Proteins]",
+          "description": "Drops raw transcriptome noise and chunks the target protein data."
+        },
+        {
+          "id": "[Task_Expand_Local_Alignment]",
+          "task_type": "EXPAND",
+          "reasoning": "Step 2 (Hierarchy): The prompt asks to run the local alignment, map the returned scores to a heatmap, and then apply the MapReduce algorithm to segment the heatmap into 4 distinct regions. This multi-step extraction exceeds the >2 logic steps limit. I am deploying a terminal EXPAND node to delegate this complex logic to a child architect using the provided [aligner.py] and [map_reduce.py].",
+          "dependencies": [
+            "[Chunked_Proteins]",
+            "[aligner.py]",
+            "[map_reduce.py]"
+          ],
+          "instruction": "For each chunk in [Chunked_Proteins], use the [aligner.py] to run the local alignment, map the returned scores to a heatmap using the [create_heatmap] function, and then apply the [map_reduce.py] to segment the heatmap into 4 distinct regions. Consolidate into a final report outputting as [Final_Protein_Analysis].",
+          "target_output": "[Final_Protein_Analysis]",
+          "description": "Delegates the multi-step protein analysis and segmentation."
+        }
+      ]
+    }
+  }
+]

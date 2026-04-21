@@ -1,0 +1,965 @@
+[
+  {
+    "domain": "software",
+    "query": {
+      "": "Transform the count of new issues and the sum of build times for the last 3 weekly builds into a single metric for software development productivity.",
+      "dependencies": [
+        {
+          "id": "Build_Logs",
+          "content": "Last 3 weeks of build times."
+        },
+        {
+          "id": "Jira_Tickets",
+          "content": "Last 3 weeks of new issues."
+        }
+      ],
+      "instruction": "Merge count of new issues and sum of build times into a productivity metric."
+    },
+    "decision": {
+      "extracted_tasks": [
+        
+        {
+          "id": "[Task_Compute_Build_Time_Summary]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology: This logic only requires [Build_Logs]. It does NOT depend on the Jira tickets. It is a single internal extraction step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Build_Logs]"
+          ],
+          "instruction": "Sum the build times from [Build_Logs] and output as [Build_Time_Summary].",
+          "target_output": "[Build_Time_Summary]",
+          "description": "Sums the build times from the build logs."
+        },
+        {
+          "id": "[Task_Compute_Issue_Count_Summary]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology: This logic only requires [Jira_Tickets]. It does NOT depend on the build logs. It is a single internal extraction step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Jira_Tickets]"
+          ],
+          "instruction": "Count the new issues from [Jira_Tickets] and output as [Issue_Count_Summary].",
+          "target_output": "[Issue_Count_Summary]",
+          "description": "Counts the new issues from the Jira tickets."
+        },
+        {
+          "id": "[Task_Expand_Merge_Productivity_Metric]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology (The Merge): The parallel tracks are complete. I must now merge [Issue_Count_Summary] and [Build_Time_Summary]. I am deploying a final EXPAND node. Total node count is exactly 5, respecting the generation limit.",
+          "dependencies": [
+            "[Issue_Count_Summary]",
+            "[Build_Time_Summary]"
+          ],
+          "instruction": "Combine the [Issue_Count_Summary] and [Build_Time_Summary] into a single metric for software development productivity, and output as [Productivity_Metric].",
+          "target_output": "[Productivity_Metric]",
+          "description": "Merges the parallel evaluations into a single final productivity metric."
+        }
+      ]
+    }
+  },
+  {
+    "domain": "physics",
+    "query": {
+      "instruction": "Calculate the total energy of the system, then derive the momentum from the kinetic energy, next compute the angular velocity from the momentum, and finally integrate the angular velocity to obtain the rotational kinetic energy.",
+      "description": "Physics analytical expansion.",
+      "dependencies": [
+        {
+          "id": "[System_Energy]",
+          "content": "Initial energy and mass values."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        {
+          "id": "[Task_Compute_System_Energy]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology & Hierarchy: This is a simple 1-to-1 mapping of the input dependency. I am spawning a COMPUTE node.",
+          "dependencies": [
+            "[System_Energy]"
+          ],
+          "instruction": "Calculate the total energy of the system and output as [System_Energy].",
+          "target_output": "[System_Energy]",
+          "description": "Computes the total system energy."
+        },
+        {
+          "id": "[Task_Compute_Kinetic_Energy]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology & Hierarchy: This is a simple 1-to-1 mapping of the input dependency. I am spawning a COMPUTE node.",
+          "dependencies": [
+            "[System_Energy]"
+          ],
+          "instruction": "Derive the kinetic energy from the total energy and output as [Kinetic_Energy].",
+          "target_output": "[Kinetic_Energy]",
+          "description": "Derives the kinetic energy from the total energy."
+        },
+        {
+          "id": "[Task_Compute_Momentum]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology & Hierarchy: This is a simple 1-to-1 mapping of the input dependency. I am spawning a COMPUTE node.",
+          "dependencies": [
+            "[Kinetic_Energy]"
+          ],
+          "instruction": "Compute the momentum from the kinetic energy and output as [Momentum].",
+          "target_output": "[Momentum]",
+          "description": "Computes the momentum from the kinetic energy."
+        },
+        {
+          "id": "[Task_Compute_Angular_Velocity]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology & Hierarchy: This is a simple 1-to-1 mapping of the input dependency. I am spawning a COMPUTE node.",
+          "dependencies": [
+            "[Momentum]"
+          ],
+          "instruction": "Compute the angular velocity from the momentum and output as [Angular_Velocity].",
+          "target_output": "[Angular_Velocity]",
+          "description": "Computes the angular velocity from the momentum."
+        },
+        {
+          "id": "[Task_Compute_Rotational_Kinetic_Energy]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology & Hierarchy: This is a simple 1-to-1 mapping of the input dependency. I am spawning a COMPUTE node.",
+          "dependencies": [
+            "[Angular_Velocity]"
+          ],
+          "instruction": "Integrate the angular velocity to obtain the rotational kinetic energy and output as [Rotational_Kinetic_Energy].",
+          "target_output": "[Rotational_Kinetic_Energy]",
+          "description": "Integrates the angular velocity to obtain the rotational kinetic energy."
+        }
+      ]
+    }
+  },
+  
+  {
+    "domain": "law",
+    "query": {
+      "instruction": "Compute the area of 3 rectangular plots and the volume of 2 cubic containers.",
+      "description": "Law Firm Property Valuation.",
+      "dependencies": [
+        {
+          "id": "[Property_Measurements]",
+          "content": "Plot dimensions and container sizes."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        {
+          "id": "[Task_Compute_Plot_Areas]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology & Hierarchy: This logic only requires [Property_Measurements]. It is a single internal computation step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Property_Measurements]"
+          ],
+          "instruction": "Compute the area of 3 rectangular plots using the dimensions in [Property_Measurements], and output as [Plot_Areas].",
+          "target_output": "[Plot_Areas]",
+          "description": "Computes the area of the plots."
+        },
+        {
+          "id": "[Task_Compute_Container_Volumes]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology & Hierarchy: This logic only requires [Property_Measurements]. It is a single internal computation step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Property_Measurements]"
+          ],
+          "instruction": "Compute the volume of 2 cubic containers using the sizes in [Property_Measurements], and output as [Container_Volumes].",
+          "target_output": "[Container_Volumes]",
+          "description": "Computes the volume of the containers."
+        },
+        {
+          "id": "[Task_Compute_Total_Valuation]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology (The Merge): The parallel tracks are complete. I must now merge [Plot_Areas] and [Container_Volumes]. I am deploying a final COMPUTE node. Total node count is exactly 3, respecting the generation limit.",
+          "dependencies": [
+            "[Plot_Areas]",
+            "[Container_Volumes]"
+          ],
+          "instruction": "Combine the plot areas and container volumes into a final internal property valuation summary, and output as [Final_Valuation].",
+          "target_output": "[Final_Valuation]",
+          "description": "Merges the parallel evaluations into a single final valuation."
+        }
+      ]
+    }
+  },
+  {
+    "domain": "mathematics",
+    "query": {
+      "instruction": "Square the first 3 prime numbers and sum the results, while cubing the fourth prime number.",
+      "description": "Mathematical computation test.",
+      "dependencies": [
+        {
+          "id": "[Prime_List]",
+          "content": "First 4 prime numbers."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        
+        {
+          "id": "[Task_Compute_Square_First_Three]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology: This logic only requires [Prime_List]. It does NOT depend on any other tasks. It is a single internal computation step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Prime_List]"
+          ],
+          "instruction": "Square the first 3 prime numbers in [Prime_List], and output as [Squared_Primes].",
+          "target_output": "[Squared_Primes]",
+          "description": "Squares the first 3 prime numbers."
+        },
+        {
+          "id": "[Task_Compute_Sum_Squared_Primes]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology: This logic only requires [Squared_Primes]. It does NOT depend on any other tasks. It is a single internal computation step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Squared_Primes]"
+          ],
+          "instruction": "Sum the squared prime numbers in [Squared_Primes], and output as [Sum_Squared_Primes].",
+          "target_output": "[Sum_Squared_Primes]",
+          "description": "Sums the squared prime numbers."
+        },
+        {
+          "id": "[Task_Compute_Cube_Fourth_Prime]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology: This logic only requires [Prime_List]. It does NOT depend on any other tasks. It is a single internal computation step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Prime_List]"
+          ],
+          "instruction": "Cube the fourth prime number in [Prime_List], and output as [Cubed_Prime].",
+          "target_output": "[Cubed_Prime]",
+          "description": "Cubes the fourth prime number."
+        },
+        {
+          "id": "[Task_Compute_Sum_Squared_Primes_and_Cubed_Prime]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology (The Merge): The parallel tracks are complete. I must now merge [Sum_Squared_Primes] and [Cubed_Prime]. I am deploying a final COMPUTE node. Total node count is exactly 5, respecting the generation limit.",
+          "dependencies": [
+            "[Sum_Squared_Primes]",
+            "[Cubed_Prime]"
+          ],
+          "instruction": "Combine the sum of the squared prime numbers and the cubed fourth prime number into a final mathematical computation result, and output as [Final_Result].",
+          "target_output": "[Final_Result]",
+          "description": "Merges the parallel evaluations into a single final result."
+        }
+      ]
+    }
+  },
+  {
+    "domain": "law",
+    "query": {
+      "instruction": "Analyze case law precedents, separately identify relevant statutes, merge with client testimony, and then reconcile with expert witness opinions to generate a comprehensive legal brief.",
+      "description": "Parallel law analysis and merge.",
+      "dependencies": [
+        {
+          "id": "[Case_Law_Rulebook]",
+          "content": "Key precedents and applicable statutes."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        
+        {
+          "id": "[Task_Fetch_Relevant_Statutes]",
+          "task_type": "FETCH",
+          "reasoning": "I also need the relevant statutes, which are independent of the case law precedents and require their own FETCH task.",
+          "dependencies": [],
+          "instruction": "Retrieve the relevant statutes from [Case_Law_Rulebook] and output as [Relevant_Statutes].",
+          "target_output": "[Relevant_Statutes]",
+          "description": "Fetches the relevant statutes document."
+        },
+        {
+          "id": "[Task_Expand_Analyze_Law]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology & Hierarchy: This logic requires >2 steps (analysis, identification). I am spawning a parallel EXPAND node.",
+          "dependencies": [
+            "[Case_Law_Precedents]",
+            "[Relevant_Statutes]"
+          ],
+          "instruction": "Analyze the [Case_Law_Precedents] and identify relevant statutes from [Relevant_Statutes], and output as [Analyzed_Law].",
+          "target_output": "[Analyzed_Law]",
+          "description": "Delegates multi-step law analysis logic to a child architect."
+        },
+        {
+          "id": "[Task_Compute_Merge_Client_Testimony]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology (The Merge): The parallel tracks are complete. I must now merge [Analyzed_Law] and [Client_Testimony]. I am deploying a final COMPUTE node. Total node count is exactly 4, but I need to add one more node to respect the generation limit.",
+          "dependencies": [
+            "[Analyzed_Law]",
+            "[Client_Testimony]"
+          ],
+          "instruction": "Combine the [Analyzed_Law] and [Client_Testimony] into a merged internal legal brief summary, and output as [Merged_Brief].",
+          "target_output": "[Merged_Brief]",
+          "description": "Merges the parallel evaluations into a single internal legal brief."
+        },
+        {
+          "id": "[Task_Compute_Reconcile_Expert_Opinions]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology (The Merge): The parallel tracks are complete. I must now reconcile [Merged_Brief] with [Expert_Witness_Opinions]. I am deploying a final COMPUTE node. Total node count is exactly 5, respecting the generation limit.",
+          "dependencies": [
+            "[Merged_Brief]",
+            "[Expert_Witness_Opinions]"
+          ],
+          "instruction": "Reconcile the [Merged_Brief] with the expert witness opinions to generate a comprehensive legal brief, and output as [Final_Legal_Brief].",
+          "target_output": "[Final_Legal_Brief]",
+          "description": "Reconciles the merged brief with expert witness opinions to generate a comprehensive legal brief."
+        }
+      ]
+    }
+  },
+  {
+    "domain": "medicine",
+    "query": {
+      "instruction": "Analyze patient's lab results, identify key biomarkers, and flag potential side effects, then classify the findings as normal or abnormal, and finally generate a detailed clinical report with recommendations.",
+      "description": "Deep medical analysis and reporting.",
+      "dependencies": [
+        {
+          "id": "[Lab_Norms]",
+          "content": "Standard reference ranges for biomarkers."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        
+        {
+          "id": "[Task_Compute_Identify_Biomarkers]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology & Hierarchy: This logic only requires [Raw_Lab_Results] and [Lab_Norms]. It does NOT depend on any other tasks. It is a single internal extraction step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Raw_Lab_Results]",
+            "[Lab_Norms]"
+          ],
+          "instruction": "Identify key biomarkers from [Raw_Lab_Results] using the reference ranges in [Lab_Norms], and output as [Biomarkers].",
+          "target_output": "[Biomarkers]",
+          "description": "Extracts biomarkers from the lab results."
+        },
+        {
+          "id": "[Task_Expand_Flag_Side_Effects]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology & Hierarchy: Operates entirely in parallel to biomarker extraction. Flagging potential side effects requires >2 steps (risk assessment, severity calculation). I am spawning a parallel EXPAND node.",
+          "dependencies": [
+            "[Raw_Lab_Results]",
+            "[Lab_Norms]"
+          ],
+          "instruction": "Assess the risk of potential side effects from [Raw_Lab_Results] using the reference ranges in [Lab_Norms], calculate the severity, and output as [Side_Effects].",
+          "target_output": "[Side_Effects]",
+          "description": "Delegates multi-step risk assessment logic to a child architect."
+        },
+        {
+          "id": "[Task_Compute_Classify_Findings]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology (The Merge): The parallel tracks are complete. I must now classify [Biomarkers] and [Side_Effects] as normal or abnormal. I am deploying a final COMPUTE node. Total node count is exactly 4, respecting the generation limit.",
+          "dependencies": [
+            "[Biomarkers]",
+            "[Side_Effects]"
+          ],
+          "instruction": "Classify the findings as normal or abnormal based on [Biomarkers] and [Side_Effects], and output as [Classification].",
+          "target_output": "[Classification]",
+          "description": "Merges the parallel evaluations into a single final classification."
+        },
+        {
+          "id": "[Task_Compute_Generate_Report]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology & Hierarchy: This logic only requires [Classification], [Biomarkers], and [Side_Effects]. It does NOT depend on any other tasks. It is a single internal report generation step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Classification]",
+            "[Biomarkers]",
+            "[Side_Effects]"
+          ],
+          "instruction": "Generate a detailed clinical report with recommendations based on [Classification], [Biomarkers], and [Side_Effects], and output as [Clinical_Report].",
+          "target_output": "[Clinical_Report]",
+          "description": "Generates a detailed clinical report with recommendations."
+        }
+      ]
+    }
+  },
+  
+  {
+    "domain": "physics",
+    "query": {
+      "instruction": "Compute the average velocity of 3 particles, and separately calculate their maximum kinetic energy. Finally, combine the results into a single internal data point.",
+      "description": "Parallel physics computation and merge.",
+      "dependencies": [
+        {
+          "id": "[Particle_Data]",
+          "content": "Particle masses and initial positions."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": []
+    }
+  },
+  {
+    "domain": "physics",
+    "query": {
+      "instruction": "Decompose the 45 atomic masses into separate elements and their atomic numbers, then combine the results into a periodic table data frame.",
+      "description": "Atomic mass decomposition and merge.",
+      "dependencies": [
+        {
+          "id": "[Atomic_Masses]",
+          "content": "List of 45 atomic masses."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        {
+          "id": "[Task_Decompose_Atomic_Masses]",
+          "task_type": "DECOMPOSE",
+          "reasoning": "The input data exceeds the 2,000-word threshold. I am spawning a DECOMPOSE task to chunk the atomic masses.",
+          "dependencies": [
+            "[Atomic_Masses]"
+          ],
+          "instruction": "Decompose the atomic masses into separate elements and their atomic numbers, and output as [Decomposed_Masses].",
+          "target_output": "[Decomposed_Masses]",
+          "description": "Chunks the atomic masses into separate elements and their atomic numbers."
+        },
+        {
+          "id": "[Task_Compute_Periodic_Table]",
+          "task_type": "COMPUTE",
+          "reasoning": "This logic only requires [Decomposed_Masses] and is a single internal transformation step. It does NOT require parallelization.",
+          "dependencies": [
+            "[Decomposed_Masses]"
+          ],
+          "instruction": "Combine the decomposed atomic masses into a periodic table data frame, and output as [Periodic_Table].",
+          "target_output": "[Periodic_Table]",
+          "description": "Merges the decomposed atomic masses into a periodic table data frame."
+        }
+      ]
+    }
+  },
+  {
+    "domain": "history",
+    "query": {
+      "instruction": "Analyze historical population trends, extract major migration patterns, compare economic growth to urbanization rates, and determine the impact on climate change. Finally, combine the results into a single historical analysis.",
+      "description": "Historical population and climate analysis.",
+      "dependencies": [
+        {
+          "id": "[Historical_Data]",
+          "content": "Population records and climate reports."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": []
+    }
+  },
+  {
+    "domain": "literature",
+    "query": {
+      "instruction": "Analyze the author's writing style, then examine the narrative structure, next evaluate the character development, and finally synthesize the themes and symbolism. Combine the results into a literary analysis report.",
+      "description": "Sequential literary analysis and merge.",
+      "dependencies": [
+        {
+          "id": "[Literary_Theory]",
+          "content": "Key concepts and critical approaches."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        {
+          "id": "[Task_Fetch_Literary_Theory]",
+          "task_type": "FETCH",
+          "reasoning": "I need the literary theory, which is currently outside the namespace. I am spawning a FETCH task.",
+          "dependencies": [],
+          "instruction": "Retrieve the literary theory and output as [Literary_Theory].",
+          "target_output": "[Literary_Theory]",
+          "description": "Fetches the literary theory document."
+        },
+        {
+          "id": "[Task_Expand_Analyze_Style]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology & Hierarchy: Analyzing the author's writing style requires >2 steps (identifying tone, analyzing syntax, evaluating coherence). I am spawning a parallel EXPAND node.",
+          "dependencies": [
+            "[Literary_Theory]",
+            "[Text_Content]"
+          ],
+          "instruction": "Analyze the author's writing style by identifying the tone, analyzing the syntax, and evaluating the coherence, and output as [Style_Analysis].",
+          "target_output": "[Style_Analysis]",
+          "description": "Delegates multi-step analysis logic to a child architect."
+        },
+        {
+          "id": "[Task_Expand_Examine_Structure]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology & Hierarchy: Examining the narrative structure requires >2 steps (identifying plot, analyzing character arcs, evaluating pacing). I am spawning a parallel EXPAND node.",
+          "dependencies": [
+            "[Literary_Theory]",
+            "[Text_Content]"
+          ],
+          "instruction": "Examine the narrative structure by identifying the plot, analyzing the character arcs, and evaluating the pacing, and output as [Structure_Analysis].",
+          "target_output": "[Structure_Analysis]",
+          "description": "Delegates multi-step examination logic to a child architect."
+        },
+        {
+          "id": "[Task_Expand_Evaluate_Development]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology & Hierarchy: Evaluating character development requires >2 steps (identifying character traits, analyzing character growth, evaluating character relationships). I am spawning a parallel EXPAND node.",
+          "dependencies": [
+            "[Literary_Theory]",
+            "[Text_Content]"
+          ],
+          "instruction": "Evaluate the character development by identifying the character traits, analyzing the character growth, and evaluating the character relationships, and output as [Development_Analysis].",
+          "target_output": "[Development_Analysis]",
+          "description": "Delegates multi-step evaluation logic to a child architect."
+        },
+        {
+          "id": "[Task_Compute_Synthesize_Themes]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology (The Merge): The parallel tracks are complete. I must now synthesize [Style_Analysis], [Structure_Analysis], and [Development_Analysis]. I am deploying a final COMPUTE node. Total node count is exactly 5, respecting the generation limit.",
+          "dependencies": [
+            "[Style_Analysis]",
+            "[Structure_Analysis]",
+            "[Development_Analysis]"
+          ],
+          "instruction": "Synthesize the themes and symbolism by combining the [Style_Analysis], [Structure_Analysis], and [Development_Analysis] into a final literary analysis report, and output as [Literary_Analysis_Report].",
+          "target_output": "[Literary_Analysis_Report]",
+          "description": "Merges the parallel evaluations into a single final literary analysis report."
+        }
+      ]
+    }
+  },
+  {
+    "domain": "law",
+    "query": {
+      "instruction": "Review contract to identify all legal liabilities, separately analyze the client's financial stability, merge the results to identify potential risks, then forecast potential litigation costs, and finally output a final risk assessment.",
+      "description": "4-Step Law Risk Assessment.",
+      "dependencies": [
+        {
+          "id": "[Contract_Terms]",
+          "content": "Contract language and client data."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        {
+          "id": "[Task_Expand_Legal_Liabilities]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology & Hierarchy: Identifying legal liabilities requires >2 steps (contract review, liability extraction). I am spawning a parallel EXPAND node.",
+          "dependencies": [
+            "[Contract_Terms]"
+          ],
+          "instruction": "Review [Contract_Terms] to identify all legal liabilities, and output as [Legal_Liabilities].",
+          "target_output": "[Legal_Liabilities]",
+          "description": "Delegates multi-step liability extraction logic to a child architect."
+        },
+        {
+          "id": "[Task_Fetch_Client_Financials]",
+          "task_type": "FETCH",
+          "reasoning": "I also need the client's financial stability data, which is currently outside the namespace. I am spawning a FETCH task.",
+          "dependencies": [],
+          "instruction": "Retrieve the client's financial stability data and output as [Client_Financials].",
+          "target_output": "[Client_Financials]",
+          "description": "Fetches the client's financial stability data."
+        },
+        {
+          "id": "[Task_Compute_Merge_Risk_Assessment]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology (The Merge): The parallel tracks are complete. I must now merge [Legal_Liabilities] and [Client_Financials]. I am deploying a final COMPUTE node. Total node count is exactly 4, respecting the generation limit.",
+          "dependencies": [
+            "[Legal_Liabilities]",
+            "[Client_Financials]"
+          ],
+          "instruction": "Combine the [Legal_Liabilities] and [Client_Financials] into a final internal risk assessment summary, and output as [Risk_Assessment].",
+          "target_output": "[Risk_Assessment]",
+          "description": "Merges the parallel evaluations into a single final risk assessment."
+        },
+        {
+          "id": "[Task_Expand_Litigation_Costs]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology & Hierarchy: Forecasting litigation costs requires >2 steps (risk assessment, cost calculation). I am spawning a parallel EXPAND node.",
+          "dependencies": [
+            "[Risk_Assessment]"
+          ],
+          "instruction": "Forecast potential litigation costs based on the [Risk_Assessment], and output as [Litigation_Costs].",
+          "target_output": "[Litigation_Costs]",
+          "description": "Delegates multi-step litigation cost forecasting logic to a child architect."
+        }
+      ]
+    }
+  },
+  {
+    "domain": "linguistics",
+    "query": {
+      "instruction": "Decompose 45 linguistic concepts into constituent parts, and separately analyze their morphological and syntactic structures. Merge the results into a unified linguistic taxonomy.",
+      "description": "Parallel linguistic decomposition and merge.",
+      "dependencies": [
+        {
+          "id": "[Linguistic_Framework]",
+          "content": "Morphological and syntactic analysis rules."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": []
+    }
+  },
+  {
+    "domain": "biology",
+    "query": {
+      "instruction": "Sequence: Identify genetic mutations, predict protein structure, simulate enzyme activity, and merge into a final disease risk assessment.",
+      "description": "Biology disease risk analysis.",
+      "dependencies": [
+        {
+          "id": "[Genetic_Mutation_Database]",
+          "content": "Genetic mutation data and protein structure models."
+        },
+        {
+          "id": "[Enzyme_Activity_Model]",
+          "content": "Enzyme kinetic parameters and protein-ligand interactions."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        {
+          "id": "[Task_Compute_Predict_Protein_Structure]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology & Hierarchy: This logic only requires [Mutations] and [Genetic_Mutation_Database]. It does NOT depend on the enzyme activity model. It is a single internal prediction step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Mutations]",
+            "[Genetic_Mutation_Database]"
+          ],
+          "instruction": "Predict the protein structure from [Mutations] using the criteria in [Genetic_Mutation_Database], and output as [Predicted_Structure].",
+          "target_output": "[Predicted_Structure]",
+          "description": "Predicts protein structure from genetic mutations."
+        },
+        {
+          "id": "[Task_Expand_Simulate_Enzyme]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology & Hierarchy: Operates entirely in parallel to protein structure prediction. Simulating enzyme activity requires >2 steps (kinetic modeling, ligand binding). I am spawning a parallel EXPAND node.",
+          "dependencies": [
+            "[Enzyme_Activity]",
+            "[Enzyme_Activity_Model]"
+          ],
+          "instruction": "Simulate enzyme activity from [Enzyme_Activity] using the kinetic parameters in [Enzyme_Activity_Model], and output as [Simulated_Activity].",
+          "target_output": "[Simulated_Activity]",
+          "description": "Delegates multi-step enzyme activity simulation logic to a child architect."
+        },
+        {
+          "id": "[Task_Compute_Merge_Disease_Risk]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology (The Merge): The parallel tracks are complete. I must now merge [Predicted_Structure] and [Simulated_Activity]. I am deploying a final COMPUTE node. Total node count is exactly 5, respecting the generation limit.",
+          "dependencies": [
+            "[Predicted_Structure]",
+            "[Simulated_Activity]"
+          ],
+          "instruction": "Combine the [Predicted_Structure] and [Simulated_Activity] into a final disease risk assessment summary, and output as [Final_Disease_Risk].",
+          "target_output": "[Final_Disease_Risk]",
+          "description": "Merges the parallel evaluations into a single final disease risk assessment."
+        }
+      ]
+    }
+  },
+  {
+    "domain": "physics",
+    "query": {
+      "instruction": "Calculate the center of mass for 40 objects in a 2D space and simultaneously calculate their individual moment of inertia.",
+      "description": "Parallel physics calculations.",
+      "dependencies": [
+        {
+          "id": "[Physics_Formula]",
+          "content": "Formula for center of mass and moment of inertia."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        {
+          "id": "[Task_Compute_Center_of_Mass]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology & Hierarchy: This logic only requires [Physics_Formula] and [Object_Count]. It does NOT depend on the moment of inertia. It is a single internal extraction step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Physics_Formula]",
+            "[Object_Count]"
+          ],
+          "instruction": "Calculate the center of mass for [Object_Count] objects in a 2D space using the formula in [Physics_Formula], and output as [Center_of_Mass].",
+          "target_output": "[Center_of_Mass]",
+          "description": "Calculates the center of mass."
+        },
+        {
+          "id": "[Task_Compute_Moment_of_Inertia]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology & Hierarchy: This logic only requires [Physics_Formula] and [Object_Count]. It does NOT depend on the center of mass. It is a single internal extraction step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Physics_Formula]",
+            "[Object_Count]"
+          ],
+          "instruction": "Calculate the moment of inertia for [Object_Count] objects in a 2D space using the formula in [Physics_Formula], and output as [Moment_of_Inertia].",
+          "target_output": "[Moment_of_Inertia]",
+          "description": "Calculates the moment of inertia."
+        },
+        {
+          "id": "[Task_Expand_Merge_Physics_Results]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology & Hierarchy: Operates entirely in parallel to center of mass and moment of inertia calculations. Merging results requires >2 steps (combining, processing). I am spawning a parallel EXPAND node.",
+          "dependencies": [
+            "[Center_of_Mass]",
+            "[Moment_of_Inertia]"
+          ],
+          "instruction": "Combine the [Center_of_Mass] and [Moment_of_Inertia] into a final internal physics results summary, and output as [Physics_Results].",
+          "target_output": "[Physics_Results]",
+          "description": "Delegates multi-step merging logic to a child architect."
+        },
+        {
+          "id": "[Task_Compute_Final_Physics_Summary]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology (The Merge): The parallel tracks are complete. I must now merge [Physics_Results]. I am deploying a final COMPUTE node. Total node count is exactly 5, respecting the generation limit.",
+          "dependencies": [
+            "[Physics_Results]"
+          ],
+          "instruction": "Combine the [Physics_Results] into a final internal physics summary, and output as [Final_Physics_Summary].",
+          "target_output": "[Final_Physics_Summary]",
+          "description": "Merges the parallel physics results into a single final summary."
+        }
+      ]
+    }
+  },
+
+  {
+    "domain": "medicine",
+    "query": {
+      "instruction": "Identify the patient's medical history + Analyze lab results + Review ECG data + Integrate into predictive model for disease diagnosis.",
+      "description": "Sequential medicine analysis and diagnosis.",
+      "dependencies": [
+        {
+          "id": "[Medical_Records]",
+          "content": "Patient's medical history and lab results."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        {
+          "id": "[Task_Fetch_Lab_Results]",
+          "task_type": "FETCH",
+          "reasoning": "I also need the patient's lab results, which is currently outside the namespace. I am spawning a FETCH task.",
+          "dependencies": [],
+          "instruction": "Retrieve the patient's lab results from the lab system and output as [Lab_Results].",
+          "target_output": "[Lab_Results]",
+          "description": "Fetches the patient's lab results."
+        },
+        {
+          "id": "[Task_Fetch_ECG_Data]",
+          "task_type": "FETCH",
+          "reasoning": "I also need the patient's ECG data, which is currently outside the namespace. I am spawning a FETCH task.",
+          "dependencies": [],
+          "instruction": "Retrieve the patient's ECG data from the ECG system and output as [ECG_Data].",
+          "target_output": "[ECG_Data]",
+          "description": "Fetches the patient's ECG data."
+        },
+        {
+          "id": "[Task_Expand_Analyze_Lab_Results]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology & Hierarchy: Analyzing lab results requires >2 steps (data cleaning, statistical analysis). I am spawning a parallel EXPAND node.",
+          "dependencies": [
+            "[Lab_Results]",
+            "[Hiring_Rubric]"
+          ],
+          "instruction": "Clean and analyze the [Lab_Results] using the criteria in [Hiring_Rubric], and output as [Lab_Analysis].",
+          "target_output": "[Lab_Analysis]",
+          "description": "Delegates multi-step lab analysis logic to a child architect."
+        },
+        {
+          "id": "[Task_Compute_Integrate_Diagnosis]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology (The Merge): The parallel tracks are complete. I must now integrate [Medical_Records], [Lab_Analysis], and [ECG_Data] into a predictive model for disease diagnosis. Total node count is exactly 5, respecting the generation limit.",
+          "dependencies": [
+            "[Medical_Records]",
+            "[Lab_Analysis]",
+            "[ECG_Data]"
+          ],
+          "instruction": "Combine the [Medical_Records], [Lab_Analysis], and [ECG_Data] into a predictive model for disease diagnosis, and output as [Disease_Diagnosis].",
+          "target_output": "[Disease_Diagnosis]",
+          "description": "Merges the parallel evaluations into a single final disease diagnosis."
+        }
+      ]
+    }
+  },
+  {
+    "domain": "physics",
+    "query": {
+      "instruction": "Fork electron masses & quark masses. Multiply electron masses by 2 and sum quark masses. Merge results.",
+      "description": "Physics direct execution test.",
+      "dependencies": [
+        {
+          "id": "[Particle_Table]",
+          "content": "Elementary particle masses."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        
+        {
+          "id": "[Task_Compute_Electron_Masses]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology & Hierarchy: This logic only requires [Particle_Table]. It is a single internal extraction step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Particle_Table]"
+          ],
+          "instruction": "Extract electron masses from [Particle_Table] and multiply by 2, output as [Electron_Masses_Doubled].",
+          "target_output": "[Electron_Masses_Doubled]",
+          "description": "Extracts electron masses and multiplies by 2."
+        },
+        {
+          "id": "[Task_Compute_Quark_Masses]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology & Hierarchy: This logic only requires [Particle_Table]. It is a single internal extraction step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Particle_Table]"
+          ],
+          "instruction": "Extract quark masses from [Particle_Table] and sum, output as [Quark_Masses_Sum].",
+          "target_output": "[Quark_Masses_Sum]",
+          "description": "Extracts quark masses and sums."
+        },
+        {
+          "id": "[Task_Compute_Merge_Results]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology (The Merge): The parallel tracks are complete. I must now merge [Electron_Masses_Doubled] and [Quark_Masses_Sum]. Total node count is exactly 4, respecting the generation limit. I am deploying a final COMPUTE node.",
+          "dependencies": [
+            "[Electron_Masses_Doubled]",
+            "[Quark_Masses_Sum]"
+          ],
+          "instruction": "Combine [Electron_Masses_Doubled] and [Quark_Masses_Sum] into a final physics result, and output as [Final_Physics_Result].",
+          "target_output": "[Final_Physics_Result]",
+          "description": "Merges the parallel evaluations into a single final result."
+        }
+      ]
+    }
+  },
+  {
+    "domain": "mathematics",
+    "query": {
+      "instruction": "Analyze the historical stock prices to predict future trends, then apply regression analysis to refine the model, isolate the impact of seasonal factors, and finally compute the confidence interval. Merge the refined model and interval.",
+      "description": "Stock market forecasting.",
+      "dependencies": [
+        {
+          "id": "[Financial_Data]",
+          "content": "Historical stock prices and seasonal factors."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        {
+          "id": "[Task_Expand_Analyze_Trends]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology & Hierarchy: Analyzing historical stock prices to predict future trends requires >2 steps (modeling, prediction). I am spawning a parallel EXPAND node.",
+          "dependencies": [
+            "[Financial_Data]"
+          ],
+          "instruction": "Analyze the historical stock prices to predict future trends, and output as [Predicted_Trends].",
+          "target_output": "[Predicted_Trends]",
+          "description": "Delegates multi-step trend analysis logic to a child architect."
+        },
+        {
+          "id": "[Task_Compute_Refine_Model]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology: The parallel track is complete. I must now apply regression analysis to refine the model. This logic only requires [Predicted_Trends] and does NOT depend on the seasonal factors. It is a single internal refinement step, safe for a parallel COMPUTE node.",
+          "dependencies": [
+            "[Predicted_Trends]"
+          ],
+          "instruction": "Apply regression analysis to refine the model, and output as [Refined_Model].",
+          "target_output": "[Refined_Model]",
+          "description": "Refines the model using regression analysis."
+        },
+        {
+          "id": "[Task_Expand_Isolate_Seasonal_Factors]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology & Hierarchy: Isolating the impact of seasonal factors requires >2 steps (identification, isolation). I am spawning a parallel EXPAND node.",
+          "dependencies": [
+            "[Financial_Data]"
+          ],
+          "instruction": "Isolate the impact of seasonal factors, and output as [Isolated_Factors].",
+          "target_output": "[Isolated_Factors]",
+          "description": "Delegates multi-step seasonal factor isolation logic to a child architect."
+        },
+        {
+          "id": "[Task_Compute_Merge_Model_Interval]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology (The Merge): The parallel tracks are complete. I must now merge [Refined_Model] and [Isolated_Factors]. I am deploying a final COMPUTE node. Total node count is exactly 5, respecting the generation limit.",
+          "dependencies": [
+            "[Refined_Model]",
+            "[Isolated_Factors]"
+          ],
+          "instruction": "Merge the refined model and the isolated seasonal factors, and output as [Final_Model].",
+          "target_output": "[Final_Model]",
+          "description": "Merges the parallel evaluations into a single final model."
+        }
+      ]
+    }
+  },
+  {
+    "domain": "biology",
+    "query": {
+      "instruction": "Sequence: analyze gene expression patterns, identify novel regulatory motifs, predict protein structure, and validate functional implications. Merge results into comprehensive gene regulatory network.",
+      "description": "Biology: Gene Regulatory Network Expansion.",
+      "dependencies": [
+        {
+          "id": "[Genomic_Database]",
+          "content": "Up-to-date gene expression datasets."
+        }
+      ]
+    },
+    "decision": {
+      "extracted_tasks": [
+        {
+          "id": "[Task_Fetch_Genomic_Database]",
+          "task_type": "FETCH",
+          "reasoning": "The genomic database is outside the namespace. I am spawning a FETCH task to retrieve it.",
+          "dependencies": [],
+          "instruction": "Retrieve the genomic database and output as [Genomic_Database].",
+          "target_output": "[Genomic_Database]",
+          "description": "Fetches the genomic database."
+        },
+        {
+          "id": "[Task_Expand_Analyze_Gene_Expression]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology & Hierarchy: Analyzing gene expression patterns requires >2 steps (data filtering, motif identification). I am spawning a parallel EXPAND node.",
+          "dependencies": [
+            "[Genomic_Database]"
+          ],
+          "instruction": "Filter the gene expression data, identify novel regulatory motifs, and output as [Regulatory_Motifs].",
+          "target_output": "[Regulatory_Motifs]",
+          "description": "Delegates multi-step gene expression analysis logic to a child architect."
+        },
+        {
+          "id": "[Task_Expand_Predict_Protein_Structure]",
+          "task_type": "EXPAND",
+          "reasoning": "Evaluating Topology & Hierarchy: Predicting protein structure requires >2 steps (sequence alignment, 3D modeling). I am spawning a parallel EXPAND node.",
+          "dependencies": [
+            "[Genomic_Database]"
+          ],
+          "instruction": "Align the gene sequences, model the 3D protein structure, and output as [Protein_Structure].",
+          "target_output": "[Protein_Structure]",
+          "description": "Delegates multi-step protein structure prediction logic to a child architect."
+        },
+        {
+          "id": "[Task_Compute_Merge_Gene_Regulatory_Network]",
+          "task_type": "COMPUTE",
+          "reasoning": "Evaluating Topology (The Merge): The parallel tracks are complete. I must now merge [Regulatory_Motifs], [Protein_Structure], and the results of the remaining tasks into a comprehensive gene regulatory network. Total node count is exactly 4, but I must emit a 'Super Router' node to delegate the remaining tasks.",
+          "dependencies": [
+            "[Regulatory_Motifs]",
+            "[Protein_Structure]"
+          ],
+          "instruction": "Combine the regulatory motifs, protein structure, and the results of the remaining tasks into a comprehensive gene regulatory network, and output as [Gene_Regulatory_Network].",
+          "target_output": "[Gene_Regulatory_Network]",
+          "description": "Merges the parallel evaluations into a single final gene regulatory network."
+        },
+        {
+          "id": "[Task_Super_Router]",
+          "task_type": "EXPAND",
+          "reasoning": "Graph width exceeds 5-node generation limit. Delegating fan-out to a dynamic sub-router.",
+          "dependencies": [
+            "[Genomic_Database]"
+          ],
+          "instruction": "Spawn the following tasks: Task_Predict_Functional_Implications, Task_Validate_Func_Implications. Merge results into [Gene_Regulatory_Network].",
+          "target_output": "[Gene_Regulatory_Network]",
+          "description": "Delegates the remaining tasks to a dynamic sub-router."
+        }
+      ]
+    }
+  }
+]

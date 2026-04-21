@@ -34,7 +34,7 @@ from llm_utils import OPENAI_API_KEY_HARDCODED, OPENROUTER_API_KEY_HARDCODED
 # ============================================================================
 
 CRUCIBLE_NAME = "C1_EpistemicVoid_TwoStage"
-TARGET_COUNT = 20
+TARGET_COUNT = 8
 OUTPUT_PATH = "./crucible_outputs/c1_epistemic_void_twostage.json"
 
 PROVIDER: str = "openrouter"
@@ -54,33 +54,35 @@ DOMAINS = [
 # ============================================================================
 # SYSTEM PROMPTS (PLACEHOLDERS)
 # ============================================================================
-
-STAGE_1_SYSTEM_PROMPT = """
-You are a Minimalist Data Generator for an 8B-parameter DAG orchestrator.
-Your goal is to generate extremely short, internal-only workflow requests that force structural delegation.
-
+temp = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 STRICT NO-ACTION POLICY (CRITICAL)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - NEVER ask to "Upload," "Send," "Email," "Save," or "Post" to an external system.
 - Focus ONLY on Internal Transformation: Summarizing, Comparing, Scoring, or Reformatting.
 - The "Trap" is now purely COGNITIVE: Give too much data (Volume) and too many steps (Logic).
+"""
+STAGE_1_SYSTEM_PROMPT = """
+You are a Minimalist Data Generator for an 8B-parameter DAG orchestrator.
+Your goal is to generate extremely short, internal-only workflow requests that force C2 Topological Forking and Merging (Parallel Execution).
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-THE 8B DELEGATION TRAP (STRICT LIMITS)
+THE C2 PARALLEL TRAP (STRICT LIMITS)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Your output JSON MUST be under 50 words. The query MUST contain:
+Your output JSON MUST be under 60 words. The query MUST contain:
 
-1. VOLUME (Decompose Bait): Mention processing 25 to 50 items (e.g., "Analyze 40 logs").
-2. LOGIC (Expand Bait): Demand 3 sequential internal steps (e.g., "Find the errors, count the frequency, and draft a summary report").
-3. THE NAMESPACE TRAP: The final result must be "stored in the internal namespace" or "held in memory." Do NOT provide an external path.
+1. THE FORK (Parallel Inputs): Introduce 2 completely distinct, independent data sources or subjects (e.g., "the Q1 revenue" and "the Q1 expenses").
+2. INDEPENDENT LOGIC (Parallel Execution): Demand a specific, separate action for *each* data source (e.g., "project the revenue trends" and "audit the expenses for anomalies").
+3. THE MERGE (Convergence): Demand that the separate results be combined into a single final internal output.
+
+CRITICAL: The logic applied to Data A must NOT depend on Data B. They must be capable of parallel execution.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 OUTPUT SCHEMA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {
   "query": {
-    "instruction": "[Volume] + [3-Step Internal Logic] + [End in Namespace].",
+    "instruction": "[Fork Data A & B] + [Independent Actions for A & B] + [Merge the Results].",
     "description": "5 words max.",
     "dependencies": [
       {
@@ -91,15 +93,15 @@ OUTPUT SCHEMA
   }
 }
 
---- EXAMPLE (DOMAIN: FINANCE) ---
+--- EXAMPLE (DOMAIN: HR) ---
 {
   "query": {
-    "instruction": "Scan the 45 attached expense receipts. Categorize by department, flag totals over $500, and generate a final internal audit table.",
-    "description": "Audit 45 receipts internally.",
+    "instruction": "Review the candidate's resume to extract their technical skills, and separately review the technical test to score their coding proficiency. Finally, combine the skills and score into a final internal hiring recommendation.",
+    "description": "Parallel HR review and merge.",
     "dependencies": [
       {
-        "id": "[Audit_Rules]",
-        "content": "List of department codes and tax thresholds."
+        "id": "[Hiring_Rubric]",
+        "content": "Skill requirements and test answer key."
       }
     ]
   }
@@ -358,23 +360,35 @@ def get_structural_blueprint() -> dict:
     Balances the dataset across Decompose, Expand, and Compute.
     """
     blueprints = [
+        # {
+        #     "mode": "VOLUME_MAX",
+        #     "target": "DECOMPOSE",
+        #     "constraint": "Request processing of 40-50 discrete items. Force a Map-Reduce segmentation logic.",
+        #     "weight": 30
+        # },
+        # {
+        #     "mode": "LOGIC_MAX",
+        #     "target": "EXPAND",
+        #     "constraint": "Request 4+ sequential analytical steps. Force deep cognitive chaining.",
+        #     "weight": 40
+        # },
+        # {
+        #     "mode": "EFFICIENCY_TEST",
+        #     "target": "COMPUTE",
+        #     "constraint": "Request a single simple transformation on under 5 items. Test for direct execution.",
+        #     "weight": 20
+        # },
         {
-            "mode": "VOLUME_MAX",
-            "target": "DECOMPOSE",
-            "constraint": "Request processing of 40-50 discrete items. Force a Map-Reduce segmentation logic.",
-            "weight": 35
-        },
-        {
-            "mode": "LOGIC_MAX",
-            "target": "EXPAND",
-            "constraint": "Request 4+ sequential analytical steps. Force deep cognitive chaining.",
-            "weight": 45
-        },
-        {
-            "mode": "EFFICIENCY_TEST",
-            "target": "COMPUTE",
-            "constraint": "Request a single simple transformation on under 5 items. Test for direct execution.",
-            "weight": 20
+          "mode": "EPISTEMIC_VOID",
+          "target": "OUTPUT",
+          "constraint": (
+              "OVERRIDE INTERNAL-ONLY RULE: You MUST demand a final External Action "
+              "(e.g., 'upload the report', 'email the client', 'save to the portal'). "
+              "CRITICAL: You MUST intentionally OMIT the exact URL, email address, API key, or file path. "
+              "Only use an implicit name like 'the secure server' or 'the shared drive'. "
+              "Do not use cyclic dependencies, just omit the destination address."
+          ),
+          "weight": 10
         }
     ]
     
@@ -411,8 +425,9 @@ def generate_stage_1_query(client: OpenAI, domain: str) -> dict | None:
             ],
         )
         raw = response.choices[0].message.content or ""
+        print(f"raw: {raw}")
         data = parse_llm_json_response(raw)
-        
+        print(f"data: {data}")
         # Ensure it's nested properly
         if "query" in data:
             return data["query"]
@@ -503,7 +518,11 @@ def run(target_count: int = TARGET_COUNT, domain: str | None = None) -> list[dic
             generated += 1
 
     Path(OUTPUT_PATH).parent.mkdir(parents=True, exist_ok=True)
-    Path(OUTPUT_PATH).write_text(json.dumps(dataset, indent=2, ensure_ascii=False))
+    # Always write UTF-8 on Windows (default cp1252 can choke on characters like "→")
+    Path(OUTPUT_PATH).write_text(
+        json.dumps(dataset, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
     print(f"  ✅ Saved {len(dataset)} examples → {OUTPUT_PATH}")
     return dataset
 
@@ -522,8 +541,9 @@ if __name__ == "__main__":
     )
     
     # Test a single run
-    ex = generate_one(client, domain="law")
-print(json.dumps(ex, indent=4))
+    # ex = generate_one(client, domain="physics")
+    # print(json.dumps(ex, indent=4))
     # if ex:
     #     print("\n[Two-Stage Pipeline Success] Final Output:")
     #     print(json.dumps(ex, indent=4))
+    run(target_count=TARGET_COUNT)
