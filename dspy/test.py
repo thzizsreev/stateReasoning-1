@@ -1,4 +1,4 @@
-from modules import SemanticRouter, DecomposerAgent, ComputeAgent, DataExtractorAgent
+from modules import SemanticRouter, DecomposerAgent, ComputeAgent, DataExtractorAgent, ExpanderAgent
 import dspy
 from config import configure_lm
 
@@ -27,7 +27,9 @@ Once all 4 fill lists are successfully derived, output a final status node named
 
 """
 query_1= """ 
-the user requests a square with a side length of 10. with point A at (43,79)
+The Scenario: A marketing director types a single, highly abstract goal into the system. They provide no steps, no variables, and no instructions on how to do it.
+
+User Query: > "Generate a personalized AI welcome video for our new enterprise client, Acme Corp, and email it to their lead.
 """
 if __name__ == "__main__":
     # 1. WAKE UP THE ENGINE
@@ -37,20 +39,27 @@ if __name__ == "__main__":
     # 2. INSTANTIATE THE BLANK ARCHITECTURE
     print("Initializing Semantic Router architecture...")
     # router = SemanticRouter() 
-    decomposer = DecomposerAgent()
+    # decomposer = DecomposerAgent()
     # compute = ComputeAgent() 
     #extractor = DataExtractorAgent()
+    expander = ExpanderAgent()
+    print(f"\nTesting Query: {query_1}\n")
+    output = expander(explicit_target=query_1)
+    print(output.model_dump_json(indent=4))
+    for task in output.extracted_tasks:
+        for k, v in task.model_dump().items():
+            print(f"{k}: {v}")
 
     # print(f"\nTesting Query: {query}\n")
     # output = compute(instruction=query, target_output_id="[Data_B]")
 
-    print("testing decomposer agent...")
-    output = decomposer(explicit_target=query)
-    print(output.model_dump_json(indent=4))
-    for k, v in output.model_dump().items():
-        print(f"{k}: {v}")
+    # print("testing decomposer agent...")
+    # output = decomposer(explicit_target=query)
+    # print(output.model_dump_json(indent=4))
+    # for k, v in output.model_dump().items():
+    #     print(f"{k}: {v}")
 
-    print("testing data extractor agent...")
+    # print("testing data extractor agent...")
     
     # output = extractor(source_text=query)
     # #print(output.model_dump_json(indent=4))

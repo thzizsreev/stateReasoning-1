@@ -340,7 +340,7 @@ def _has_cycle(tasks: list[ExpanderTaskNode]) -> Optional[str]:
 # VALIDATION HELPER
 # ============================================================================
  
-def _validate_decision(decision: ExpanderDecision) -> ExpanderDecision:
+def _validate_expander_decision(decision: ExpanderDecision) -> ExpanderDecision:
     """
     Enforce structural contracts post-LLM.
  
@@ -438,7 +438,7 @@ class ExpanderAgent(dspy.Module):
     def forward(self, explicit_target: str) -> ExpanderDecision:
         prediction = self.prog(explicit_target=explicit_target)
         decision = prediction.decision
- 
-        decision = _validate_decision(decision)
+        print(f"inner trace: {decision}")
+        decision = _validate_expander_decision(decision)
  
         return decision

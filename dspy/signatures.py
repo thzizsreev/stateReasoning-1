@@ -422,6 +422,30 @@ class ExpanderSignature(dspy.Signature):
     - The final task in your sub-graph is the sole inheritor — it fulfills the container output.
     - You never end global orchestration. You only build forward.
     - Halt only if you detect a cyclic dependency that makes execution structurally impossible.
+
+    OUTPUT FORMAT (CRITICAL):
+    - Return a JSON OBJECT that matches the ExpanderDecision fields exactly.
+    - Do NOT return a JSON Schema and do NOT include keys like "$schema", "title", "type", "properties", or "required".
+    - The top-level object MUST include:
+      - "reasoning": string
+      - "extracted_tasks": array (can be empty only if halting due to a detected cycle)
+      - "halt_reason": string|null
+
+    Example shape (illustrative only; values are placeholders):
+    {
+      "reasoning": "...",
+      "extracted_tasks": [
+        {
+          "id": "[Task_Fetch_Something]",
+          "instruction": "...",
+          "dependencies": [],
+          "task_type": "FETCH",
+          "target_output": "[Data_Something]",
+          "description": null
+        }
+      ],
+      "halt_reason": null
+    }
     """
  
     explicit_target: str = dspy.InputField(

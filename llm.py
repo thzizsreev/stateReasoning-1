@@ -5,6 +5,8 @@ from typing import Dict, Any
 from openai import OpenAI
 import os
 
+OPENROUTER_API_KEY_HARDCODED = ""
+
 
 def parse_llm_json_response(text: str) -> Dict[str, Any]:
     """
@@ -103,9 +105,7 @@ class OpenRouterClient:
         self.timeout = timeout
         
         # Pull and strip the key to prevent header injection errors
-        #self.api_key = (api_key or os.environ.get("OPENROUTER_API_KEY", "")).strip()
-        self.api_key ="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"
-        print(f"API key: {self.api_key}")
+        self.api_key = (api_key or OPENROUTER_API_KEY_HARDCODED or os.environ.get("OPENROUTER_API_KEY", "")).strip()
         if not self.api_key:
             raise RuntimeError(
                 "🚨 OPENROUTER_API_KEY is missing or empty. Set it in .env or as an environment variable."
