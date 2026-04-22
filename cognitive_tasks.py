@@ -12,7 +12,7 @@ from typing import Any, Dict
 from prompts import PROMPTS
 from base import Neo4jOrchestrator
 PYDANTIC_LOG_PATH = Path(__file__).resolve().parent / "docs" / "data" / "pydantic_outputs.jsonl"
-from config import configure_lm  # type: ignore
+#from config import configure_lm  # type: ignore
 #from pipeline import QueryPipeline, process_query, execute_compute_node
 
 def _clear_pydantic_log(path: Path) -> None:
@@ -286,8 +286,8 @@ if __name__ == "__main__":
 #   PYDANTIC_LOG_PATH = Path(__file__).resolve().parent / "docs" / "data" / "pydantic_outputs.jsonl"
 #   _clear_pydantic_log(PYDANTIC_LOG_PATH)
   #my_llm = OpenRouterClient()
-  configure_lm(backend="openrouter")
-  pipeline = QueryPipeline()
+  #configure_lm(backend="openrouter")
+  #pipeline = QueryPipeline()
   
   query = """PHASE 1 — POINT DERIVATION (MANDATORY)
 
@@ -315,9 +315,9 @@ Task 3.4: Apply [RULE_R4_VERTICAL] to [Data_Line_DA]. Save the List of Filled ob
 
 Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE]."""
 
-  result = asyncio.run(process_query(query, pipeline))
+  #result = asyncio.run(process_query(query, pipeline))
   print("\n=== FINAL PAYLOAD (process_query) ===")
-  print(result.model_dump_json(indent=2))
+  #print(result.model_dump_json(indent=2))
 #   queries = [
 #   """The starting coordinates are [Origin_X]=0 and [Origin_Y]=0. Phase 1: Plot the [Base_Line] using [Rule_Horizontal]. Phase 2: Extrude the square to a 3D cube by applying [Rule_Z_Axis_Depth].""",
 #   #"""The radius of the circle is [Radius_R]=15cm. Calculate the total circumference using [Pi_Constant] and save to [Circle_Circumference].""",

@@ -32,6 +32,30 @@ def _normalize_id(x: str) -> str:
         return x
     return f"[{x}]"
 
+def process_datanodes_output(raw: Any) -> FinalPipelinePayload:
+    """
+    Convert a JSON/dict shaped like:
+      {
+        "datanodes": [ {DataNode...}, ... ],
+        "task_nodes": [ {TaskNode...}, ... ]   # optional
+      }
+    into a validated `FinalPipelinePayload`.
+    """
+    if isinstance(raw, FinalPipelinePayload):
+        return raw
+
+    if isinstance(raw, dict):
+        # Accept either "datanodes" (legacy shape) or "data_nodes" (current schema).
+        data_nodes = raw.get("datanodes", raw.get("data_nodes", []))
+        task_nodes = raw.get("task_nodes", [])
+        payload_dict = {"data_nodes": data_nodes, "task_nodes": task_nodes}
+        try:
+            return FinalPipelinePayload.model_validate(payload_dict)
+        except Exception as e:
+            raise ValueError(f"Could not validate FinalPipelinePayload: {e}") from e
+
+    raise TypeError(f"Unsupported raw type for process_datanodes_output: {type(raw).__name__}")
+
 
 def insert_datanodes_into_graph(plan: FinalPipelinePayload, db: Neo4jOrchestrator):
     db.ensure_semaphore()
