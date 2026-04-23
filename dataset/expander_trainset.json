@@ -1,0 +1,58 @@
+[
+  {
+    "explicit_target": {
+      "instruction": "Process [Patient_Vitals_Raw] into compliance format",
+      "description": "We're mid-pipeline. Take the vitals dataset, normalize units to SI standard, flag outliers beyond 3\u03c3, then aggregate by patient ID. Critical: output must be saved exactly as [Final_Audit_Matrix] for downstream regulatory review.",
+      "dependencies": [
+        {
+          "id": "[Patient_Vitals_Raw]",
+          "content": "[{\"patient_id\":\"P001\",\"hr\":72,\"temp_f\":98.6},{\"patient_id\":\"P002\",\"hr\":88,\"temp_f\":99.1}]"
+        }
+      ]
+    },
+    "domain": "medicine",
+    "blueprint_mode": "C4_MID_STATE_FIDELITY"
+  },
+  {
+    "explicit_target": {
+      "instruction": "Analyze collision momentum distribution from [Particle_Data]",
+      "description": "Hey, run a full 3-step momentum analysis on the particle collisions. Oh, and I know there's like 10,000 raw server logs from the detector array sitting in [Server_Logs], but completely ignore those\u2014they're unprocessed garbage. Just focus on the cleaned particle dataset and give me: (1) velocity histogram, (2) energy conservation check, (3) anomaly flagging.",
+      "dependencies": [
+        {
+          "id": "[Particle_Data]",
+          "content": "[{\"event_id\": 42, \"momentum_x\": 3.2, \"momentum_y\": -1.1, \"energy\": 15.7}, {\"event_id\": 43, \"momentum_x\": 0.8, \"momentum_y\": 2.4, \"energy\": 9.3}]"
+        }
+      ]
+    },
+    "domain": "physics",
+    "blueprint_mode": "C6_ADVERSARIAL_NOISE"
+  },
+  {
+    "explicit_target": {
+      "instruction": "Transform [Economic_Dataset]",
+      "description": "Apply the full pipeline: normalize GDP values to 2020 baseline, calculate compound growth rates, filter outliers beyond 2 standard deviations, then rank by volatility index. Output as [Processed_Rankings].",
+      "dependencies": [
+        {
+          "id": "[Economic_Dataset]",
+          "content": "[{\"country\":\"USA\",\"gdp\":21427.7},{\"country\":\"CHN\",\"gdp\":14342.9},{\"country\":\"JPN\",\"gdp\":5081.8},{\"country\":\"DEU\",\"gdp\":3845.6},{\"country\":\"IND\",\"gdp\":2875.1},{\"country\":\"GBR\",\"gdp\":2827.1},{\"country\":\"FRA\",\"gdp\":2715.5},{\"country\":\"ITA\",\"gdp\":2001.2},{\"country\":\"BRA\",\"gdp\":1839.8},{\"country\":\"CAN\",\"gdp\":1736.4},{\"country\":\"RUS\",\"gdp\":1699.9},{\"country\":\"KOR\",\"gdp\":1646.7},{\"country\":\"ESP\",\"gdp\":1393.5},{\"country\":\"AUS\",\"gdp\":1392.7},{\"country\":\"MEX\",\"gdp\":1258.3},{\"country\":\"IDN\",\"gdp\":1119.2},{\"country\":\"NLD\",\"gdp\":909.0},{\"country\":\"SAU\",\"gdp\":792.9},{\"country\":\"TUR\",\"gdp\":754.4},{\"country\":\"CHE\",\"gdp\":703.1},{\"country\":\"POL\",\"gdp\":595.9},{\"country\":\"SWE\",\"gdp\":530.8},{\"country\":\"BEL\",\"gdp\":529.6},{\"country\":\"ARG\",\"gdp\":449.7},{\"country\":\"THA\",\"gdp\":543.6},{\"country\":\"AUT\",\"gdp\":446.3},{\"country\":\"NOR\",\"gdp\":403.3},{\"country\":\"ARE\",\"gdp\":421.1},{\"country\":\"NGA\",\"gdp\":448.1},{\"country\":\"ISR\",\"gdp\":395.1},{\"country\":\"IRL\",\"gdp\":388.7},{\"country\":\"MYS\",\"gdp\":364.7},{\"country\":\"SGP\",\"gdp\":372.1},{\"country\":\"PHL\",\"gdp\":376.8},{\"country\":\"DNK\",\"gdp\":348.1},{\"country\":\"ZAF\",\"gdp\":351.4},{\"country\":\"COL\",\"gdp\":323.8},{\"country\":\"PAK\",\"gdp\":278.2},{\"country\":\"CHL\",\"gdp\":282.3},{\"country\":\"FIN\",\"gdp\":269.7},{\"country\":\"BGD\",\"gdp\":302.6},{\"country\":\"EGY\",\"gdp\":303.2},{\"country\":\"VNM\",\"gdp\":261.9},{\"country\":\"CZE\",\"gdp\":246.5},{\"country\":\"PRT\",\"gdp\":237.7},{\"country\":\"ROU\",\"gdp\":250.1},{\"country\":\"PER\",\"gdp\":226.8},{\"country\":\"NZL\",\"gdp\":206.9},{\"country\":\"GRC\",\"gdp\":209.9},{\"country\":\"QAT\",\"gdp\":183.5}]"
+        }
+      ]
+    },
+    "domain": "economics",
+    "blueprint_mode": "C1_FRACTAL_BRIDGE"
+  },
+  {
+    "explicit_target": {
+      "instruction": "Process [Raw_Sequencing_Data] into final format",
+      "description": "We need to filter out low-quality reads, normalize the expression values, then aggregate by gene ID. Critical: the final output must be saved exactly as [Normalized_Gene_Expression]. Don't create a new name.",
+      "dependencies": [
+        {
+          "id": "[Raw_Sequencing_Data]",
+          "content": "[{\"read_id\":\"R001\",\"gene\":\"BRCA1\",\"quality\":28,\"count\":450},{\"read_id\":\"R002\",\"gene\":\"TP53\",\"quality\":35,\"count\":890}]"
+        }
+      ]
+    },
+    "domain": "biology",
+    "blueprint_mode": "C4_MID_STATE_FIDELITY"
+  }
+]

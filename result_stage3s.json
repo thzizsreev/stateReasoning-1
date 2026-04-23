@@ -1,0 +1,63 @@
+{
+  "test_name": "TEST 1: Clean namespace, no EXPAND nodes",
+  "global_context": {
+    "global_reasoning": "Clean output. All IDs declared and properly chained. No EXPAND nodes present.",
+    "overall_severity": 0.1,
+    "required_but_missing_types": [],
+    "coverage_ratio": 1.0
+  },
+  "semantic_scores": {
+    "S1": {
+      "outcome": "correct",
+      "severity_ratio": null,
+      "local_reasoning": "All bracketed IDs in instructions are either from query dependencies, declared as target_output by prior tasks, or the task's own target_output. No namespace hallucinations detected."
+    },
+    "S2": {
+      "outcome": "absent_not_required",
+      "severity_ratio": null,
+      "local_reasoning": "No EXPAND tasks present in output. Inheritance validation not applicable."
+    }
+  }
+}{
+  "test_name": "TEST 2: Namespace hallucination in instruction",
+  "global_context": {
+    "global_reasoning": "[Regulatory_Framework] appears in instruction and dependencies but was never declared in query dependencies or as any task's target_output. Phantom node causing deadlock.",
+    "overall_severity": 0.8,
+    "required_but_missing_types": [
+      "FETCH"
+    ],
+    "coverage_ratio": 0.5
+  },
+  "semantic_scores": {
+    "S1": {
+      "outcome": "hallucinated",
+      "severity_ratio": 0.9,
+      "local_reasoning": "[Regulatory_Framework] is referenced in the COMPUTE task instruction but was never declared in query dependencies or as any task's target_output. This is a namespace hallucination that will cause the executor to wait indefinitely for a node that will never be produced, resulting in permanent deadlock."
+    },
+    "S2": {
+      "outcome": "absent_not_required",
+      "severity_ratio": null,
+      "local_reasoning": "No EXPAND tasks are present in the output, so inheritance checking is not applicable to this task graph."
+    }
+  }
+}{
+  "test_name": "TEST 3: EXPAND inheritance broken \u2014 container ID renamed",
+  "global_context": {
+    "global_reasoning": "EXPAND declares [Final_Spatial_Map] as container output. Inheritor task uses [Spatial_Result] and [Processed_Map] \u2014 neither matches [Final_Spatial_Map]. Container ID was renamed, parent graph waits forever.",
+    "overall_severity": 0.7,
+    "required_but_missing_types": [],
+    "coverage_ratio": 0.6
+  },
+  "semantic_scores": {
+    "S1": {
+      "outcome": "hallucinated",
+      "severity_ratio": 0.7,
+      "local_reasoning": "Task_Compute_FinalOutput references [Spatial_Result] in its instruction, but this ID is never declared as a target_output by any task and is not in the query dependencies. This is a namespace hallucination that causes the executor to wait forever for a node that will never be produced."
+    },
+    "S2": {
+      "outcome": "hallucinated",
+      "severity_ratio": 0.7,
+      "local_reasoning": "The EXPAND task Task_Expand_Mapping declares [Final_Spatial_Map] as its container output, but the inheritor task Task_Compute_FinalOutput produces [Processed_Map] instead. The container ID was renamed, causing the parent graph to wait forever for [Final_Spatial_Map] which will never be produced. This is a critical inheritance hallucination."
+    }
+  }
+}

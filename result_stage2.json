@@ -1,0 +1,8 @@
+{
+  "global_reasoning": "The query required processing 45 individual quarterly earnings reports with explicit emphasis on individual parsing and normalization of each report, followed by aggregation into a market trend summary. This is high-volume, structurally repetitive work that demands decomposition into manageable units. The output provided a single COMPUTE task attempting to collapse all 45 parsing, normalization, and aggregation operations into one atomic node. This fundamentally violates the type system's constraint that COMPUTE nodes perform single atomic operations. The critical missing component is a DECOMPOSE task to break down the 45-report workload into individual processing units. While the output correctly identifies the input data, target output, and general operations needed, it fails to provide the structural breakdown explicitly required by the query's 'each report must be individually' phrasing. The output demonstrates a misunderstanding of when decomposition is architecturally necessary, resulting in a non-executable task structure that cannot be properly processed by the DAG engine.",
+  "overall_severity": 0.65,
+  "required_but_missing_types": [
+    "DECOMPOSE"
+  ],
+  "coverage_ratio": 0.25
+}

@@ -1,0 +1,117 @@
+
+[{
+  "test_name": "TEST 1: COMPUTE collapsing high-volume work",
+  "global_context": {
+    "global_reasoning": "The query requires processing 45 individual reports \u2014 high volume structural work. A single COMPUTE node cannot handle this within 8B context limits. DECOMPOSE was required but absent. Severity is high.",
+    "overall_severity": 0.75,
+    "required_but_missing_types": [
+      "DECOMPOSE"
+    ],
+    "coverage_ratio": 0.3
+  },
+  "per_task_scores": [
+    {
+      "task_id": "[Task_Compute_Trends]",
+      "metric_scores": [
+        {
+          "metric": "M1",
+          "outcome": "wrong",
+          "severity_ratio": 0.8,
+          "local_reasoning": "Task type COMPUTE is incorrect. The instruction requires parsing, normalizing, and aggregating 45 separate PDF reports \u2014 this chains 3 distinct transformations across high-volume data (135+ operations total). COMPUTE must be a single atomic operation, but this is massive multi-step batch processing. Volume of 45 PDFs far exceeds 8B context limits (~2000 words threshold). Should be DECOMPOSE for structural breakdown of high-volume work. This is a structural impossibility that will cause execution failure."
+        },
+        {
+          "metric": "M6",
+          "outcome": "wrong",
+          "severity_ratio": 0.85,
+          "local_reasoning": "Catastrophic cognitive load misjudgment. Agent collapsed 135+ sequential operations (parse + normalize + aggregate \u00d7 45 reports) into a claimed single atomic operation. An 8B model cannot load 45 PDFs simultaneously, execute this many transformations, or maintain coherence across that volume. This is severe collapse of multi-step work into atomic, not a slight misjudgment. The core failure mode identified in global context."
+        },
+        {
+          "metric": "M7",
+          "outcome": "wrong",
+          "severity_ratio": 0.2,
+          "local_reasoning": "Instruction follows required pattern: Action (parse, normalize, aggregate) + Input [Earnings_Data] + Output declaration [Market_Trends]. All bracketed IDs present and properly formatted. Executor would understand what to do, what data to use, and where to store results. Minor ambiguity exists about execution mode for 45 reports, but the pattern itself is complete and unambiguous. The problem is task type mismatch, not instruction clarity."
+        }
+      ]
+    }
+  ]
+},
+{
+  "test_name": "TEST 2: FETCH redundantly fetching provided node",
+  "global_context": {
+    "global_reasoning": "[Patient_Records] was explicitly provided in the query dependencies. The agent fetched it anyway, demonstrating failure to read its own context. This is an unnecessary FETCH of an already-present node.",
+    "overall_severity": 0.4,
+    "required_but_missing_types": [],
+    "coverage_ratio": 0.6
+  },
+  "per_task_scores": [
+    {
+      "task_id": "[Task_Fetch_Patient_Records]",
+      "metric_scores": [
+        {
+          "metric": "M1",
+          "outcome": "unnecessary",
+          "severity_ratio": 0.4,
+          "local_reasoning": "Task type FETCH is structurally valid but applied to retrieve [Patient_Records] which is explicitly present in query dependencies. This violates the FETCH requirement to NOT fetch already-provided data. The type choice creates redundant work but doesn't break graph structure."
+        },
+        {
+          "metric": "M5",
+          "outcome": "unnecessary",
+          "severity_ratio": 0.5,
+          "local_reasoning": "Agent failed to recognize [Patient_Records] is already present in query dependencies. Fetched something already provided with maximally obvious redundancy (direct ID match, explicit content description). This is a clear epistemic humility failure in distinguishing known vs needed data."
+        },
+        {
+          "metric": "M7",
+          "outcome": "correct",
+          "severity_ratio": null,
+          "local_reasoning": "Instruction follows the required pattern adapted for FETCH tasks: Action (Fetch patient records) + source description (from medical database) + output declaration (store as [Patient_Records]). Clear and unambiguous for executor."
+        }
+      ]
+    }
+  ]
+},{
+  "test_name": "TEST 3: Perfect EXPAND node (true negative)",
+  "global_context": {
+    "global_reasoning": "The EXPAND node correctly delegates a cognitively heavy 4-step algorithm to a child sub-graph. Type choice is appropriate. Container output declared in description. Instruction follows the contract. Overall output is sound.",
+    "overall_severity": 0.1,
+    "required_but_missing_types": [],
+    "coverage_ratio": 0.9
+  },
+  "per_task_scores": [
+    {
+      "task_id": "[Task_Expand_Mapping]",
+      "metric_scores": [
+        {
+          "metric": "M1",
+          "outcome": "correct",
+          "severity_ratio": null,
+          "local_reasoning": "EXPAND is the correct task type for delegating a highly complex 4-step spatial mapping algorithm. The task correctly identifies this as cognitive delegation requiring a child sub-graph, with proper dependencies and container output declaration."
+        },
+        {
+          "metric": "M2",
+          "outcome": "correct",
+          "severity_ratio": null,
+          "local_reasoning": "Correctly chose EXPAND over DECOMPOSE. A 4-step spatial mapping algorithm represents cognitive/epistemic complexity requiring chained transformations, not structural volume breakdown. This is precisely the EXPAND use case."
+        },
+        {
+          "metric": "M5",
+          "outcome": "correct",
+          "severity_ratio": null,
+          "local_reasoning": "Agent correctly identified a cognitive gap (complex algorithm) rather than a data gap. Cleaned telemetry data is available in dependencies, and the agent appropriately recognized that the algorithm itself requires delegation, not additional data fetching."
+        },
+        {
+          "metric": "M6",
+          "outcome": "correct",
+          "severity_ratio": null,
+          "local_reasoning": "Correct assessment that a 4-step spatial mapping algorithm exceeds 8B model direct execution capacity. Multiple chained transformations require orchestration through a child sub-graph rather than attempting to collapse into a single COMPUTE operation."
+        },
+        {
+          "metric": "M7",
+          "outcome": "correct",
+          "severity_ratio": null,
+          "local_reasoning": "Instruction follows the required pattern perfectly: Action (Run the 4-step spatial mapping algorithm) + Input [Cleaned_Telemetry] + store as [Final_Spatial_Map]. Fully unambiguous and executable."
+        }
+      ]
+    }
+  ]
+}
+]

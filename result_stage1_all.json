@@ -1,0 +1,38 @@
+[
+  {
+    "test_name": "TEST 1: Perfect Execution (True Negative)",
+    "result": {
+      "namespace_score": 1.0,
+      "boundary_score": 1.0,
+      "structural_score": 1.0,
+      "violations": [],
+      "gate_passed": true
+    }
+  },
+  {
+    "test_name": "TEST 2: Moderate \u2014 phantom dependency, should pass gate",
+    "result": {
+      "namespace_score": 0.6667,
+      "boundary_score": 1.0,
+      "structural_score": 0.8,
+      "violations": [
+        "Task [Task_Compute_Violations]: dependency '[Regulatory_Framework]' not in declared_set (phantom dependency \u2014 will cause deadlock)"
+      ],
+      "gate_passed": true
+    }
+  },
+  {
+    "test_name": "TEST 3: Very Wrong \u2014 multiple phantoms + boundary violations",
+    "result": {
+      "namespace_score": 0.6,
+      "boundary_score": 0.0,
+      "structural_score": 0.36,
+      "violations": [
+        "Task [Task_Compute_Alerts]: dependency '[Parsed_Logs]' not in declared_set (phantom dependency \u2014 will cause deadlock)",
+        "Task [Task_Compute_Alerts]: dependency '[Severity_Index]' not in declared_set (phantom dependency \u2014 will cause deadlock)",
+        "Task [Task_Fetch_Rules] (FETCH): must have empty dependencies, found ['[Log_Chunks]']"
+      ],
+      "gate_passed": false
+    }
+  }
+]

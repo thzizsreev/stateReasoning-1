@@ -314,91 +314,64 @@ class DataExtractorSignature(dspy.Signature):
 "------------------------------------ expander agent signature ------------------------------------"
 class ExpanderTaskNode(BaseModel):
     id: str = Field(
+        ...,
+        description="The bracketed ID of the task. Format: [Task_<verb>_<noun>]."
+    )
+    task_type: Literal["FETCH", "EXPAND", "COMPUTE", "DECOMPOSE", "OUTPUT"] = Field(
+        ...,
         description=(
-            "Unique bracketed identifier for this task. "
-            "Format: [Task_<verb>_<noun>]. "
-            "Derive from what the task does, not what it needs."
+            "The strict operational type. "
+            "FETCH: retrieve data not present in graph from external source. No dependencies. "
+            "COMPUTE: apply logic to already-present values. Single atomic operation. "
+            "DECOMPOSE: structural breakdown of high-volume or multi-action work. "
+            "EXPAND: delegate abstract or cognitively heavy goal to child sub-graph. "
+            "OUTPUT: terminal signal. Use with target_output=[ORCHESTRATION_END] and empty dependencies to halt."
+        )
+    )
+    reasoning: str = Field(
+        ...,
+        description="First-person justification for this specific node's type and structure."
+    )
+    dependencies: List[str] = Field(
+        default_factory=list,
+        description=(
+            "List of inherited bracketed variables this task waits for. "
+            "Only include IDs that will exist when this task fires. "
+            "Phantom IDs cause permanent deadlock."
         )
     )
     instruction: str = Field(
+        ...,
         description=(
-            "Self-contained instruction referencing all inputs and declaring its output. "
-            "Follow the contract: Action + Input [BracketedIDs] + 'store as [Output_ID]'. "
-            "Node IDs mentioned in the parent instruction already exist in the graph — "
-            "do not create tasks to produce them. "
-            "Node IDs not mentioned anywhere must be produced by a FETCH or COMPUTE task "
-            "before any task that needs them can declare them as a dependency."
-        )
-    )
-    dependencies: List[str] = Field(
-        description=(
-            "Bracketed IDs this task must wait for before executing. "
-            "Only include IDs that will exist when this task fires — "
-            "either present in the parent instruction or declared as target_output "
-            "by a prior task in this sub-graph. "
-            "Listing a phantom ID here causes permanent deadlock."
-        )
-    )
-    task_type: Literal["COMPUTE", "FETCH", "EXPAND", "DECOMPOSE"] = Field(
-        description=(
-            "COMPUTE: execute logic on already-present values to produce one output node. "
-            "FETCH: retrieve information not present in the graph from external sources "
-            "(RAG, databases, tools). Has no input dependencies — reaches outward only. "
-            "EXPAND: sub-goal is still too abstract or cognitively heavy — "
-            "pawn responsibility to a child sub-graph. "
-            "DECOMPOSE: instruction contains multiple distinct actions requiring structural breakdown."
+            "The precise action to execute. "
+            "Contract: Action + Input [BracketedIDs] + 'store as [Output_ID]'."
         )
     )
     target_output: Optional[str] = Field(
         default=None,
         description=(
-            "The [BracketedID] this task will produce and write to the graph. "
-            "COMPUTE: always declare. "
-            "FETCH: always declare — this is the node RAG results are stored in. "
-            "EXPAND: declare the container ID this sub-graph promises to fill. "
+            "The pre-declared bracketed variable this node outputs. "
+            "[ORCHESTRATION_END] if this node halts execution. "
             "DECOMPOSE: leave null — output resolved downstream."
         )
     )
-    description: Optional[str] = Field(
-        default=None,
+    description: str = Field(
+        ...,
         description=(
-            "Required for the final inheritor task only. "
-            "Must state: which node ID is the container output this sub-graph fulfills, "
-            "and what it will contain when complete. "
-            "This is how the parent graph knows what to wait for. "
-            "Example: 'Final inheritor. Produces [Data_GwenAvgBill] — "
-            "the average of all bills, taxes, and fees for user Gwen.'"
+            "Objective summary of what this node does and what it produces. "
+            "Final inheritor must declare the container output ID here."
         )
     )
  
+ 
+# ============================================================================
+# EXPANDER DECISION SCHEMA
+# ============================================================================
  
 class ExpanderDecision(BaseModel):
-    reasoning: str = Field(
-        description=(
-            "Think through the goal before producing tasks: "
-            "What is being asked? "
-            "What information already exists (referenced in the instruction)? "
-            "What information is absent and must be fetched or derived? "
-            "What is the minimum viable path to fulfill the container output? "
-            "Is there any risk of cyclic dependency in the plan?"
-        )
-    )
     extracted_tasks: List[ExpanderTaskNode] = Field(
-        description=(
-            "The sub-graph as ordered ExpanderTaskNodes. "
-            "Tasks must appear after their dependencies. "
-            "FETCH tasks first — they have no dependencies and unblock everything else. "
-            "Final task must declare the container output ID in its target_output and description. "
-            "Return [] only if a cyclic dependency makes execution impossible."
-        )
-    )
-    halt_reason: Optional[str] = Field(
-        default=None,
-        description=(
-            "Populated only when extracted_tasks is empty due to cyclic dependency detection. "
-            "Describe the cycle precisely: which nodes form the loop and why it cannot be resolved. "
-            "Leave null in all other cases — missing context is a task, not a halt condition."
-        )
+        default_factory=list,
+        description="The flat topological array of tasks."
     )
  
  
@@ -411,48 +384,39 @@ class ExpanderSignature(dspy.Signature):
     You are the Expander Agent — a Sub-Graph Architect for a DAG execution engine.
  
     YOUR JOB: Take an abstract or cognitively heavy goal and unroll it into
-    an executable sub-graph of interdependent tasks that collectively fulfill it.
+    a flat, ordered list of interdependent task nodes that collectively fulfill it.
  
     BEHAVIORAL GUIDELINES:
-    - Identify what already exists: node IDs referenced in the instruction are present in the graph.
-    - Identify what is absent: anything not referenced must be fetched or derived before use.
-    - Prefer FETCH for external information, COMPUTE for logic on present values.
-    - Build the minimum viable path — do not over-architect.
-    - If a piece of work is still too abstract or heavy, spawn a child EXPAND rather than guessing.
-    - The final task in your sub-graph is the sole inheritor — it fulfills the container output.
-    - You never end global orchestration. You only build forward.
-    - Halt only if you detect a cyclic dependency that makes execution structurally impossible.
-
+    - Node IDs referenced in the instruction already exist in the graph. Do not fetch them.
+    - Anything not referenced must be produced by a FETCH or COMPUTE before anything depends on it.
+    - Prefer FETCH for external data, COMPUTE for logic on present values.
+    - Build the minimum viable path. Do not over-architect.
+    - If a step is too abstract or cognitively heavy, spawn EXPAND and delegate.
+    - To halt: create one OUTPUT node with empty dependencies and target_output=[ORCHESTRATION_END].
+    - Every node must have a description. Final inheritor must declare its container output ID there.
+ 
     OUTPUT FORMAT (CRITICAL):
-    - Return a JSON OBJECT that matches the ExpanderDecision fields exactly.
-    - Do NOT return a JSON Schema and do NOT include keys like "$schema", "title", "type", "properties", or "required".
-    - The top-level object MUST include:
-      - "reasoning": string
-      - "extracted_tasks": array (can be empty only if halting due to a detected cycle)
-      - "halt_reason": string|null
-
-    Example shape (illustrative only; values are placeholders):
+    Return a JSON object with exactly this shape. Do NOT return a JSON Schema.
     {
-      "reasoning": "...",
       "extracted_tasks": [
         {
-          "id": "[Task_Fetch_Something]",
-          "instruction": "...",
-          "dependencies": [],
-          "task_type": "FETCH",
-          "target_output": "[Data_Something]",
-          "description": null
+          "id": "[Task_verb_noun]",
+          "task_type": "FETCH | COMPUTE | DECOMPOSE | EXPAND | OUTPUT",
+          "reasoning": "First-person justification for this node.",
+          "dependencies": ["[BracketedID]"],
+          "instruction": "Action + inputs + store as [Output_ID].",
+          "target_output": "[Output_ID]",
+          "description": "Objective summary of what this node produces."
         }
-      ],
-      "halt_reason": null
+      ]
     }
     """
  
     explicit_target: str = dspy.InputField(
         desc=(
-            "The abstract goal or EXPAND task instruction to fulfill. "
-            "Node IDs mentioned here already exist in the graph. "
-            "Derive what needs to be fetched, computed, or further expanded from this context alone."
+            "The task instruction to fulfill. "
+            "Provided as JSON with instruction, description, and dependencies fields. "
+            "Node IDs in dependencies already exist in the graph."
         )
     )
  

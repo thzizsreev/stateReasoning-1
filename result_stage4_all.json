@@ -1,0 +1,169 @@
+[
+  {
+    "test_name": "TEST 1: Perfect Execution \u2014 expect high score ~0.90+",
+    "breakdown": {
+      "structural_score": 1.0,
+      "per_task_score": 1.0,
+      "semantic_score": 0.55,
+      "coverage_score": 1.0,
+      "raw_final": 0.91,
+      "normalized_final": 0.964,
+      "per_task_detail": [
+        {
+          "task_id": "[Task_Compute_Report]",
+          "metric_scores": [
+            {
+              "metric": "M1",
+              "outcome": "correct",
+              "severity_ratio": null,
+              "local_reasoning": "COMPUTE correct."
+            },
+            {
+              "metric": "M6",
+              "outcome": "correct",
+              "severity_ratio": null,
+              "local_reasoning": "Atomic operation."
+            },
+            {
+              "metric": "M7",
+              "outcome": "correct",
+              "severity_ratio": null,
+              "local_reasoning": "Instruction clear."
+            }
+          ]
+        }
+      ],
+      "type_scores": {
+        "FETCH": null,
+        "COMPUTE": 1.0,
+        "DECOMPOSE": null,
+        "EXPAND": null
+      },
+      "layer2_weights": {
+        "FETCH": null,
+        "COMPUTE": 1.0,
+        "DECOMPOSE": null,
+        "EXPAND": null
+      }
+    }
+  },
+  {
+    "test_name": "TEST 2: Moderate Failures \u2014 expect mid score ~0.50-0.65",
+    "breakdown": {
+      "structural_score": 0.7,
+      "per_task_score": -1.182,
+      "semantic_score": -0.385,
+      "coverage_score": 0.0,
+      "raw_final": -0.3398,
+      "normalized_final": 0.4641,
+      "per_task_detail": [
+        {
+          "task_id": "[Task_Compute_Trends]",
+          "metric_scores": [
+            {
+              "metric": "M1",
+              "outcome": "wrong",
+              "severity_ratio": 0.75,
+              "local_reasoning": "Should be DECOMPOSE."
+            },
+            {
+              "metric": "M6",
+              "outcome": "wrong",
+              "severity_ratio": 0.8,
+              "local_reasoning": "45 reports exceeds 8B limits."
+            },
+            {
+              "metric": "M7",
+              "outcome": "correct",
+              "severity_ratio": null,
+              "local_reasoning": "Instruction pattern present."
+            }
+          ]
+        }
+      ],
+      "type_scores": {
+        "FETCH": null,
+        "COMPUTE": 0.075,
+        "DECOMPOSE": -1.5,
+        "EXPAND": null
+      },
+      "layer2_weights": {
+        "FETCH": null,
+        "COMPUTE": 0.2019,
+        "DECOMPOSE": 0.7981,
+        "EXPAND": null
+      }
+    }
+  },
+  {
+    "test_name": "TEST 3: Severe Failures \u2014 expect low score ~0.20-0.35",
+    "breakdown": {
+      "structural_score": 0.44,
+      "per_task_score": -0.9855,
+      "semantic_score": -0.495,
+      "coverage_score": -0.6,
+      "raw_final": -0.4212,
+      "normalized_final": 0.4315,
+      "per_task_detail": [
+        {
+          "task_id": "[Task_Fetch_Rules]",
+          "metric_scores": [
+            {
+              "metric": "M1",
+              "outcome": "hallucinated",
+              "severity_ratio": 0.9,
+              "local_reasoning": "FETCH with dependencies is structurally impossible."
+            },
+            {
+              "metric": "M5",
+              "outcome": "wrong",
+              "severity_ratio": 0.8,
+              "local_reasoning": "Fetched using existing node as input."
+            },
+            {
+              "metric": "M7",
+              "outcome": "wrong",
+              "severity_ratio": 0.4,
+              "local_reasoning": "Instruction partially clear."
+            }
+          ]
+        },
+        {
+          "task_id": "[Task_Compute_Alerts]",
+          "metric_scores": [
+            {
+              "metric": "M1",
+              "outcome": "wrong",
+              "severity_ratio": 0.7,
+              "local_reasoning": "Incorrect type for multi-step work."
+            },
+            {
+              "metric": "M6",
+              "outcome": "wrong",
+              "severity_ratio": 0.75,
+              "local_reasoning": "Multi-step collapsed into COMPUTE."
+            },
+            {
+              "metric": "M7",
+              "outcome": "wrong",
+              "severity_ratio": 0.5,
+              "local_reasoning": "References phantom IDs in instruction."
+            }
+          ]
+        }
+      ],
+      "type_scores": {
+        "FETCH": -0.5,
+        "COMPUTE": -0.325,
+        "DECOMPOSE": -1.5,
+        "EXPAND": null
+      },
+      "layer2_weights": {
+        "FETCH": 0.3635,
+        "COMPUTE": 0.1285,
+        "DECOMPOSE": 0.508,
+        "EXPAND": null
+      }
+    }
+  }
+]

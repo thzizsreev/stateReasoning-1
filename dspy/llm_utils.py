@@ -65,6 +65,64 @@ def parse_llm_json_response(text: str) -> Dict[str, Any]:
     preview = text[:800]
     raise ValueError(f"Could not extract a valid JSON object. First 800 chars:\n{preview}")
 
+def parse_stage2_response(text: str) -> dict:
+    """
+    Extract Stage 2 fields directly by key pattern.
+    Handles COT responses where JSON is embedded in reasoning text.
+    Tries fenced JSON last block first, falls back to key extraction.
+    """
+    # 1. Try last fenced block first
+    fenced = re.findall(r"```(?:json)?\s*([\s\S]*?)\s*```", text, flags=re.IGNORECASE)
+    for block in reversed(fenced):
+        try:
+            parsed = json.loads(block.strip())
+            if all(k in parsed for k in ["global_reasoning", "overall_severity", "coverage_ratio"]):
+                return parsed
+        except json.JSONDecodeError:
+            pass
+
+    # 2. Try last raw JSON object that has all required keys
+    candidates = re.findall(r"\{[\s\S]*?\}", text)
+    for cand in reversed(candidates):
+        try:
+            parsed = json.loads(cand.strip())
+            if all(k in parsed for k in ["global_reasoning", "overall_severity", "coverage_ratio"]):
+                return parsed
+        except json.JSONDecodeError:
+            pass
+
+    # 3. Key-based extraction fallback
+    result = {}
+
+    # global_reasoning — grab between key and next key
+    m = re.search(r'"global_reasoning"\s*:\s*"([\s\S]*?)"(?:\s*,|\s*\})', text)
+    if m:
+        result["global_reasoning"] = m.group(1)
+
+    # overall_severity
+    m = re.search(r'"overall_severity"\s*:\s*([0-9]*\.?[0-9]+)', text)
+    if m:
+        result["overall_severity"] = float(m.group(1))
+
+    # coverage_ratio
+    m = re.search(r'"coverage_ratio"\s*:\s*([0-9]*\.?[0-9]+)', text)
+    if m:
+        result["coverage_ratio"] = float(m.group(1))
+
+    # required_but_missing_types — extract array
+    m = re.search(r'"required_but_missing_types"\s*:\s*\[([\s\S]*?)\]', text)
+    if m:
+        types_raw = m.group(1)
+        types = re.findall(r'"(FETCH|COMPUTE|DECOMPOSE|EXPAND)"', types_raw)
+        result["required_but_missing_types"] = types
+    else:
+        result["required_but_missing_types"] = []
+
+    if "global_reasoning" in result and "overall_severity" in result:
+        return result
+
+    raise ValueError(f"Could not extract Stage 2 fields. First 800 chars:\n{text[:800]}")
+
 
 def get_api_key(provider: str, *, hardcoded: str = "", env_var: str = "") -> str:
     key = (hardcoded or os.getenv(env_var, "")).strip()
