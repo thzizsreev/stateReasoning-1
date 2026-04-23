@@ -4,3 +4,4 @@ networkx
 neo4j
 openai
 dspy
+matplotlib

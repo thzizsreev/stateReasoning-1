@@ -1,0 +1,4 @@
+{"ts": "2026-04-23T19:02:02.124460+00:00", "run_id": "a75d937c-7c68-4192-b71e-9ebf0a2de666", "domain": "test", "stage": "pipeline_start", "payload": {"query": {"instruction": "x", "description": "y", "dependencies": []}, "extracted_tasks": []}}
+{"ts": "2026-04-23T19:02:02.125604+00:00", "run_id": "a75d937c-7c68-4192-b71e-9ebf0a2de666", "domain": "test", "stage": "stage1_structural", "payload": {"namespace_score": 1.0, "boundary_score": 1.0, "structural_score": 1.0, "violations": [], "gate_passed": true}}
+{"ts": "2026-04-23T19:02:10.077983+00:00", "run_id": "a75d937c-7c68-4192-b71e-9ebf0a2de666", "domain": "test", "stage": "stage2_global_reasoning_error", "payload": {"error": "run_stage_2 returned None"}}
+{"ts": "2026-04-23T19:02:10.080904+00:00", "run_id": "a75d937c-7c68-4192-b71e-9ebf0a2de666", "domain": "test", "stage": "pipeline_end", "payload": {"status": "error_stage2"}}

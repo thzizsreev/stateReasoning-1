@@ -17,16 +17,20 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 from openai import OpenAI
 
 # Path resolution matching crucible_c1.py pattern
 _JUDGE_DIR = Path(__file__).resolve().parent
-_PROJECT_DIR = _JUDGE_DIR.parent
+_PROJECT_DIR = _JUDGE_DIR.parent.parent
 for _p in [str(_JUDGE_DIR), str(_PROJECT_DIR)]:
     if _p not in sys.path:
         sys.path.insert(0, _p)
+
+# Log file — always relative to the project root, resolved at import time.
+_LOG_FILE = _PROJECT_DIR / "logs" / "pipeline_stage_log.jsonl"
 
 from llm_utils import (
     build_client,
@@ -56,6 +60,30 @@ from judge_prompts import (
     STAGE_3_PER_TASK_PROMPT,
     STAGE_3S_SEMANTIC_PROMPT,
 )
+
+# ============================================================================
+# STAGE LOGGING
+# ============================================================================
+
+def _log_reset() -> None:
+    """Erase the log file at the start of every pipeline run."""
+    _LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    open(str(_LOG_FILE), "w", encoding="utf-8").close()
+
+
+def _log_write(stage: str, domain: str, payload: dict) -> None:
+    """Append one JSON record to the log file. Never raises."""
+    try:
+        record = {
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "domain": domain,
+            "stage": stage,
+            "payload": payload,
+        }
+        with open(str(_LOG_FILE), "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False, indent=None) + "\n")
+    except Exception:
+        pass
 
 
 # ============================================================================
@@ -235,7 +263,11 @@ def run_stage_3s(
 # ============================================================================
 
 def run_judge_pipeline(pipeline_input: PipelineInput) -> Optional[ScoreBreakdown]:
-   
+    domain = pipeline_input.domain
+
+    # Erase log file at the start of each run
+    _log_reset()
+
     client = build_client(
         provider=PROVIDER,
         openai_api_key_hardcoded=OPENAI_API_KEY_HARDCODED,
@@ -245,26 +277,30 @@ def run_judge_pipeline(pipeline_input: PipelineInput) -> Optional[ScoreBreakdown
         openrouter_app_title=OPENROUTER_APP_TITLE,
     )
 
-    print(f"\n[Judge] Starting pipeline for domain={pipeline_input.domain}")
+    print(f"\n[Judge] Starting pipeline for domain={domain}")
     print(f"[Judge] Tasks: {[t.id for t in pipeline_input.extracted_tasks]}")
+    _log_write("pipeline_start", domain, {
+        "query": pipeline_input.query.model_dump(),
+        "extracted_tasks": [t.model_dump() for t in pipeline_input.extracted_tasks],
+    })
 
     # ── Stage 1: Structural check ──────────────────────────────────────────
     print("[Judge] Stage 1: Structural check...")
     structural_result: StructuralResult = run_structural_check(pipeline_input)
     print(f"    [Stage 1] Structural check output: {structural_result}")
+    _log_write("stage1_structural", domain, structural_result.model_dump())
     print(f"  structural_score={structural_result.structural_score}, "
           f"gate_passed={structural_result.gate_passed}")
 
     if structural_result.violations:
         for v in structural_result.violations:
-            print(f"  ⚠️  {v}")
+            print(f"  [!] {v}")
 
     if not structural_result.gate_passed:
         print("[Judge] Gate failed — skipping LLM stages. Returning early score.")
-        # Return early breakdown with structural score only
         from judge_scorer import normalize
         early_score = normalize(structural_result.structural_score * 0.30)
-        return ScoreBreakdown(
+        breakdown = ScoreBreakdown(
             structural_score=structural_result.structural_score,
             per_task_score=0.0,
             semantic_score=0.0,
@@ -275,12 +311,18 @@ def run_judge_pipeline(pipeline_input: PipelineInput) -> Optional[ScoreBreakdown
             type_scores=TypeScores(),
             layer2_weights=Layer2Weights(),
         )
+        _log_write("stage4_breakdown_early", domain, breakdown.model_dump())
+        _log_write("pipeline_end", domain, {"status": "early_return"})
+        return breakdown
 
     # ── Stage 2: Global reasoning ──────────────────────────────────────────
     print("[Judge] Stage 2: Global reasoning...")
     global_context = run_stage_2(client, pipeline_input)
     if not global_context:
+        _log_write("stage2_global_reasoning_error", domain, {"error": "run_stage_2 returned None"})
+        _log_write("pipeline_end", domain, {"status": "error_stage2"})
         return None
+    _log_write("stage2_global_reasoning", domain, global_context.model_dump())
     print(f"  overall_severity={global_context.overall_severity}, "
           f"coverage_ratio={global_context.coverage_ratio}, "
           f"missing_types={global_context.required_but_missing_types}")
@@ -289,13 +331,19 @@ def run_judge_pipeline(pipeline_input: PipelineInput) -> Optional[ScoreBreakdown
     print("[Judge] Stage 3: Per-task metric scoring...")
     per_task_outputs = run_stage_3(client, pipeline_input, global_context)
     if not per_task_outputs:
+        _log_write("stage3_per_task_error", domain, {"error": "run_stage_3 produced empty results"})
+        _log_write("pipeline_end", domain, {"status": "error_stage3"})
         return None
+    _log_write("stage3_per_task", domain, {"per_task_outputs": [p.model_dump() for p in per_task_outputs]})
 
     # ── Stage 3S: Semantic scoring ─────────────────────────────────────────
     print("[Judge] Stage 3S: Semantic scoring...")
     semantic_output = run_stage_3s(client, pipeline_input, global_context)
     if not semantic_output:
+        _log_write("stage3s_semantic_error", domain, {"error": "run_stage_3s returned None"})
+        _log_write("pipeline_end", domain, {"status": "error_stage3s"})
         return None
+    _log_write("stage3s_semantic", domain, semantic_output.model_dump())
 
     # ── Stage 4: Score assembly ────────────────────────────────────────────
     print("[Judge] Stage 4: Assembling scores...")
@@ -306,6 +354,7 @@ def run_judge_pipeline(pipeline_input: PipelineInput) -> Optional[ScoreBreakdown
         per_task_outputs=per_task_outputs,
         semantic_output=semantic_output,
     )
+    _log_write("stage4_breakdown", domain, breakdown.model_dump())
 
     print(f"\n[Judge] Final score: {breakdown.normalized_final}")
     print(f"  structural={breakdown.structural_score} | "
@@ -313,6 +362,7 @@ def run_judge_pipeline(pipeline_input: PipelineInput) -> Optional[ScoreBreakdown
           f"semantic={breakdown.semantic_score} | "
           f"coverage={breakdown.coverage_score}")
 
+    _log_write("pipeline_end", domain, {"status": "ok"})
     return breakdown
 
 

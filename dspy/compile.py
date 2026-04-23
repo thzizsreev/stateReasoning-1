@@ -27,8 +27,7 @@ from llm_utils import (
     OPENAI_API_KEY_HARDCODED,
     OPENROUTER_API_KEY_HARDCODED,
 )
- 
- 
+from simba_chart import compile_with_live_chart
 # ============================================================================
 # CONFIG
 # ============================================================================
@@ -38,13 +37,15 @@ MODEL_CLAUDE         = "anthropic/claude-sonnet-4-5"
 OPENROUTER_BASE_URL  = "https://openrouter.ai/api/v1"
 OPENROUTER_HTTP_REFERER = "https://localhost"
 OPENROUTER_APP_TITLE = "stateReasoning-1"
+
+# Failed-example logging
+FAILED_SCORE_THRESHOLD = 0.6
+FAILED_LOG_PATH = "./logs/failed_examples.jsonl"
  
 # SIMBA hyperparameters
-SIMBA_BSIZE     = 4    # mini-batch size per optimization step
-SIMBA_NUM_STEPS = 20   # total optimization steps
- 
-# Dataset size — total queries generated before SIMBA runs
-DATASET_SIZE = 5
+SIMBA_BSIZE     = 2
+SIMBA_NUM_STEPS = 3
+DATASET_SIZE    = 6 
  
 OPTIMIZED_PATH = "./optimized/expander_optimized.json"
  
@@ -55,6 +56,17 @@ DOMAINS = [
     "literature", "software", "economics", "biology",
     "linguistics", "history",
 ]
+
+
+def _append_failed_example(record: dict) -> None:
+    """Append one JSONL record. Never raises."""
+    try:
+        path = Path(FAILED_LOG_PATH)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except Exception:
+        return
  
 # ============================================================================
 # STAGE 0 QUERY GENERATION PROMPT — placeholder
@@ -364,8 +376,16 @@ def expander_metric(
             ],
         )
  
+        # ExpanderModule.forward() returns an ExpanderDecision directly.
+        # SIMBA passes that return value as `prediction`, so there is no
+        # wrapping `.decision` attribute — just use prediction itself.
+        if hasattr(prediction, "decision"):
+            # Fallback: handle if SIMBA ever wraps it (e.g. raw dspy.Prediction)
+            expander_decision = prediction.decision
+        else:
+            expander_decision = prediction
         # Parse prediction tasks — ExpanderTaskNode → judge TaskNode
-        extracted = prediction.decision.extracted_tasks or []
+        extracted = (expander_decision.extracted_tasks or []) if expander_decision else []
         judge_tasks = [
             TaskNode(
                 id=t.id,
@@ -387,13 +407,45 @@ def expander_metric(
  
         result = run_judge_pipeline(pipeline_input)
         if result is None:
+            _append_failed_example({
+                "reason": "pipeline_returned_none",
+                "threshold": FAILED_SCORE_THRESHOLD,
+                "domain": getattr(example, "domain", None),
+                "blueprint_mode": getattr(example, "blueprint_mode", None),
+                "query": query_dict,
+                "predicted_tasks": [t.model_dump() for t in judge_tasks],
+            })
             return 0.0
  
+        if result.normalized_final < FAILED_SCORE_THRESHOLD:
+            _append_failed_example({
+                "reason": "below_threshold",
+                "threshold": FAILED_SCORE_THRESHOLD,
+                "score": result.normalized_final,
+                "domain": getattr(example, "domain", None),
+                "blueprint_mode": getattr(example, "blueprint_mode", None),
+                "query": query_dict,
+                "predicted_tasks": [t.model_dump() for t in judge_tasks],
+                "score_breakdown": result.model_dump(),
+            })
+
         print(f"  [Metric] score={result.normalized_final:.4f}")
         return result.normalized_final
  
     except Exception as e:
-        print(f"  ❌ [Metric] Failed: {e}")
+        try:
+            q = json.loads(example.explicit_target) if hasattr(example, "explicit_target") else None
+        except Exception:
+            q = getattr(example, "explicit_target", None)
+        _append_failed_example({
+            "reason": "metric_exception",
+            "threshold": FAILED_SCORE_THRESHOLD,
+            "domain": getattr(example, "domain", None),
+            "blueprint_mode": getattr(example, "blueprint_mode", None),
+            "query": q,
+            "error": str(e),
+        })
+        print(f"  [Metric] Failed: {e}")
         return 0.0
  
  
@@ -406,21 +458,24 @@ def compile_expander(trainset: list[dspy.Example]) -> ExpanderModule:
     Run SIMBA to optimize ExpanderModule prompt.
     Returns the optimized module.
     """
-    student = ExpanderModule()
- 
-    optimizer = SIMBA(
-        metric=expander_metric,
-        bsize=SIMBA_BSIZE,
-        max_steps=SIMBA_NUM_STEPS,
-    )
+    
  
     print(f"\n[SIMBA] Compiling ExpanderModule...")
     print(f"  bsize={SIMBA_BSIZE}, num_steps={SIMBA_NUM_STEPS}")
     print(f"  trainset size={len(trainset)}")
  
-    optimized = optimizer.compile(
-        student,
+    optimizer = SIMBA(
+    metric=expander_metric,
+    bsize=SIMBA_BSIZE,
+    max_steps=SIMBA_NUM_STEPS,
+)
+
+    optimized = compile_with_live_chart(
+        optimizer=optimizer,
+        module=ExpanderModule(),
         trainset=trainset,
+        base_metric=expander_metric,
+        update_interval_ms=2000,
     )
  
     return optimized

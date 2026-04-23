@@ -6,7 +6,8 @@ from signatures import RouterDecision, DecomposerSignature, DecomposerDecision
 from signatures import ComputeAgentSignature, ComputeDecision, DataExtractorDecision, DataExtractorSignature
 from signatures import ORCHESTRATION_END_ID, ExpanderDecision, ExpanderSignature, ExpanderTaskNode
 from schema import DataNode
-import json
+import re as _re
+import json as _json
 from typing import Optional
 from collections import defaultdict, deque
 
@@ -298,44 +299,92 @@ class DataExtractorAgent(dspy.Module):
         ]
 "-------------------------------Expander Agent Module-------------------------------"
  
+def _parse_expander_output(raw: str) -> ExpanderDecision:
+    """
+    Extract ExpanderDecision from COT output.
+    Model writes labeled reasoning steps then a fenced ```json block last.
+    Takes the last valid fenced JSON block containing extracted_tasks.
+    """
+    # 1. Try last fenced block
+    fenced = _re.findall(r"```(?:json)?\s*([\s\S]*?)\s*```", raw, flags=_re.IGNORECASE)
+    for block in reversed(fenced):
+        block = block.strip()
+        if not block:
+            continue
+        try:
+            data = _json.loads(block)
+            if "extracted_tasks" in data:
+                return ExpanderDecision(
+                    extracted_tasks=[ExpanderTaskNode(**t) for t in data["extracted_tasks"]]
+                )
+        except Exception:
+            pass
+ 
+    # 2. Fallback — last raw JSON object with extracted_tasks key
+    candidates = list(_re.finditer(r"\{[\s\S]*\}", raw))
+    for match in reversed(candidates):
+        try:
+            data = _json.loads(match.group())
+            if "extracted_tasks" in data:
+                return ExpanderDecision(
+                    extracted_tasks=[ExpanderTaskNode(**t) for t in data["extracted_tasks"]]
+                )
+        except Exception:
+            pass
+ 
+    # 3. Return empty — validator will warn
+    print("  ⚠️ Could not parse ExpanderDecision from output. Returning empty.")
+    return ExpanderDecision(extracted_tasks=[])
+
+def _validate_expander_decision(decision: ExpanderDecision) -> ExpanderDecision:
+    """Drop malformed nodes silently."""
+    valid = []
+    for task in (decision.extracted_tasks or []):
+        try:
+            if task.id and task.task_type and task.instruction and task.description:
+                valid.append(task)
+            else:
+                print(f"  ⚠️ Dropping malformed task: {getattr(task, 'id', 'unknown')}")
+        except Exception:
+            pass
+    return ExpanderDecision(extracted_tasks=valid)
+ 
+# ============================================================================
+# EXPANDER MODULE
+# ============================================================================
+ 
 class ExpanderModule(dspy.Module):
     """
     Expander Agent DSPy Module.
  
-    Receives explicit_target as a JSON string containing:
-        instruction, description, dependencies
- 
-    Returns ExpanderDecision with flat extracted_tasks list.
-    Uses ChainOfThought to allow reasoning before structured output.
+    Receives explicit_target as JSON string.
+    Model writes COT steps then fenced JSON.
+    Custom parser extracts ExpanderDecision from last fenced block.
     """
  
     def __init__(self):
         super().__init__()
-        self.prog = dspy.ChainOfThought(ExpanderSignature)
+        self.prog = dspy.Predict(ExpanderSignature)
  
     def forward(self, explicit_target: str) -> ExpanderDecision:
-        """
-        Args:
-            explicit_target: JSON string of the task input.
-                             Keys: instruction, description, dependencies
- 
-        Returns:
-            ExpanderDecision with extracted_tasks list.
-        """
         prediction = self.prog(explicit_target=explicit_target)
-        decision: ExpanderDecision = prediction.decision
  
-        # Validate — ensure all tasks have required fields
-        # Drop malformed nodes silently rather than crashing
-        valid_tasks = []
-        for task in (decision.extracted_tasks or []):
-            try:
-                # Pydantic already validated on parse, but re-check required fields
-                if task.id and task.task_type and task.instruction and task.description:
-                    valid_tasks.append(task)
-                else:
-                    print(f"  ⚠️ Dropping malformed task: {task.id}")
-            except Exception:
-                pass
+        # DSPy will try to parse decision field — if it fails, raw text is in prediction
+        try:
+            decision: ExpanderDecision = prediction.decision
+            if decision.extracted_tasks:
+                return _validate_expander_decision(decision)
+        except Exception:
+            pass
  
-        return ExpanderDecision(extracted_tasks=valid_tasks)
+        # Fallback — parse from raw completion text
+        raw = getattr(prediction, "completions", None)
+        if raw:
+            raw_text = str(raw)
+        else:
+            raw_text = str(prediction)
+ 
+        decision = _parse_expander_output(raw_text)
+        return _validate(decision)
+ 
+ 

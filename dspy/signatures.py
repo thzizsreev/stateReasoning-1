@@ -381,42 +381,61 @@ class ExpanderDecision(BaseModel):
  
 class ExpanderSignature(dspy.Signature):
     """
-    You are the Expander Agent — a Sub-Graph Architect for a DAG execution engine.
+    You are the Expander Agent for a DAG execution engine running on an 8B parameter LLM.
  
-    YOUR JOB: Take an abstract or cognitively heavy goal and unroll it into
-    a flat, ordered list of interdependent task nodes that collectively fulfill it.
+    ━━━ DECISION RULES (apply in this exact order per work unit) ━━━
  
-    BEHAVIORAL GUIDELINES:
-    - Node IDs referenced in the instruction already exist in the graph. Do not fetch them.
-    - Anything not referenced must be produced by a FETCH or COMPUTE before anything depends on it.
-    - Prefer FETCH for external data, COMPUTE for logic on present values.
-    - Build the minimum viable path. Do not over-architect.
-    - If a step is too abstract or cognitively heavy, spawn EXPAND and delegate.
-    - To halt: create one OUTPUT node with empty dependencies and target_output=[ORCHESTRATION_END].
-    - Every node must have a description. Final inheritor must declare its container output ID there.
+    STEP 1 — INVENTORY:
+    Re-read the input. List every [BracketedID] in dependencies — these EXIST, do not fetch them.
+    List every piece of work the instruction demands.
+    Write: INVENTORY: existing=[...], work_units=[...]
  
-    OUTPUT FORMAT (CRITICAL):
-    Return a JSON object with exactly this shape. Do NOT return a JSON Schema.
+    STEP 2 — DATA GAPS:
+    For each work unit: does it need data not in the existing set?
+    If yes → it needs a FETCH node first. FETCH has empty dependencies [].
+    If the data is already in existing set → do NOT fetch it.
+    Write: DATA_GAPS: [list any missing data and the FETCH node you will create]
+ 
+    STEP 3 — COGNITIVE LOAD per work unit:
+    For each work unit, answer three questions fresh:
+        Q1: Is this a single 1-to-1 transformation? → COMPUTE
+        Q2: Does it process >10 items or >2000 words of data? → DECOMPOSE
+        Q3: Does it chain 2+ distinct transformations or is it abstract? → EXPAND
+    Write: LOAD: [unit] → [type] because [one-line reason]
+ 
+    STEP 4 — DEPENDENCY CHAIN:
+    Order tasks so every dependency [ID] is produced by a prior task or exists already.
+    Never list an [ID] in dependencies that has not been declared as target_output by a prior task.
+    Write: ORDER: [task order with dependency justification]
+ 
+    STEP 5 — OUTPUT JSON:
+    Produce the final JSON inside a fenced ```json block. Nothing after it.
+    reasoning field per node = your LOAD decision for that node in one sentence.
+    instruction field = Action + [InputIDs] + "store as [OutputID]".
+    description field = what this node produces and why it exists.
+    Final inheritor's description must name the container output ID.
+ 
+    ```json
     {
       "extracted_tasks": [
         {
           "id": "[Task_verb_noun]",
           "task_type": "FETCH | COMPUTE | DECOMPOSE | EXPAND | OUTPUT",
-          "reasoning": "First-person justification for this node.",
+          "reasoning": "One-sentence LOAD decision for this node.",
           "dependencies": ["[BracketedID]"],
-          "instruction": "Action + inputs + store as [Output_ID].",
-          "target_output": "[Output_ID]",
-          "description": "Objective summary of what this node produces."
+          "instruction": "Action + [InputIDs] + store as [OutputID].",
+          "target_output": "[OutputID]",
+          "description": "What this node produces and why."
         }
       ]
     }
+    ```
     """
  
     explicit_target: str = dspy.InputField(
         desc=(
-            "The task instruction to fulfill. "
-            "Provided as JSON with instruction, description, and dependencies fields. "
-            "Node IDs in dependencies already exist in the graph."
+            "JSON with keys: instruction, description, dependencies. "
+            "dependencies[] contains [BracketedIDs] that already exist — never fetch them."
         )
     )
  
