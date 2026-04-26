@@ -185,23 +185,29 @@ async def process_query(user_query: str, llm) -> FinalPipelinePayload:
 # {decision.decomposition_snippet}"""
         pending_tasks.append(run_data_extractor(user_query, llm))
         
-    if decision.requires_decomposition:
+    if decision.requires_decomposition :
         # Build the Tunnel Vision Prompt
-        framed_prompt = f"""--- GLOBAL CONTEXT (For reference only. DO NOT evaluate your rules against this) ---
-{user_query}
+        framed_prompt = f"""
 
---- YOUR EXPLICIT TARGET (You MUST apply your rules ONLY to this text) ---
-{decision.decomposition_snippet}"""
+        --- YOUR EXPLICIT TARGET (You MUST apply your rules ONLY to this text) ---
+        {decision.decomposition_snippet}"""
         
         pending_tasks.append(run_task_decomposer(framed_prompt, llm))
+
+    if decision.requires_expansion:
+        framed_prompt = f"""
+
+        --- YOUR EXPLICIT TARGET (You MUST apply your rules ONLY to this text) ---
+        {decision.expansion_snippet}"""
         
+        pending_tasks.append(run_task_decomposer(framed_prompt, llm))
+
     if decision.requires_computation:
         # Build the Tunnel Vision Prompt
-        framed_prompt = f"""--- GLOBAL CONTEXT (For reference only. DO NOT evaluate your rules against this) ---
-{user_query}
+        framed_prompt = f"""
 
---- YOUR EXPLICIT TARGET (You MUST apply your rules ONLY to this text) ---
-{decision.computation_snippet}"""
+        --- YOUR EXPLICIT TARGET (You MUST apply your rules ONLY to this text) ---
+        {decision.computation_snippet}"""
         
         pending_tasks.append(run_compute_agent(framed_prompt, llm))
 

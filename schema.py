@@ -29,13 +29,17 @@ class TaskNode(BaseModel):
     instruction: str = Field(
         description="The isolated prompt for the Worker LLM, preserving bracketed IDs."
     )
-    target_output: Optional[str] = Field(
+    description: str = Field(
         default=None,
-        description=(
-            "Bracketed ID of the DataNode this task creates; null allowed for DECOMPOSE "
-            "or tasks that do not materialize a single output node."
-        ),
+        description="A description of the Task node."
     )
+    # target_output: Optional[str] = Field(
+    #     default=None,
+    #     description=(
+    #         "Bracketed ID of the DataNode this task creates; null allowed for DECOMPOSE "
+    #         "or tasks that do not materialize a single output node."
+    #     ),
+    # )
     task_type: Literal["COMPUTE", "DECOMPOSE", "OUTPUT"] = Field(
         description="'COMPUTE' if a Worker can solve this. 'DECOMPOSE' if it needs breakdown."
     )
@@ -72,14 +76,21 @@ class FinalPipelinePayload(BaseModel):
     task_nodes: List[TaskNode] = []
 
 class RouterDecision(BaseModel):
+    data_scratchpad: str = Field(description="The exact text substring containing the facts. Empty string if none.")
     requires_data_extraction: bool = Field(description="True if explicit facts/numbers are provided.")
     data_snippet: str = Field(description="The exact text substring containing the facts. Empty string if none.")
     
+    decompose_scratchpad: str = Field(description="The exact text substring containing the decomposition. Empty string if none.")
     requires_decomposition: bool
     decomposition_snippet: str = Field(description="CRITICAL: Must be a continuous, verbatim substring copied EXACTLY from the prompt. DO NOT summarize. DO NOT use ellipses. If the workflow is 300 words, copy the exact first and last words to encompass it.")
     
+    compute_scratchpad: str = Field(description="The exact text substring containing the computation. Empty string if none.")
     requires_computation: bool
     computation_snippet: str = Field(description="CRITICAL: Must be a continuous, verbatim substring copied EXACTLY from the prompt. DO NOT summarize.")
+    
+    expand_scratchpad: str = Field(description="The exact text substring containing the expansion. Empty string if none.")
+    requires_expansion: bool
+    expansion_snippet: str = Field(description="CRITICAL: Must be a continuous, verbatim substring copied EXACTLY from the prompt. DO NOT summarize.")
 # ==========================================
 # 2. ENFORCEMENT DEMONSTRATION
 # ==========================================

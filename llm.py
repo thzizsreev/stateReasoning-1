@@ -8,61 +8,71 @@ import os
 
 def parse_llm_json_response(text: str) -> Dict[str, Any]:
     """
-    Extract the first valid JSON object from an LLM response.
-
-    Uses regex to locate candidate JSON blocks (including ```json fenced blocks),
-    then validates candidates via json.loads().
+    Extract the first valid JSON object or array from an LLM response.
+    Handles embedded newlines inside JSON string values via regex pre-processing.
     """
     if not text:
         raise ValueError("Empty LLM response; expected JSON.")
 
-    # 1) Prefer fenced JSON blocks.
-    fenced = re.findall(r"```(?:json)?\s*([\s\S]*?)\s*```", text, flags=re.IGNORECASE)
-    for block in fenced:
-        block = block.strip()
-        if not block:
-            continue
+    def sanitize(raw: str) -> str:
+        # Replace literal newlines inside JSON string values only
+        # Matches content between quotes, replaces \n with \\n
+        return re.sub(
+            r'"((?:[^"\\]|\\.)*)"',
+            lambda m: '"' + m.group(1).replace('\n', '\\n').replace('\r', '\\r') + '"',
+            raw
+        )
+
+    def try_parse(blob: str):
+        blob = blob.strip()
+        if not blob:
+            return None
+        # Try raw first
         try:
-            parsed = json.loads(block)
-            if isinstance(parsed, dict):
+            parsed = json.loads(blob)
+            if isinstance(parsed, (dict, list)):
                 return parsed
         except json.JSONDecodeError:
             pass
-
-    # 2) Try to find JSON object candidates in raw text.
-    # Greedy match gives us the largest {...} span; we then validate by parsing.
-    candidates = re.findall(r"\{[\s\S]*\}", text)
-    for cand in candidates:
-        cand = cand.strip()
+        # Try sanitized
         try:
-            parsed = json.loads(cand)
-            if isinstance(parsed, dict):
+            parsed = json.loads(sanitize(blob))
+            if isinstance(parsed, (dict, list)):
                 return parsed
         except json.JSONDecodeError:
-            continue
+            return None
 
-    # 3) Fallback: brace-balanced scan starting from first '{' (handles extra trailing text).
-    start = text.find("{")
-    if start != -1:
+    # 1) Fenced blocks
+    for block in re.findall(r"```(?:json)?\s*([\s\S]*?)\s*```", text, re.IGNORECASE):
+        result = try_parse(block)
+        if result is not None:
+            return result
+
+    # 2) Largest { } or [ ] span
+    for pattern in (r"\{[\s\S]*\}", r"\[[\s\S]*\]"):
+        for cand in re.findall(pattern, text):
+            result = try_parse(cand)
+            if result is not None:
+                return result
+
+    # 3) Brace-balanced scan for both { and [
+    for open_ch, close_ch in [('{', '}'), ('[', ']')]:
+        start = text.find(open_ch)
+        if start == -1:
+            continue
         depth = 0
         for i in range(start, len(text)):
-            ch = text[i]
-            if ch == "{":
+            if text[i] == open_ch:
                 depth += 1
-            elif ch == "}":
+            elif text[i] == close_ch:
                 depth -= 1
                 if depth == 0:
-                    snippet = text[start : i + 1]
-                    try:
-                        parsed = json.loads(snippet)
-                        if isinstance(parsed, dict):
-                            return parsed
-                    except json.JSONDecodeError:
-                        break
+                    result = try_parse(text[start:i + 1])
+                    if result is not None:
+                        return result
+                    break
 
-    preview = text[:800]
-    raise ValueError(f"Could not extract a valid JSON object. First 800 chars:\n{preview}")
-
+    raise ValueError(f"Could not extract valid JSON. First 800 chars:\n{text[:800]}")
 
 class OllamaClient:
     """A wrapper class to handle LLM API interactions and force structured JSON."""
@@ -104,7 +114,7 @@ class OpenRouterClient:
         
         # Pull and strip the key to prevent header injection errors
         #self.api_key = (api_key or os.environ.get("OPENROUTER_API_KEY", "")).strip()
-        self.api_key ="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"
+        self.api_key ="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"
         print(f"API key: {self.api_key}")
         if not self.api_key:
             raise RuntimeError(
@@ -130,6 +140,7 @@ class OpenRouterClient:
             # Mirror OllamaClient’s contract: messages -> JSON dict
             response = self.client.chat.completions.create(
                 model=self.model_name,
+                #response_format={"type": "json_object"},
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},

@@ -155,7 +155,7 @@ class Neo4jOrchestrator:
             session.run(query, id=node_id, content=content_str, status=status)
             
         self.recompute_semaphore() 
-        print(f"🟢 DATA INJECTED & CASCADED: {node_id}")
+        print(f"[DATA] Injected & cascaded: {node_id}")
 
     def upsert_task(self, task) -> None:
         """
@@ -173,6 +173,7 @@ class Neo4jOrchestrator:
         // 1) Upsert TaskNode and basic properties
         MERGE (t:TaskNode {id: $task_id})
         SET t.instruction = $instruction,
+            t.description = $description,
             t.task_type = $task_type,
             t.status = $status
 
@@ -222,13 +223,14 @@ class Neo4jOrchestrator:
                 query,
                 task_id=task_id,
                 instruction=task.instruction,
+                description=getattr(task, "description", "") or "",
                 task_type=task.task_type,
                 status=getattr(task, "status", "PENDING"),
                 parent_task=parent_task,
                 target_output=target_output,
                 dependencies=deps,
             )
-        print(f"🟡 INJECTED TASK: {task_id} (Parent: {parent_task})")
+        print(f"[TASK] Injected: {task_id} (Parent: {parent_task})")
 
     def mark_data_complete(self, node_id: str, content: Any) -> None:
         node_id = self._normalize_id(node_id)

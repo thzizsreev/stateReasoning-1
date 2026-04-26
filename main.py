@@ -108,6 +108,45 @@ def fetch_executable_tasks(db: Neo4jOrchestrator) -> list:
                 } for record in result
             ]
 
+def fetch_first_decompose_task(db: Neo4jOrchestrator) -> Optional[TaskNode]:
+        """
+        Fetch the first DECOMPOSE task currently present in the graph.
+        This is used as the `root_task` after the initial query is processed/inserted.
+        """
+        query = """
+        MATCH (t:TaskNode {task_type: 'DECOMPOSE'})
+        WITH t
+        ORDER BY id(t) ASC
+        LIMIT 1
+        OPTIONAL MATCH (dep:DataNode)-[:REQUIRES]->(t)
+        WITH t, collect(distinct dep.id) AS dependencies
+        OPTIONAL MATCH (p:TaskNode)-[:CREATES]->(t)
+        WITH t, dependencies, head(collect(distinct p.id)) AS parent_task
+        OPTIONAL MATCH (t)-[:GENERATES]->(out:DataNode)
+        RETURN
+          t.id AS id,
+          t.instruction AS instruction,
+          coalesce(t.status, 'PENDING') AS status,
+          t.task_type AS task_type,
+          dependencies AS dependencies,
+          parent_task AS parent_task,
+          out.id AS target_output
+        """
+        with db.driver.session() as session:
+            rec = session.run(query).single()
+            if not rec:
+                return None
+            # Populate a Pydantic TaskNode using schema defaults where DB doesn't store fields.
+            return TaskNode(
+                id=rec["id"],
+                dependencies=[d for d in (rec["dependencies"] or []) if d],
+                instruction=rec["instruction"] or "",
+                # schema.TaskNode declares `description: str` but some DB rows may not have it.
+                description="",
+                task_type=rec["task_type"],
+                
+            )
+
 async def process_and_upsert_query(query: str, llm, db, parent_task_id: Optional[str] = None):
     """
     End-to-end pipeline: Extracts nodes via the cognitive pipeline, 
@@ -182,12 +221,16 @@ async def run_execution_engine(db: Neo4jOrchestrator, llm, terminal_node: str):
         # 3. Process the Frontier Concurrently
         for task in executable_tasks:
             print(f"\n⚡ [ENGINE] Executing Node: {task['id']} (Type: {task['task_type']})")
-            
+            deps = fetch_resolved_dependencies_for_task(db, task["id"])
             if task['task_type'] == 'DECOMPOSE':
                 # Route to Cognitive Pipeline
                 print(f"  -> Passing instruction to Compiler...")
                 # Note: This is the recursive expansion of the graph
-                await process_and_upsert_query(task['instruction'], llm, db, parent_task_id=task['id'])
+                framed_prompt = f"""instruction: {task['instruction']}
+                description: {task['description']}
+                dependencies: {deps}
+                """
+                await process_and_upsert_query(framed_prompt, llm, db, parent_task_id=task['id'])
                 db.mark_task_complete(task['id'])
                 
             elif task['task_type'] == 'COMPUTE':
@@ -204,13 +247,13 @@ async def run_execution_engine(db: Neo4jOrchestrator, llm, terminal_node: str):
 
 if __name__ == "__main__":  
 
-    def mock_RAG(instruction: str, db) -> str:
+    def mock_RAG( db: Neo4jOrchestrator) -> str:
         """
         Simulates querying the Vector Database. 
         Fetches the required dependencies (Primitives), injects them into the graph, 
         and returns the execution template for the orchestrator to chunk.
         """
-        print(f"\n[Experiential RAG] Searching memory for: '{instruction[:50]}...'")
+        #print(f"\n[Experiential RAG] Searching memory for: '{instruction[:50]}...'")
         
         # 1. Fetch & Load Dependencies (Primitives & Rules)
         print("  -> Match found. Loading required dependencies into memory...")
@@ -243,9 +286,9 @@ if __name__ == "__main__":
         
         # 2. Fetch & Return the Template
         print("  -> Dependencies loaded. Returning execution template.")
-        phase_text = PROMPTS["SQUARE_CONSTRUCTION"]
+        # phase_text = PROMPTS["SQUARE_CONSTRUCTION"]
         
-        return phase_text  
+        # return phase_text  
     "-------------- real code---------------------------"
     my_llm = OpenRouterClient()
     db = Neo4jOrchestrator(password="password")
@@ -253,16 +296,17 @@ if __name__ == "__main__":
     PYDANTIC_LOG_PATH = Path(__file__).resolve().parent / "docs" / "data" / "pydantic_outputs.jsonl"
     _clear_pydantic_log(PYDANTIC_LOG_PATH)
     # Mock data
-    known_keys = ["DEF_PRIMITIVES", "RULE_R1", "RULE_R2", "RULE_R3"]
-    phase_text = PROMPTS["TASK_PHASE_1"]
+    #known_keys = ["DEF_PRIMITIVES", "RULE_R1", "RULE_R2", "RULE_R3"]
+    #phase_text = PROMPTS["TASK_PHASE_1"]
 
 
-    db._clear_db()
-    query = """construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively"""
-    datanodes = asyncio.run(process_query(query, my_llm))
-    #datanodes = process_datanodes_output(datanodes)
-    ##print_datanodes_nodes(datanodes)
-    insert_datanodes_into_graph(datanodes, db)
+    # db._clear_db()
+    # query = """construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively"""
+    # datanodes = asyncio.run(process_query(query, my_llm))
+    # datanodes = process_datanodes_output(datanodes)
+    # insert_datanodes_into_graph(datanodes, db)
+    # ##print_datanodes_nodes(datanodes)
+    # insert_datanodes_into_graph(datanodes, db)
     # phase_text = """First, analyze the [Client_Requirements_Doc] to extract a core [Feature_List]. Next, take that 
     # [Feature_List] and use it to build a full, production-ready [ECommerce_Web_Application]. Building a web application is
     #  a massive undertaking that requires designing  a database, writing frontend React code, and configuring backend APIs. 
@@ -286,15 +330,21 @@ if __name__ == "__main__":
     print("\n=== STAGE 2: FETCHING EXPERIENTIAL MEMORY ===")
     # Pass the instruction to the mock RAG. It handles injecting the primitives 
     # internally and returns the template we need to decompose.
-    template_text = mock_RAG(datanodes.task_nodes[0].instruction, db)
-
+    #mock_RAG(db)
+    #template_text = mock_RAG(db)
+    template_text = f"""{PROMPTS["SQUARE_CONSTRUCTION"]}\n after the task is done, Output a final status node named: [END_ORCHESTRATION]."""
     # ========================================================================
     # 3. TEMPLATE CHUNKING & HIERARCHY CONJUNCTION
     # ========================================================================
     print("\n=== STAGE 3: DECOMPOSING TEMPLATE & BUILDING HIERARCHY ===")
     # Process the returned template, passing the root_task_id so the function 
     # natively draws the [:CREATES] edges from the root to these new sub-tasks.
-    root_task_id = datanodes.task_nodes[0].id
+    root_task = fetch_first_decompose_task(db)
+    print(root_task)
+    # if root_task is None:
+    #     raise RuntimeError("No DECOMPOSE TaskNode found in graph; cannot set root_task.")
+    root_task_id = root_task.id
+    print(f"root_task_id: {root_task_id}")
     plan_payload = asyncio.run(process_and_upsert_query(template_text, my_llm, db, parent_task_id=root_task_id))
     
     # ========================================================================
@@ -308,4 +358,4 @@ if __name__ == "__main__":
         print(f"\n🟢 ROOT TASK '{root_task_id}' COMPLETED (Successfully decomposed).")
 
     print("\n✅ Setup Complete. Open Neo4j Browser and run: MATCH (n) RETURN n")
-    asyncio.run(run_execution_engine(db, my_llm, terminal_node="[STATE_PHASE_3_DONE]"))
+    # asyncio.run(run_execution_engine(db, my_llm, terminal_node="[STATE_PHASE_3_DONE]"))

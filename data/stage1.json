@@ -1,0 +1,111 @@
+{
+  "meta": {
+    "created_at": "2026-04-26T22:07:07.194098+00:00",
+    "format": "stateReasoning-1.neo4j_snapshot.v1"
+  },
+  "nodes": [
+    {
+      "labels": [
+        "Semaphore"
+      ],
+      "props": {
+        "pending_count": 0,
+        "id": "GLOBAL"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_A]",
+        "content": "{\"x\": 0, \"y\": 0}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_L]",
+        "content": "4",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively",
+        "unresolved_deps": 0,
+        "description": "[INTENT]: Macro-container for the square construction phase. [DEFERRED LOGIC]: Defers the atomic construction of a square given a point and side length. [SHELL ARCHITECTURE]: This node generates two discrete shells: [Data_A] and [Data_L]. [PRUNED DEPENDENCIES]: No prior dependencies are inherited as this is the initial phase.",
+        "id": "[Square_Construction_Decomp]",
+        "task_type": "DECOMPOSE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[DEF_PRIMITIVES]",
+        "content": "PRIMITIVE OBJECTS:\nPoint(name, row, col)\nLine(name, orientation, start_point, end_point)\nFilled(row, col)",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R1]",
+        "content": "Rule R1 (HorizontalExtension): store this entire rule as a data node.\nthis is a rule that extends a horizontal line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{\nINPUT: A Point P, an Integer Length L.\nOUTPUT: A new Point Q = (P.row, P.col + L).}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R2]",
+        "content": "Rule R2 (VerticalExtension): store this entire rule as a data node.\nthis is a rule that extends a vertical line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Point P, an Integer Length L.\nOUTPUT: A new Point Q = (P.row + L, P.col).}}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R3]",
+        "content": "Rule R3 (CornerCompletion): store this entire rule as a data node.\nthis is a rule that completes a corner of a square by connecting two lines. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (r2, c1).}}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R4_HORIZONTAL]",
+        "content": "Rule R4 (Strict Successor-Based Line Filling) - Horizontal: store this entire rule as a data node.\nthis is a rule that fills a horizontal line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Horizontal Line L with start_point(r, c_start) and end_point(r, c_end).\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R4_VERTICAL]",
+        "content": "Rule R4 (Strict Successor-Based Line Filling) - Vertical: store this entire rule as a data node.\nthis is a rule that fills a vertical line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Vertical Line L with start_point(r_start, c) and end_point(r_end, c).\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}}",
+        "status": "COMPLETE"
+      }
+    }
+  ],
+  "relationships": []
+}

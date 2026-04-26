@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from base import Neo4jOrchestrator
 
 
-DEFAULT_SNAPSHOT_PATH = Path(__file__).resolve().parent / "data" / "neo4j_snapshot2.json"
+DEFAULT_SNAPSHOT_PATH = Path(__file__).resolve().parent / "data" / "stage2.json"
 
 
 def export_neo4j_snapshot(
@@ -96,8 +96,24 @@ def load_neo4j_snapshot(
     """
     Load a snapshot created by `export_neo4j_snapshot` and recreate the graph.
     """
+    if not snapshot_path.exists():
+        raise FileNotFoundError(f"Snapshot file not found: {snapshot_path}")
+
+    # Avoid JSONDecodeError on empty/whitespace-only snapshot files.
+    try:
+        if snapshot_path.stat().st_size == 0:
+            print(f"[Snapshot] '{snapshot_path}' is empty. Nothing to load.")
+            return
+    except OSError:
+        # If we can't stat, fall through to open/load and let it raise.
+        pass
+
     with open(snapshot_path, "r", encoding="utf-8") as f:
-        snapshot = json.load(f)
+        raw = f.read()
+        if not raw.strip():
+            print(f"[Snapshot] '{snapshot_path}' has no JSON content. Nothing to load.")
+            return
+        snapshot = json.loads(raw)
 
     nodes = snapshot.get("nodes", [])
     rels = snapshot.get("relationships", [])
@@ -152,5 +168,6 @@ def load_neo4j_snapshot(
 
 if __name__ == "__main__":
     db = Neo4jOrchestrator(password="password")
-    path = export_neo4j_snapshot(db)
-    print(f"Snapshot written to: {path}")
+    # path = export_neo4j_snapshot(db)
+    # print(f"Snapshot written to: {path}")
+    load_neo4j_snapshot(db)

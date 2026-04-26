@@ -1,291 +1,83 @@
 {
-  "ts": "2026-04-22T10:27:33.360487+00:00",
+  "ts": "2026-04-26T22:14:06.389260+00:00",
   "label": "RouterDecision",
   "type": "RouterDecision",
   "data": {
-    "requires_data_extraction": true,
-    "data_snippet": "construct a square with the point A(0,0) and side length 4.",
-    "requires_decomposition": true,
-    "decomposition_snippet": "construct a square with the point A(0,0) and side length 4.",
-    "requires_computation": false,
-    "computation_snippet": ""
-  }
-}
-
-{
-  "ts": "2026-04-22T10:27:46.610389+00:00",
-  "label": "DataNodesList",
-  "type": "DataNodesList",
-  "data": {
-    "data_nodes": [
-      {
-        "id": "[Data_A]",
-        "content": {
-          "x": 0,
-          "y": 0
-        },
-        "status": "UNRESOLVED"
-      },
-      {
-        "id": "[Data_L]",
-        "content": 4,
-        "status": "UNRESOLVED"
-      }
-    ]
-  }
-}
-
-{
-  "ts": "2026-04-22T10:28:03.863035+00:00",
-  "label": "TaskNodesList.decomposer",
-  "type": "TaskNodesList",
-  "data": {
-    "task_nodes": [
-      {
-        "id": "[Task_Construct_Square]",
-        "dependencies": [
-          "[Data_A]",
-          "[Data_L]"
-        ],
-        "instruction": "construct a square with the point A(0,0) and side length 4.",
-        "target_output": null,
-        "task_type": "DECOMPOSE",
-        "status": "PENDING",
-        "parent_task": null
-      }
-    ]
-  }
-}
-
-{
-  "ts": "2026-04-22T10:28:03.864012+00:00",
-  "label": "FinalPipelinePayload",
-  "type": "FinalPipelinePayload",
-  "data": {
-    "data_nodes": [
-      {
-        "id": "[Data_A]",
-        "content": {
-          "x": 0,
-          "y": 0
-        },
-        "status": "UNRESOLVED"
-      },
-      {
-        "id": "[Data_L]",
-        "content": 4,
-        "status": "UNRESOLVED"
-      }
-    ],
-    "task_nodes": [
-      {
-        "id": "[Task_Construct_Square]",
-        "dependencies": [
-          "[Data_A]",
-          "[Data_L]"
-        ],
-        "instruction": "construct a square with the point A(0,0) and side length 4.",
-        "target_output": null,
-        "task_type": "DECOMPOSE",
-        "status": "PENDING",
-        "parent_task": null
-      }
-    ]
-  }
-}
-
-{
-  "ts": "2026-04-22T10:28:27.170423+00:00",
-  "label": "RouterDecision",
-  "type": "RouterDecision",
-  "data": {
+    "data_scratchpad": "No literal value assignments found.",
     "requires_data_extraction": false,
     "data_snippet": "",
+    "decompose_scratchpad": "Found: 'PHASE 1 — POINT DERIVATION' with Task 1.1, 1.2, 1.3 and trailing completion sentence 'Once the three new points are successfully derived...' — extends to that sentence. 'PHASE 2 — LINE DERIVATION' with Task 2.1, 2.2, 2.3, 2.4 and trailing completion sentence 'Once all 4 lines are successfully derived...' — extends to that sentence. 'PHASE 3 — LINE FILLING' with Task 3.1, 3.2, 3.3, 3.4 and trailing completion sentence 'Once all 4 fill lists are successfully derived...' — extends to that sentence. GLOBAL TERMINAL SENTENCE: 'after the task is done, Output a final status node named: [END_ORCHESTRATION].'",
     "requires_decomposition": true,
-    "decomposition_snippet": "The entire provided workflow text.",
+    "decomposition_snippet": "PHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to a point B.\nTask 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to a point D.\nTask 1.3: Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to a point C.\nOnce the three new points are successfully derived, output a final status node indicating Phase 1 is complete.\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Create a Horizontal Line from [Data_A] to the point B. Save output to a new Line AB.\nTask 2.2: Create a Vertical Line from the point B to the point C. Save output to a new Line BC.\nTask 2.3: Create a Horizontal Line from the point D to the point C. Save output to a new Line DC.\nTask 2.4: Create a Vertical Line from the point D to the [Data_A]. Save output to a new Line DA.\nOnce all 4 lines are successfully derived, output a final status node indicating Phase 2 is complete.\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply [RULE_R4_HORIZONTAL] to the first horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply [RULE_R4_VERTICAL] to the first vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply [RULE_R4_HORIZONTAL] to the second horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply [RULE_R4_VERTICAL] to the second vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.\nOnce all 4 fill lists are successfully derived, output a final status node indicating Phase 3 is complete.\nafter the task is done, Output a final status node named: [END_ORCHESTRATION].",
+    "compute_scratchpad": "No remaining unclaimed text after DECOMPOSE.",
     "requires_computation": false,
-    "computation_snippet": ""
+    "computation_snippet": "",
+    "expand_scratchpad": "No remaining unclaimed text after DECOMPOSE.",
+    "requires_expansion": false,
+    "expansion_snippet": ""
   }
 }
 
 {
-  "ts": "2026-04-22T10:29:32.069373+00:00",
+  "ts": "2026-04-26T22:14:42.932576+00:00",
   "label": "TaskNodesList.decomposer",
   "type": "TaskNodesList",
   "data": {
     "task_nodes": [
       {
-        "id": "[Task_Compute_Data_B]",
+        "id": "Phase_1_Decompose",
         "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
           "[RULE_R1]",
-          "[Data_A]",
-          "[Data_L]"
-        ],
-        "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].",
-        "target_output": "[Data_B]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Compute_Data_D]",
-        "dependencies": [
           "[RULE_R2]",
-          "[Data_A]",
-          "[Data_L]"
+          "[RULE_R3]"
         ],
-        "instruction": "Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].",
-        "target_output": "[Data_D]",
-        "task_type": "COMPUTE",
+        "instruction": "PHASE 1 — POINT DERIVATION (MANDATORY) Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to a point B. Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to a point D. Task 1.3: Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to a point C. Once the three new points are successfully derived, output a final status node indicating Phase 1 is complete.",
+        "description": "[INTENT]: Derive new points based on the provided data and rules. [DEFERRED LOGIC]: Apply rules R1, R2, and R3 to generate points B, D, and C. [SHELL ARCHITECTURE]: This node generates discrete shells [Point_B], [Point_D], and [Point_C]. [PRUNED DEPENDENCIES]: Strictly inherits [Data_A], [Data_L], [RULE_R1], [RULE_R2], and [RULE_R3] from the previous phase.",
+        "task_type": "DECOMPOSE",
         "status": "PENDING",
         "parent_task": null
       },
       {
-        "id": "[Task_Compute_Data_C]",
-        "dependencies": [
-          "[RULE_R3]",
-          "[Data_B]",
-          "[Data_D]"
-        ],
-        "instruction": "Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].",
-        "target_output": "[Data_C]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Status_Phase_1_Done]",
-        "dependencies": [
-          "[Data_B]",
-          "[Data_C]",
-          "[Data_D]"
-        ],
-        "instruction": "Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE].",
-        "target_output": "[STATE_PHASE_1_DONE]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Compute_Data_Line_AB]",
+        "id": "Phase_2_Decompose",
         "dependencies": [
           "[Data_A]",
-          "[Data_B]"
+          "[Point_B]",
+          "[Point_C]",
+          "[Point_D]"
         ],
-        "instruction": "Create a Horizontal Line from [Data_A] to [Data_B]. Save output to node ID: [Data_Line_AB].",
-        "target_output": "[Data_Line_AB]",
-        "task_type": "COMPUTE",
+        "instruction": "PHASE 2 — LINE DERIVATION (MANDATORY) Task 2.1: Create a Horizontal Line from [Data_A] to the point B. Save output to a new Line AB. Task 2.2: Create a Vertical Line from the point B to the point C. Save output to a new Line BC. Task 2.3: Create a Horizontal Line from the point D to the point C. Save output to a new Line DC. Task 2.4: Create a Vertical Line from the point D to the [Data_A]. Save output to a new Line DA. Once all 4 lines are successfully derived, output a final status node indicating Phase 2 is complete.",
+        "description": "[INTENT]: Derive new lines based on the provided points. [DEFERRED LOGIC]: Create horizontal and vertical lines using the generated points. [SHELL ARCHITECTURE]: This node generates discrete shells [Line_AB], [Line_BC], [Line_DC], and [Line_DA]. [PRUNED DEPENDENCIES]: Strictly inherits [Data_A], [Point_B], [Point_C], and [Point_D] from the previous phase.",
+        "task_type": "DECOMPOSE",
         "status": "PENDING",
         "parent_task": null
       },
       {
-        "id": "[Task_Compute_Data_Line_BC]",
+        "id": "Phase_3_Decompose",
         "dependencies": [
-          "[Data_B]",
-          "[Data_C]"
-        ],
-        "instruction": "Create a Vertical Line from [Data_B] to [Data_C]. Save output to node ID: [Data_Line_BC].",
-        "target_output": "[Data_Line_BC]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Compute_Data_Line_CD]",
-        "dependencies": [
-          "[Data_C]",
-          "[Data_D]"
-        ],
-        "instruction": "Create a Horizontal Line from [Data_C] to [Data_D]. Save output to node ID: [Data_Line_CD].",
-        "target_output": "[Data_Line_CD]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Compute_Data_Line_DA]",
-        "dependencies": [
-          "[Data_D]",
-          "[Data_A]"
-        ],
-        "instruction": "Create a Vertical Line from [Data_D] to [Data_A]. Save output to node ID: [Data_Line_DA].",
-        "target_output": "[Data_Line_DA]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Status_Phase_2_Done]",
-        "dependencies": [
-          "[Data_Line_AB]",
-          "[Data_Line_BC]",
-          "[Data_Line_CD]",
-          "[Data_Line_DA]"
-        ],
-        "instruction": "Once all 4 lines are successfully derived, output a final status node named: [STATE_PHASE_2_DONE].",
-        "target_output": "[STATE_PHASE_2_DONE]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Compute_Data_Fill_AB]",
-        "dependencies": [
+          "[Line_AB]",
+          "[Line_BC]",
+          "[Line_DC]",
+          "[Line_DA]",
           "[RULE_R4_HORIZONTAL]",
-          "[Data_Line_AB]"
+          "[RULE_R4_VERTICAL]"
         ],
-        "instruction": "Apply [RULE_R4_HORIZONTAL] to [Data_Line_AB]. Save the List of Filled objects to node ID: [Data_Fill_AB].",
-        "target_output": "[Data_Fill_AB]",
-        "task_type": "COMPUTE",
+        "instruction": "PHASE 3 — LINE FILLING (STRICT) Task 3.1: Apply [RULE_R4_HORIZONTAL] to the first horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID. Task 3.2: Apply [RULE_R4_VERTICAL] to the first vertical line generated in Phase 2. Save the List of Filled objects to a new node ID. Task 3.3: Apply [RULE_R4_HORIZONTAL] to the second horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID. Task 3.4: Apply [RULE_R4_VERTICAL] to the second vertical line generated in Phase 2. Save the List of Filled objects to a new node ID. Once all 4 fill lists are successfully derived, output a final status node indicating Phase 3 is complete.",
+        "description": "[INTENT]: Fill the derived lines based on the provided rules. [DEFERRED LOGIC]: Apply rules R4_HORIZONTAL and R4_VERTICAL to the generated lines. [SHELL ARCHITECTURE]: This node generates a Collection Shell [Filled_Objects_Collection]. Downstream task nodes must compute and aggregate their results into this shell. [PRUNED DEPENDENCIES]: Strictly inherits [Line_AB], [Line_BC], [Line_DC], [Line_DA], [RULE_R4_HORIZONTAL], and [RULE_R4_VERTICAL] from the previous phase.",
+        "task_type": "DECOMPOSE",
         "status": "PENDING",
         "parent_task": null
       },
       {
-        "id": "[Task_Compute_Data_Fill_BC]",
+        "id": "[END_ORCHESTRATION]",
         "dependencies": [
-          "[RULE_R4_VERTICAL]",
-          "[Data_Line_BC]"
+          "[Phase_1_Decompose]",
+          "[Phase_2_Decompose]",
+          "[Phase_3_Decompose]"
         ],
-        "instruction": "Apply [RULE_R4_VERTICAL] to [Data_Line_BC]. Save the List of Filled objects to node ID: [Data_Fill_BC].",
-        "target_output": "[Data_Fill_BC]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Compute_Data_Fill_CD]",
-        "dependencies": [
-          "[RULE_R4_HORIZONTAL]",
-          "[Data_Line_CD]"
-        ],
-        "instruction": "Apply [RULE_R4_HORIZONTAL] to [Data_Line_CD]. Save the List of Filled objects to node ID: [Data_Fill_CD].",
-        "target_output": "[Data_Fill_CD]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Compute_Data_Fill_DA]",
-        "dependencies": [
-          "[RULE_R4_VERTICAL]",
-          "[Data_Line_DA]"
-        ],
-        "instruction": "Apply [RULE_R4_VERTICAL] to [Data_Line_DA]. Save the List of Filled objects to node ID: [Data_Fill_DA].",
-        "target_output": "[Data_Fill_DA]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Status_Phase_3_Done]",
-        "dependencies": [
-          "[Data_Fill_AB]",
-          "[Data_Fill_BC]",
-          "[Data_Fill_CD]",
-          "[Data_Fill_DA]"
-        ],
-        "instruction": "Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE].",
-        "target_output": "[STATE_PHASE_3_DONE]",
+        "instruction": "Output a final status node named: [END_ORCHESTRATION].",
+        "description": "[INTENT]: Finalize the task by indicating its completion. [DEFERRED LOGIC]: None. [SHELL ARCHITECTURE]: None. [PRUNED DEPENDENCIES]: Strictly inherits the final dependencies from the previous phases to ensure task completion.",
         "task_type": "COMPUTE",
         "status": "PENDING",
         "parent_task": null
@@ -295,481 +87,71 @@
 }
 
 {
-  "ts": "2026-04-22T10:29:32.070853+00:00",
+  "ts": "2026-04-26T22:14:42.933603+00:00",
   "label": "FinalPipelinePayload",
   "type": "FinalPipelinePayload",
   "data": {
     "data_nodes": [],
     "task_nodes": [
       {
-        "id": "[Task_Compute_Data_B]",
+        "id": "Phase_1_Decompose",
         "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
           "[RULE_R1]",
-          "[Data_A]",
-          "[Data_L]"
-        ],
-        "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_B].",
-        "target_output": "[Data_B]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Compute_Data_D]",
-        "dependencies": [
           "[RULE_R2]",
-          "[Data_A]",
-          "[Data_L]"
+          "[RULE_R3]"
         ],
-        "instruction": "Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to node ID: [Data_D].",
-        "target_output": "[Data_D]",
-        "task_type": "COMPUTE",
+        "instruction": "PHASE 1 — POINT DERIVATION (MANDATORY) Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to a point B. Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to a point D. Task 1.3: Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to a point C. Once the three new points are successfully derived, output a final status node indicating Phase 1 is complete.",
+        "description": "[INTENT]: Derive new points based on the provided data and rules. [DEFERRED LOGIC]: Apply rules R1, R2, and R3 to generate points B, D, and C. [SHELL ARCHITECTURE]: This node generates discrete shells [Point_B], [Point_D], and [Point_C]. [PRUNED DEPENDENCIES]: Strictly inherits [Data_A], [Data_L], [RULE_R1], [RULE_R2], and [RULE_R3] from the previous phase.",
+        "task_type": "DECOMPOSE",
         "status": "PENDING",
         "parent_task": null
       },
       {
-        "id": "[Task_Compute_Data_C]",
-        "dependencies": [
-          "[RULE_R3]",
-          "[Data_B]",
-          "[Data_D]"
-        ],
-        "instruction": "Apply [RULE_R3] using [Data_B] and [Data_D]. Save the output to node ID: [Data_C].",
-        "target_output": "[Data_C]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Status_Phase_1_Done]",
-        "dependencies": [
-          "[Data_B]",
-          "[Data_C]",
-          "[Data_D]"
-        ],
-        "instruction": "Once [Data_B], [Data_C], and [Data_D] are successfully derived, output a final status node named: [STATE_PHASE_1_DONE].",
-        "target_output": "[STATE_PHASE_1_DONE]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Compute_Data_Line_AB]",
+        "id": "Phase_2_Decompose",
         "dependencies": [
           "[Data_A]",
-          "[Data_B]"
+          "[Point_B]",
+          "[Point_C]",
+          "[Point_D]"
         ],
-        "instruction": "Create a Horizontal Line from [Data_A] to [Data_B]. Save output to node ID: [Data_Line_AB].",
-        "target_output": "[Data_Line_AB]",
-        "task_type": "COMPUTE",
+        "instruction": "PHASE 2 — LINE DERIVATION (MANDATORY) Task 2.1: Create a Horizontal Line from [Data_A] to the point B. Save output to a new Line AB. Task 2.2: Create a Vertical Line from the point B to the point C. Save output to a new Line BC. Task 2.3: Create a Horizontal Line from the point D to the point C. Save output to a new Line DC. Task 2.4: Create a Vertical Line from the point D to the [Data_A]. Save output to a new Line DA. Once all 4 lines are successfully derived, output a final status node indicating Phase 2 is complete.",
+        "description": "[INTENT]: Derive new lines based on the provided points. [DEFERRED LOGIC]: Create horizontal and vertical lines using the generated points. [SHELL ARCHITECTURE]: This node generates discrete shells [Line_AB], [Line_BC], [Line_DC], and [Line_DA]. [PRUNED DEPENDENCIES]: Strictly inherits [Data_A], [Point_B], [Point_C], and [Point_D] from the previous phase.",
+        "task_type": "DECOMPOSE",
         "status": "PENDING",
         "parent_task": null
       },
       {
-        "id": "[Task_Compute_Data_Line_BC]",
+        "id": "Phase_3_Decompose",
         "dependencies": [
-          "[Data_B]",
-          "[Data_C]"
-        ],
-        "instruction": "Create a Vertical Line from [Data_B] to [Data_C]. Save output to node ID: [Data_Line_BC].",
-        "target_output": "[Data_Line_BC]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Compute_Data_Line_CD]",
-        "dependencies": [
-          "[Data_C]",
-          "[Data_D]"
-        ],
-        "instruction": "Create a Horizontal Line from [Data_C] to [Data_D]. Save output to node ID: [Data_Line_CD].",
-        "target_output": "[Data_Line_CD]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Compute_Data_Line_DA]",
-        "dependencies": [
-          "[Data_D]",
-          "[Data_A]"
-        ],
-        "instruction": "Create a Vertical Line from [Data_D] to [Data_A]. Save output to node ID: [Data_Line_DA].",
-        "target_output": "[Data_Line_DA]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Status_Phase_2_Done]",
-        "dependencies": [
-          "[Data_Line_AB]",
-          "[Data_Line_BC]",
-          "[Data_Line_CD]",
-          "[Data_Line_DA]"
-        ],
-        "instruction": "Once all 4 lines are successfully derived, output a final status node named: [STATE_PHASE_2_DONE].",
-        "target_output": "[STATE_PHASE_2_DONE]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Compute_Data_Fill_AB]",
-        "dependencies": [
+          "[Line_AB]",
+          "[Line_BC]",
+          "[Line_DC]",
+          "[Line_DA]",
           "[RULE_R4_HORIZONTAL]",
-          "[Data_Line_AB]"
+          "[RULE_R4_VERTICAL]"
         ],
-        "instruction": "Apply [RULE_R4_HORIZONTAL] to [Data_Line_AB]. Save the List of Filled objects to node ID: [Data_Fill_AB].",
-        "target_output": "[Data_Fill_AB]",
-        "task_type": "COMPUTE",
+        "instruction": "PHASE 3 — LINE FILLING (STRICT) Task 3.1: Apply [RULE_R4_HORIZONTAL] to the first horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID. Task 3.2: Apply [RULE_R4_VERTICAL] to the first vertical line generated in Phase 2. Save the List of Filled objects to a new node ID. Task 3.3: Apply [RULE_R4_HORIZONTAL] to the second horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID. Task 3.4: Apply [RULE_R4_VERTICAL] to the second vertical line generated in Phase 2. Save the List of Filled objects to a new node ID. Once all 4 fill lists are successfully derived, output a final status node indicating Phase 3 is complete.",
+        "description": "[INTENT]: Fill the derived lines based on the provided rules. [DEFERRED LOGIC]: Apply rules R4_HORIZONTAL and R4_VERTICAL to the generated lines. [SHELL ARCHITECTURE]: This node generates a Collection Shell [Filled_Objects_Collection]. Downstream task nodes must compute and aggregate their results into this shell. [PRUNED DEPENDENCIES]: Strictly inherits [Line_AB], [Line_BC], [Line_DC], [Line_DA], [RULE_R4_HORIZONTAL], and [RULE_R4_VERTICAL] from the previous phase.",
+        "task_type": "DECOMPOSE",
         "status": "PENDING",
         "parent_task": null
       },
       {
-        "id": "[Task_Compute_Data_Fill_BC]",
+        "id": "[END_ORCHESTRATION]",
         "dependencies": [
-          "[RULE_R4_VERTICAL]",
-          "[Data_Line_BC]"
+          "[Phase_1_Decompose]",
+          "[Phase_2_Decompose]",
+          "[Phase_3_Decompose]"
         ],
-        "instruction": "Apply [RULE_R4_VERTICAL] to [Data_Line_BC]. Save the List of Filled objects to node ID: [Data_Fill_BC].",
-        "target_output": "[Data_Fill_BC]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Compute_Data_Fill_CD]",
-        "dependencies": [
-          "[RULE_R4_HORIZONTAL]",
-          "[Data_Line_CD]"
-        ],
-        "instruction": "Apply [RULE_R4_HORIZONTAL] to [Data_Line_CD]. Save the List of Filled objects to node ID: [Data_Fill_CD].",
-        "target_output": "[Data_Fill_CD]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Compute_Data_Fill_DA]",
-        "dependencies": [
-          "[RULE_R4_VERTICAL]",
-          "[Data_Line_DA]"
-        ],
-        "instruction": "Apply [RULE_R4_VERTICAL] to [Data_Line_DA]. Save the List of Filled objects to node ID: [Data_Fill_DA].",
-        "target_output": "[Data_Fill_DA]",
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[Task_Status_Phase_3_Done]",
-        "dependencies": [
-          "[Data_Fill_AB]",
-          "[Data_Fill_BC]",
-          "[Data_Fill_CD]",
-          "[Data_Fill_DA]"
-        ],
-        "instruction": "Once all 4 fill lists are successfully derived, output a final status node named: [STATE_PHASE_3_DONE].",
-        "target_output": "[STATE_PHASE_3_DONE]",
+        "instruction": "Output a final status node named: [END_ORCHESTRATION].",
+        "description": "[INTENT]: Finalize the task by indicating its completion. [DEFERRED LOGIC]: None. [SHELL ARCHITECTURE]: None. [PRUNED DEPENDENCIES]: Strictly inherits the final dependencies from the previous phases to ensure task completion.",
         "task_type": "COMPUTE",
         "status": "PENDING",
         "parent_task": null
       }
     ]
-  }
-}
-
-{
-  "ts": "2026-04-22T10:29:41.240543+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[Data_B]",
-    "content": {
-      "x": 4,
-      "y": 0
-    },
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-22T10:29:44.067008+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[Data_D]",
-    "content": {
-      "x": 0,
-      "y": 4
-    },
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-22T10:29:48.076826+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[Data_C]",
-    "content": {
-      "x": 0,
-      "y": 0
-    },
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-22T10:30:01.034583+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[Data_Line_AB]",
-    "content": {
-      "start": {
-        "x": 0,
-        "y": 0
-      },
-      "end": {
-        "x": 4,
-        "y": 0
-      }
-    },
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-22T10:30:07.689980+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[Data_Line_DA]",
-    "content": [
-      {
-        "x": 0,
-        "y": 4
-      },
-      {
-        "x": 0,
-        "y": 0
-      }
-    ],
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-22T10:30:10.236394+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[STATE_PHASE_1_DONE]",
-    "content": {
-      "id": "[STATE_PHASE_1_DONE]",
-      "status": "COMPLETE"
-    },
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-22T10:30:51.213794+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[Data_Fill_AB]",
-    "content": [
-      {
-        "x": 0,
-        "y": 0
-      },
-      {
-        "x": 1,
-        "y": 0
-      },
-      {
-        "x": 2,
-        "y": 0
-      },
-      {
-        "x": 3,
-        "y": 0
-      },
-      {
-        "x": 4,
-        "y": 0
-      }
-    ],
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-22T10:31:00.727048+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[Data_Fill_DA]",
-    "content": [
-      {
-        "x": 0,
-        "y": 4
-      },
-      {
-        "x": 0,
-        "y": 3
-      },
-      {
-        "x": 0,
-        "y": 2
-      },
-      {
-        "x": 0,
-        "y": 1
-      },
-      {
-        "x": 0,
-        "y": 0
-      }
-    ],
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-22T10:31:09.518090+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[Data_Line_BC]",
-    "content": [
-      {
-        "x": 4,
-        "y": 0
-      },
-      {
-        "x": 0,
-        "y": 0
-      }
-    ],
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-22T10:31:13.743979+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[Data_Line_CD]",
-    "content": [
-      {
-        "x": 0,
-        "y": 0
-      },
-      {
-        "x": 0,
-        "y": 4
-      }
-    ],
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-22T10:31:17.773488+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[STATE_PHASE_2_DONE]",
-    "content": {
-      "id": "[STATE_PHASE_2_DONE]",
-      "status": "true"
-    },
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-22T10:31:23.951243+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[Data_Fill_BC]",
-    "content": [
-      {
-        "x": 4,
-        "y": 0
-      },
-      {
-        "x": 3,
-        "y": 0
-      },
-      {
-        "x": 2,
-        "y": 0
-      },
-      {
-        "x": 1,
-        "y": 0
-      },
-      {
-        "x": 0,
-        "y": 0
-      }
-    ],
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-22T10:31:28.590302+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[Data_Fill_CD]",
-    "content": [
-      {
-        "x": 0,
-        "y": 0
-      },
-      {
-        "x": 0,
-        "y": 1
-      },
-      {
-        "x": 0,
-        "y": 2
-      },
-      {
-        "x": 0,
-        "y": 3
-      },
-      {
-        "x": 0,
-        "y": 4
-      }
-    ],
-    "status": "READY"
-  }
-}
-
-{
-  "ts": "2026-04-22T10:31:33.054857+00:00",
-  "label": "DataNode",
-  "type": "DataNode",
-  "data": {
-    "id": "[STATE_PHASE_3_DONE]",
-    "content": {
-      "id": "[STATE_PHASE_3_DONE]",
-      "status": "true"
-    },
-    "status": "READY"
   }
 }
 
