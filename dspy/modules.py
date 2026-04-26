@@ -249,7 +249,7 @@ class ComputeAgent(dspy.Module):
         )
 
 "-------------------------------Data Extractor Agent Module-------------------------------"
-def _validate_decision(decision: DataExtractorDecision) -> DataExtractorDecision:
+def _validate_data_extractor_decision(decision: DataExtractorDecision) -> DataExtractorDecision:
     """
     Drop structurally invalid nodes.
     - id must be non-empty
@@ -291,7 +291,7 @@ class DataExtractorAgent(dspy.Module):
         prediction = self.prog(source_text=source_text)
         decision: DataExtractorDecision = prediction.decision
  
-        decision = _validate_decision(decision)
+        decision = _validate_data_extractor_decision(decision)
  
         return [
             DataNode(id=node.id, content=node.content, description=node.description)
@@ -356,35 +356,18 @@ def _validate_expander_decision(decision: ExpanderDecision) -> ExpanderDecision:
 class ExpanderModule(dspy.Module):
     """
     Expander Agent DSPy Module.
- 
-    Receives explicit_target as JSON string.
-    Model writes COT steps then fenced JSON.
-    Custom parser extracts ExpanderDecision from last fenced block.
     """
- 
     def __init__(self):
         super().__init__()
+        # In modern DSPy, standard Predict natively handles Pydantic coercion
         self.prog = dspy.Predict(ExpanderSignature)
  
-    def forward(self, explicit_target: str) -> ExpanderDecision:
+    def forward(self, explicit_target: str) -> dspy.Prediction:
         prediction = self.prog(explicit_target=explicit_target)
- 
-        # DSPy will try to parse decision field — if it fails, raw text is in prediction
-        try:
-            decision: ExpanderDecision = prediction.decision
-            if decision.extracted_tasks:
-                return _validate_expander_decision(decision)
-        except Exception:
-            pass
- 
-        # Fallback — parse from raw completion text
-        raw = getattr(prediction, "completions", None)
-        if raw:
-            raw_text = str(raw)
-        else:
-            raw_text = str(prediction)
- 
-        decision = _parse_expander_output(raw_text)
-        return _validate(decision)
+        
+        # DSPy automatically parses the JSON into prediction.decision
+        validated = _validate_expander_decision(prediction.decision)
+        
+        return dspy.Prediction(decision=validated)
  
  

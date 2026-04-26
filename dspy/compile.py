@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 from openai import OpenAI
+import uuid
  
 _COMPILE_DIR = Path(__file__).resolve().parent
 _PROJECT_DIR = _COMPILE_DIR.parent
@@ -14,39 +15,48 @@ for _p in [str(_COMPILE_DIR), str(_PROJECT_DIR)]:
         sys.path.insert(0, _p)
  
 import dspy
-from dspy.teleprompt import SIMBA
+from dspy.teleprompt import SIMBA, MIPROv2
  
 from config import configure_lm
 from modules import ExpanderModule
-from signatures import ExpanderTaskNode
+from signatures import ExpanderTaskNode, ExpanderDecision
 from judge.judge_pipeline import run_judge_pipeline
 from judge.judge_schemas import PipelineInput, QueryInput, DependencyNode, TaskNode
+from log_utils import JsonlRunLogger
+from chart.smoke_chart import compile_with_smoke_chart, make_tracked_metric as smoke_metric
+from chart.prod_chart import compile_with_live_chart, make_tracked_metric as prod_metric
+
 from llm_utils import (
     build_client,
     parse_llm_json_response,
+    parse_with_retries,
     OPENAI_API_KEY_HARDCODED,
     OPENROUTER_API_KEY_HARDCODED,
 )
-from simba_chart import compile_with_live_chart
-# ============================================================================
+# ================================================  ============================
 # CONFIG
 # ============================================================================
- 
+
 PROVIDER             = "openrouter"
-MODEL_CLAUDE         = "anthropic/claude-sonnet-4-5"
+MODEL_CLAUDE         = "openai/gpt-oss-120b"
 OPENROUTER_BASE_URL  = "https://openrouter.ai/api/v1"
 OPENROUTER_HTTP_REFERER = "https://localhost"
 OPENROUTER_APP_TITLE = "stateReasoning-1"
 
 # Failed-example logging
-FAILED_SCORE_THRESHOLD = 0.6
+FAILED_SCORE_THRESHOLD = 0.4
 FAILED_LOG_PATH = "./logs/failed_examples.jsonl"
  
+# Dataset logging (refreshed each run)
+DATASET_LOG_PATH = "./logs/dataset_generation_log.jsonl"
+
 # SIMBA hyperparameters
-SIMBA_BSIZE     = 2
-SIMBA_NUM_STEPS = 3
-DATASET_SIZE    = 6 
- 
+# SIMBA_BSIZE     = 2
+# SIMBA_NUM_STEPS = 2
+DATASET_SIZE    = 15
+
+SMOKE_TEST = False
+
 OPTIMIZED_PATH = "./optimized/expander_optimized.json"
  
 QUERY_TEMPERATURE = 0.7
@@ -59,12 +69,12 @@ DOMAINS = [
 
 
 def _append_failed_example(record: dict) -> None:
-    """Append one JSONL record. Never raises."""
+    """Append one pretty JSON record. Never raises."""
     try:
         path = Path(FAILED_LOG_PATH)
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+            f.write(json.dumps(record, ensure_ascii=False, indent=2) + "\n\n")
     except Exception:
         return
  
@@ -148,6 +158,21 @@ def pick_random_domain(domains: list[str] = DOMAINS) -> str:
  
 BLUEPRINTS = [
     {
+        "mode": "STANDARD_ATOMIC_COMPUTE",
+        "weight": 25,
+        "target_tasks": [
+            "COMPUTE: Execute a single, 1-step mathematical, logical, or formatting operation on the provided dependencies."
+        ],
+        "constraint_prompt": (
+            "Request a very simple, 1-step mathematical, logical, or formatting operation on a small provided dataset "
+            "(under 5 items). Do NOT include any conversational noise, missing data, or massive volumes. Keep it straightforward."
+        ),
+        "evaluation_trap": (
+            "Tests Baseline Stability. The model must simply spawn a single COMPUTE node to execute the exact instruction "
+            "without overcomplicating the graph, hallucinating missing data, or unnecessarily delegating to EXPAND or DECOMPOSE."
+        )
+    },
+    {
         "mode": "C1_C2_COGNITIVE_CHAIN",
         "weight": 15,
         "target_tasks": [
@@ -165,7 +190,7 @@ BLUEPRINTS = [
     },
     {
         "mode": "C6_ADVERSARIAL_NOISE",
-        "weight": 25,
+        "weight": 15,
         "target_tasks": [
             "EXPAND: Process the valid target dataset using the required tools.",
             "IGNORE (Implicit): The system must actively drop the conversational noise without spawning a FETCH or DECOMPOSE node for it."
@@ -183,7 +208,7 @@ BLUEPRINTS = [
     },
     {
         "mode": "C4_MID_STATE_FIDELITY",
-        "weight": 25,
+        "weight": 15,
         "target_tasks": [
             "EXPAND: Process the upstream data already explicitly present in the dependencies array.",
             "STRICT_BINDING (Implicit): Force the 'target_output' attribute of the node to precisely match the user's mandated variable name."
@@ -201,7 +226,7 @@ BLUEPRINTS = [
     },
     {
         "mode": "C1_FRACTAL_BRIDGE",
-        "weight": 20,
+        "weight": 15,
         "target_tasks": [
             "DECOMPOSE: Chunk the high-volume target dataset (40-60 items) into manageable batches of 10.",
             "EXPAND: Delegate the complex, multi-step logic applied to each of those newly created chunks."
@@ -285,18 +310,38 @@ def generate_query(
     )
  
     try:
-        response = claude_client.chat.completions.create(
-            model=MODEL_CLAUDE,
-            temperature=QUERY_TEMPERATURE,
-            max_tokens=1024,
-            response_format={"type": "json_object"},
-            messages=[
+        # Append-only detailed request/parse logging for query generation
+        qlog = JsonlRunLogger(path=_PROJECT_DIR / "logs" / "query_generation_log.jsonl")
+
+        def _call(attempt: int) -> str:
+            messages = [
                 {"role": "system", "content": QUERY_GENERATION_PROMPT},
                 {"role": "user", "content": user_prompt},
-            ],
+            ]
+            if attempt > 1:
+                messages.append({
+                    "role": "system",
+                    "content": "Retry: output ONLY valid JSON. No markdown, no extra text.",
+                })
+            response = claude_client.chat.completions.create(
+                model=MODEL_CLAUDE,
+                temperature=QUERY_TEMPERATURE,
+                max_tokens=1024,
+                response_format={"type": "json_object"},
+                messages=messages,
+            )
+            return response.choices[0].message.content or ""
+
+        data = parse_with_retries(
+            call_llm=_call,
+            parser_name="parse_llm_json_response",
+            max_attempts=3,
+            logger=qlog,
+            log_stage="compile.query_generation",
+            run_id=None,
+            domain=domain,
+            request_payload={"user_prompt": user_prompt, "blueprint_mode": blueprint.get("mode")},
         )
-        raw = response.choices[0].message.content or ""
-        data = parse_llm_json_response(raw)
         return data.get("query", data)
  
     except Exception as e:
@@ -345,6 +390,31 @@ def build_trainset(
  
     print(f"[Dataset] Built {len(trainset)} examples.")
     return trainset
+
+
+def write_dataset_log(trainset: list[dspy.Example], *, run_id: str) -> None:
+    """
+    Write the generated dataset to a separate log file (append-only).
+    """
+    logger = JsonlRunLogger(path=_PROJECT_DIR / DATASET_LOG_PATH)
+
+    for i, ex in enumerate(trainset):
+        try:
+            explicit_target_obj = json.loads(ex.explicit_target)
+        except Exception:
+            explicit_target_obj = ex.explicit_target
+
+        logger.write(
+            stage="dataset_example",
+            domain=getattr(ex, "domain", None),
+            run_id=run_id,
+            payload={
+                "index": i,
+                "domain": getattr(ex, "domain", None),
+                "blueprint_mode": getattr(ex, "blueprint_mode", None),
+                "explicit_target": explicit_target_obj,
+            },
+        )
  
  
 # ============================================================================
@@ -365,6 +435,21 @@ def expander_metric(
     4. Return normalized_final scalar [0.0, 1.0]
     """
     try:
+        # DEBUG — see exactly what Llama produced
+        print(f"\n[DEBUG LLAMA RAW] prediction type: {type(prediction)}")
+        print(f"[DEBUG LLAMA RAW] prediction attrs: {dir(prediction)}")
+        try:
+            print(f"[DEBUG LLAMA DECISION] {prediction.decision}")
+        except Exception as e:
+            print(f"[DEBUG LLAMA DECISION ERROR] {e}")
+        try:
+            print(f"[DEBUG LLAMA TASKS] {prediction.decision.extracted_tasks}")
+        except Exception as e:
+            print(f"[DEBUG LLAMA TASKS ERROR] {e}")
+    except Exception as e:
+        print(f"[DEBUG LLAMA RAW ERROR] {e}")
+        
+    try:
         # Parse query from example
         query_dict = json.loads(example.explicit_target)
         query_input = QueryInput(
@@ -379,11 +464,21 @@ def expander_metric(
         # ExpanderModule.forward() returns an ExpanderDecision directly.
         # SIMBA passes that return value as `prediction`, so there is no
         # wrapping `.decision` attribute — just use prediction itself.
-        if hasattr(prediction, "decision"):
-            # Fallback: handle if SIMBA ever wraps it (e.g. raw dspy.Prediction)
-            expander_decision = prediction.decision
-        else:
+        if prediction is None:
+            return 0.0
+
+        # MIPROv2 passes ExpanderDecision directly as prediction
+        # since forward() returns ExpanderDecision, not a DSPy wrapper
+        from signatures import ExpanderDecision as _ExpanderDecision
+        if isinstance(prediction, _ExpanderDecision):
             expander_decision = prediction
+        elif hasattr(prediction, "decision"):
+            expander_decision = prediction.decision
+        elif hasattr(prediction, "extracted_tasks"):
+            expander_decision = prediction
+        else:
+            print(f"  ⚠️ [Metric] Unknown prediction type: {type(prediction)}")
+            return 0.0
         # Parse prediction tasks — ExpanderTaskNode → judge TaskNode
         extracted = (expander_decision.extracted_tasks or []) if expander_decision else []
         judge_tasks = [
@@ -406,6 +501,20 @@ def expander_metric(
         )
  
         result = run_judge_pipeline(pipeline_input)
+        try:
+            from chart.prod_chart import BUFFER
+            BUFFER.record(
+                step=len(BUFFER.steps),
+                normalized_final=result.normalized_final,
+                structural_score=result.structural_score,
+                per_task_score=result.per_task_score,
+                semantic_score=result.semantic_score,
+                coverage_score=result.coverage_score,
+            )
+        except Exception:
+            pass  # never let chart recording crash the metric
+
+        print(f"  [Metric] score={result.normalized_final:.4f}")
         if result is None:
             _append_failed_example({
                 "reason": "pipeline_returned_none",
@@ -453,33 +562,52 @@ def expander_metric(
 # COMPILE
 # ============================================================================
  
-def compile_expander(trainset: list[dspy.Example]) -> ExpanderModule:
-    """
-    Run SIMBA to optimize ExpanderModule prompt.
-    Returns the optimized module.
-    """
+# def compile_expander(trainset: list[dspy.Example]) -> ExpanderModule:
+#     """
+#     Run SIMBA to optimize ExpanderModule prompt.
+#     Returns the optimized module.
+#     """
     
  
-    print(f"\n[SIMBA] Compiling ExpanderModule...")
-    print(f"  bsize={SIMBA_BSIZE}, num_steps={SIMBA_NUM_STEPS}")
-    print(f"  trainset size={len(trainset)}")
+#     print(f"\n[SIMBA] Compiling ExpanderModule...")
+#     print(f"  bsize={SIMBA_BSIZE}, num_steps={SIMBA_NUM_STEPS}")
+#     print(f"  trainset size={len(trainset)}")
  
-    optimizer = SIMBA(
-    metric=expander_metric,
-    bsize=SIMBA_BSIZE,
-    max_steps=SIMBA_NUM_STEPS,
-)
+#     optimizer = MIPROv2(metric=expander_metric, auto="light", num_threads=1)
 
-    optimized = compile_with_live_chart(
-        optimizer=optimizer,
-        module=ExpanderModule(),
-        trainset=trainset,
-        base_metric=expander_metric,
-        update_interval_ms=2000,
-    )
+#     optimized = optimizer.compile(
+#         ExpanderModule(),
+#         trainset=trainset,
+#         max_bootstrapped_demos=2,
+#         max_labeled_demos=2,
+#         requires_permission_to_run=False,
+#         provide_traceback=True,
+#     )
  
-    return optimized
- 
+#     return optimized
+def compile_expander(trainset: list[dspy.Example]) -> ExpanderModule:
+    print(f"\n[MIPROv2] Compiling ExpanderModule...")
+    
+    if SMOKE_TEST:
+        print(f"  Mode: TIER 1 - SMOKE TEST (Fast)")
+        tracked_metric = smoke_metric(expander_metric)
+        smoke_trainset = trainset[:2]  
+        
+        optimizer = MIPROv2(metric=tracked_metric, auto=None, num_candidates=2, num_threads=1)
+        return compile_with_smoke_chart(optimizer, ExpanderModule(), smoke_trainset)
+        
+    else:
+        # ==========================================
+        # TIER 2: PRODUCTION OPTIMIZATION
+        # ==========================================
+        print(f"  Mode: TIER 2 - PRODUCTION (Deep)")
+        print(f"  Trainset size: {len(trainset)} items")
+        tracked_metric = prod_metric(expander_metric)
+        
+        # ADDED auto="medium" here in the constructor
+        optimizer = MIPROv2(metric=tracked_metric, auto="medium", num_threads=1)
+        
+        return compile_with_live_chart(optimizer, ExpanderModule(), trainset)
  
 # ============================================================================
 # SAVE / LOAD
@@ -501,16 +629,70 @@ def load_optimized(path: str = OPTIMIZED_PATH) -> ExpanderModule:
 # ============================================================================
 # ENTRY POINT
 # ============================================================================
- 
+def load_trainset() -> list[dspy.Example]:
+        """
+        Load the dataset generated by `write_dataset_log()` back into a DSPy trainset.
+
+        The dataset log file is pretty-printed JSON records separated by blank lines.
+        We read each record, extract `payload`, and reconstruct `dspy.Example` objects
+        matching `build_trainset()` output.
+        """
+        path = _PROJECT_DIR / "logs" / "dataset_generation_log.jsonl"
+        text = path.read_text(encoding="utf-8").strip()
+        if not text:
+            return []
+
+        decoder = json.JSONDecoder()
+        idx = 0
+        records: list[dict] = []
+        while idx < len(text):
+            # Skip whitespace/newlines between records
+            while idx < len(text) and text[idx].isspace():
+                idx += 1
+            if idx >= len(text):
+                break
+            obj, next_idx = decoder.raw_decode(text, idx)
+            records.append(obj)
+            idx = next_idx
+
+        trainset: list[dspy.Example] = []
+        for rec in records:
+            if not isinstance(rec, dict) or rec.get("stage") != "dataset_example":
+                continue
+            payload = rec.get("payload") or {}
+            explicit_target = payload.get("explicit_target")
+            explicit_target_str = (
+                json.dumps(explicit_target, ensure_ascii=False)
+                if isinstance(explicit_target, (dict, list))
+                else str(explicit_target)
+            )
+
+            ex = dspy.Example(
+                explicit_target=explicit_target_str,
+                domain=payload.get("domain"),
+                blueprint_mode=payload.get("blueprint_mode"),
+            ).with_inputs("explicit_target")
+            trainset.append(ex)
+
+        return trainset
+
 if __name__ == "__main__":
     # 1. Configure DSPy LM — Llama 3.1 8B via OpenRouter
     configure_lm("openrouter")
+    
+    print(f"[DEBUG] dspy.settings.lm: {dspy.settings.lm}")
+    print(f"[DEBUG] LM api_key set: {bool(dspy.settings.lm.kwargs.get('api_key'))}")
+
+    
  
     # 2. Build Claude client for query generation
     claude_client = build_claude_client()
  
     # 3. Generate trainset
-    trainset = build_trainset(claude_client, size=DATASET_SIZE)
+    run_id = uuid.uuid4().hex
+    #trainset = build_trainset(claude_client, size=DATASET_SIZE)
+    trainset = load_trainset()
+    #write_dataset_log(trainset, run_id=run_id)
  
     # 4. Compile with SIMBA
     optimized = compile_expander(trainset)

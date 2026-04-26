@@ -1,0 +1,1670 @@
+{
+  "ts": "2026-04-24T13:08:50.892594+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: mathematics\nStructural Target: ['EXPAND: Process the upstream data already explicitly present in the dependencies array.', \"STRICT_BINDING (Implicit): Force the 'target_output' attribute of the node to precisely match the user's mandated variable name.\"]\nBlueprint Mode: Tests C4 (Namespace Fidelity). The model must NOT hallucinate variables or spawn a FETCH node because the data is already in the dependencies. It must also perfectly bind the `target_output` of the EXPAND node to the mandated variable name, resisting the urge to invent its own naming convention.\nStrict Constraint: Simulate a pipeline mid-state handoff. Provide 1 to 2 upstream variables in brackets in the dependencies array (e.g., [Cleaned_Telemetry_Data]). Request a 3-step operation on this data, and rigidly mandate that the final output MUST be saved exactly as a specific bracketed variable name (e.g., 'Save as [Final_Audit_Matrix]').\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C4_MID_STATE_FIDELITY"
+    }
+  },
+  "domain": "mathematics"
+}
+
+{
+  "ts": "2026-04-24T13:08:56.462778+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Transform [Raw_Matrix] into normalized form\",\n    \"description\": \"Pipeline handoff at stage 3. Need you to: (1) transpose [Raw_Matrix], (2) apply L2 normalization row-wise, (3) round to 4 decimals. Critical: output MUST be saved exactly as [Final_Audit_Matrix] for downstream compliance checks.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Raw_Matrix]\",\n        \"content\": \"[[2, 4], [6, 8], [1, 3]]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "mathematics"
+}
+
+{
+  "ts": "2026-04-24T13:08:56.463978+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Transform [Raw_Matrix] into normalized form",
+        "description": "Pipeline handoff at stage 3. Need you to: (1) transpose [Raw_Matrix], (2) apply L2 normalization row-wise, (3) round to 4 decimals. Critical: output MUST be saved exactly as [Final_Audit_Matrix] for downstream compliance checks.",
+        "dependencies": [
+          {
+            "id": "[Raw_Matrix]",
+            "content": "[[2, 4], [6, 8], [1, 3]]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "mathematics"
+}
+
+{
+  "ts": "2026-04-24T13:08:56.464901+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: law\nStructural Target: ['EXPAND: Deploy a terminal node to delegate the entire multi-step analytical sequence to a child architect, strictly avoiding local computation because the logic exceeds the 2-step threshold.']\nBlueprint Mode: Tests C1 (Hierarchy) and C2 (Terminal Delegation). The model must realize that logic > 2 steps forbids a COMPUTE node. It must spawn an EXPAND node and delegate the instruction to a child architect without trying to solve the math itself.\nStrict Constraint: Request 4 to 5 sequential analytical or transformative steps on a small dataset (under 5 items). Ensure the logic is highly nested and cannot be solved in a single calculation.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C1_C2_COGNITIVE_CHAIN"
+    }
+  },
+  "domain": "law"
+}
+
+{
+  "ts": "2026-04-24T13:09:03.429597+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Analyze precedent impact across [Case_Log]\",\n    \"description\": \"Hey, we need to filter cases by jurisdiction, then rank by citation count, compute weighted influence scores using the formula in [Weight_Matrix], cross-reference against [Statute_Index], and finally output a sorted summary table named 'precedent_impact_report.json'. Multi-step sequence required.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Case_Log]\",\n        \"content\": \"[{\\\"case_id\\\":\\\"A1\\\",\\\"jurisdiction\\\":\\\"fed\\\",\\\"citations\\\":12},{\\\"case_id\\\":\\\"B2\\\",\\\"jurisdiction\\\":\\\"state\\\",\\\"citations\\\":8},{\\\"case_id\\\":\\\"C3\\\",\\\"jurisdiction\\\":\\\"fed\\\",\\\"citations\\\":15}]\"\n      },\n      {\n        \"id\": \"[Weight_Matrix]\",\n        \"content\": \"{\\\"fed\\\":1.5,\\\"state\\\":1.0}\"\n      },\n      {\n        \"id\": \"[Statute_Index]\",\n        \"content\": \"[\\\"A1\\\",\\\"C3\\\"]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "law"
+}
+
+{
+  "ts": "2026-04-24T13:09:03.430615+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Analyze precedent impact across [Case_Log]",
+        "description": "Hey, we need to filter cases by jurisdiction, then rank by citation count, compute weighted influence scores using the formula in [Weight_Matrix], cross-reference against [Statute_Index], and finally output a sorted summary table named 'precedent_impact_report.json'. Multi-step sequence required.",
+        "dependencies": [
+          {
+            "id": "[Case_Log]",
+            "content": "[{\"case_id\":\"A1\",\"jurisdiction\":\"fed\",\"citations\":12},{\"case_id\":\"B2\",\"jurisdiction\":\"state\",\"citations\":8},{\"case_id\":\"C3\",\"jurisdiction\":\"fed\",\"citations\":15}]"
+          },
+          {
+            "id": "[Weight_Matrix]",
+            "content": "{\"fed\":1.5,\"state\":1.0}"
+          },
+          {
+            "id": "[Statute_Index]",
+            "content": "[\"A1\",\"C3\"]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "law"
+}
+
+{
+  "ts": "2026-04-24T13:09:03.431596+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: literature\nStructural Target: ['EXPAND: Deploy a terminal node to delegate the entire multi-step analytical sequence to a child architect, strictly avoiding local computation because the logic exceeds the 2-step threshold.']\nBlueprint Mode: Tests C1 (Hierarchy) and C2 (Terminal Delegation). The model must realize that logic > 2 steps forbids a COMPUTE node. It must spawn an EXPAND node and delegate the instruction to a child architect without trying to solve the math itself.\nStrict Constraint: Request 4 to 5 sequential analytical or transformative steps on a small dataset (under 5 items). Ensure the logic is highly nested and cannot be solved in a single calculation.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C1_C2_COGNITIVE_CHAIN"
+    }
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:09:08.275421+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Derive thematic evolution across [Novel_Chapters]\",\n    \"description\": \"Hey, need you to extract dominant motifs from each chapter, map their frequency shifts, calculate semantic drift coefficients between consecutive pairs, then rank chapters by volatility and output the top divergent transition. All steps mandatory for the final ranking.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Novel_Chapters]\",\n        \"content\": \"[{\\\"ch\\\":1,\\\"text\\\":\\\"ambition\\\"},{\\\"ch\\\":2,\\\"text\\\":\\\"betrayal\\\"},{\\\"ch\\\":3,\\\"text\\\":\\\"ambition\\\"},{\\\"ch\\\":4,\\\"text\\\":\\\"redemption\\\"}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:09:08.276317+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Derive thematic evolution across [Novel_Chapters]",
+        "description": "Hey, need you to extract dominant motifs from each chapter, map their frequency shifts, calculate semantic drift coefficients between consecutive pairs, then rank chapters by volatility and output the top divergent transition. All steps mandatory for the final ranking.",
+        "dependencies": [
+          {
+            "id": "[Novel_Chapters]",
+            "content": "[{\"ch\":1,\"text\":\"ambition\"},{\"ch\":2,\"text\":\"betrayal\"},{\"ch\":3,\"text\":\"ambition\"},{\"ch\":4,\"text\":\"redemption\"}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:09:08.277363+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: mathematics\nStructural Target: ['EXPAND: Process the valid target dataset using the required tools.', 'IGNORE (Implicit): The system must actively drop the conversational noise without spawning a FETCH or DECOMPOSE node for it.']\nBlueprint Mode: Tests C6 (Noise Ignorance). The orchestrator must type 'Step 0 (Noise): Dropping [Noise]' in its reasoning. Crucially, it must NOT spawn a FETCH node to retrieve the noise, and it must NOT pass the noise into the EXPAND node's instruction payload.\nStrict Constraint: Request a multi-step analysis (3+ steps) on a valid target dataset, but inject a massive, conversational distractor. Have the 'user' mention a gigantic external dataset (e.g., '10,000 raw server logs') and explicitly command the system to completely ignore it.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C6_ADVERSARIAL_NOISE"
+    }
+  },
+  "domain": "mathematics"
+}
+
+{
+  "ts": "2026-04-24T13:09:13.961178+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Analyze [Matrix_Data] using statistical methods\",\n    \"description\": \"Hey, I need a full statistical breakdown of [Matrix_Data]: compute mean, variance, and standard deviation for each column. Oh, and I know we have [Server_Logs_10K] sitting around with 10,000 raw entries, but completely ignore that—don't touch it. Just focus on the matrix analysis. Output the results as [Stats_Report].\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Matrix_Data]\",\n        \"content\": \"[[2.1, 4.5, 3.2], [1.8, 5.1, 2.9], [3.4, 4.8, 3.7]]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "mathematics"
+}
+
+{
+  "ts": "2026-04-24T13:09:13.962184+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Analyze [Matrix_Data] using statistical methods",
+        "description": "Hey, I need a full statistical breakdown of [Matrix_Data]: compute mean, variance, and standard deviation for each column. Oh, and I know we have [Server_Logs_10K] sitting around with 10,000 raw entries, but completely ignore that—don't touch it. Just focus on the matrix analysis. Output the results as [Stats_Report].",
+        "dependencies": [
+          {
+            "id": "[Matrix_Data]",
+            "content": "[[2.1, 4.5, 3.2], [1.8, 5.1, 2.9], [3.4, 4.8, 3.7]]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "mathematics"
+}
+
+{
+  "ts": "2026-04-24T13:09:13.963313+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: literature\nStructural Target: ['EXPAND: Process the upstream data already explicitly present in the dependencies array.', \"STRICT_BINDING (Implicit): Force the 'target_output' attribute of the node to precisely match the user's mandated variable name.\"]\nBlueprint Mode: Tests C4 (Namespace Fidelity). The model must NOT hallucinate variables or spawn a FETCH node because the data is already in the dependencies. It must also perfectly bind the `target_output` of the EXPAND node to the mandated variable name, resisting the urge to invent its own naming convention.\nStrict Constraint: Simulate a pipeline mid-state handoff. Provide 1 to 2 upstream variables in brackets in the dependencies array (e.g., [Cleaned_Telemetry_Data]). Request a 3-step operation on this data, and rigidly mandate that the final output MUST be saved exactly as a specific bracketed variable name (e.g., 'Save as [Final_Audit_Matrix]').\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C4_MID_STATE_FIDELITY"
+    }
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:09:19.117286+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process [Raw_Manuscript_Text] into final output\",\n    \"description\": \"Hey, need you to strip metadata tags, normalize quote marks to curly style, then validate chapter sequence integrity. Critical: output must be saved exactly as [Canonical_Edition_Draft] for the publishing pipeline.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Raw_Manuscript_Text]\",\n        \"content\": \"[{\\\"ch\\\": 1, \\\"text\\\": \\\"Call me Ishmael...\\\", \\\"meta\\\": \\\"draft_v2\\\"}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:09:19.118351+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Process [Raw_Manuscript_Text] into final output",
+        "description": "Hey, need you to strip metadata tags, normalize quote marks to curly style, then validate chapter sequence integrity. Critical: output must be saved exactly as [Canonical_Edition_Draft] for the publishing pipeline.",
+        "dependencies": [
+          {
+            "id": "[Raw_Manuscript_Text]",
+            "content": "[{\"ch\": 1, \"text\": \"Call me Ishmael...\", \"meta\": \"draft_v2\"}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:09:19.119327+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: mathematics\nStructural Target: ['EXPAND: Deploy a terminal node to delegate the entire multi-step analytical sequence to a child architect, strictly avoiding local computation because the logic exceeds the 2-step threshold.']\nBlueprint Mode: Tests C1 (Hierarchy) and C2 (Terminal Delegation). The model must realize that logic > 2 steps forbids a COMPUTE node. It must spawn an EXPAND node and delegate the instruction to a child architect without trying to solve the math itself.\nStrict Constraint: Request 4 to 5 sequential analytical or transformative steps on a small dataset (under 5 items). Ensure the logic is highly nested and cannot be solved in a single calculation.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C1_C2_COGNITIVE_CHAIN"
+    }
+  },
+  "domain": "mathematics"
+}
+
+{
+  "ts": "2026-04-24T13:09:59.641176+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: biology\nStructural Target: ['EXPAND: Process the upstream data already explicitly present in the dependencies array.', \"STRICT_BINDING (Implicit): Force the 'target_output' attribute of the node to precisely match the user's mandated variable name.\"]\nBlueprint Mode: Tests C4 (Namespace Fidelity). The model must NOT hallucinate variables or spawn a FETCH node because the data is already in the dependencies. It must also perfectly bind the `target_output` of the EXPAND node to the mandated variable name, resisting the urge to invent its own naming convention.\nStrict Constraint: Simulate a pipeline mid-state handoff. Provide 1 to 2 upstream variables in brackets in the dependencies array (e.g., [Cleaned_Telemetry_Data]). Request a 3-step operation on this data, and rigidly mandate that the final output MUST be saved exactly as a specific bracketed variable name (e.g., 'Save as [Final_Audit_Matrix]').\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C4_MID_STATE_FIDELITY"
+    }
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:10:06.768652+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process [Raw_Sequence_Data] into final output\",\n    \"description\": \"Hey, need you to validate the sequences, filter out any with quality scores below 30, then normalize the remaining reads. Critical: the final result MUST be saved exactly as [Validated_Genome_Set]. Don't rename it.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Raw_Sequence_Data]\",\n        \"content\": \"[{\\\"seq_id\\\": \\\"ACT001\\\", \\\"read\\\": \\\"ATCGATCG\\\", \\\"quality\\\": 28}, {\\\"seq_id\\\": \\\"ACT002\\\", \\\"read\\\": \\\"GCTAGCTA\\\", \\\"quality\\\": 35}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:10:06.770802+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Process [Raw_Sequence_Data] into final output",
+        "description": "Hey, need you to validate the sequences, filter out any with quality scores below 30, then normalize the remaining reads. Critical: the final result MUST be saved exactly as [Validated_Genome_Set]. Don't rename it.",
+        "dependencies": [
+          {
+            "id": "[Raw_Sequence_Data]",
+            "content": "[{\"seq_id\": \"ACT001\", \"read\": \"ATCGATCG\", \"quality\": 28}, {\"seq_id\": \"ACT002\", \"read\": \"GCTAGCTA\", \"quality\": 35}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:10:06.773377+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: software\nStructural Target: ['EXPAND: Process the upstream data already explicitly present in the dependencies array.', \"STRICT_BINDING (Implicit): Force the 'target_output' attribute of the node to precisely match the user's mandated variable name.\"]\nBlueprint Mode: Tests C4 (Namespace Fidelity). The model must NOT hallucinate variables or spawn a FETCH node because the data is already in the dependencies. It must also perfectly bind the `target_output` of the EXPAND node to the mandated variable name, resisting the urge to invent its own naming convention.\nStrict Constraint: Simulate a pipeline mid-state handoff. Provide 1 to 2 upstream variables in brackets in the dependencies array (e.g., [Cleaned_Telemetry_Data]). Request a 3-step operation on this data, and rigidly mandate that the final output MUST be saved exactly as a specific bracketed variable name (e.g., 'Save as [Final_Audit_Matrix]').\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C4_MID_STATE_FIDELITY"
+    }
+  },
+  "domain": "software"
+}
+
+{
+  "ts": "2026-04-24T13:10:12.080042+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process [Raw_Logs] into audit format\",\n    \"description\": \"Hey, take the [Raw_Logs] dependency, strip nulls, normalize timestamps to UTC, then aggregate by user_id. Critical: output MUST be named exactly [Final_Audit_Matrix] for downstream compliance checks.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Raw_Logs]\",\n        \"content\": \"[{\\\"ts\\\":1609459200,\\\"user\\\":\\\"u42\\\",\\\"action\\\":\\\"login\\\"},{\\\"ts\\\":null,\\\"user\\\":\\\"u13\\\",\\\"action\\\":\\\"logout\\\"}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "software"
+}
+
+{
+  "ts": "2026-04-24T13:10:12.082219+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Process [Raw_Logs] into audit format",
+        "description": "Hey, take the [Raw_Logs] dependency, strip nulls, normalize timestamps to UTC, then aggregate by user_id. Critical: output MUST be named exactly [Final_Audit_Matrix] for downstream compliance checks.",
+        "dependencies": [
+          {
+            "id": "[Raw_Logs]",
+            "content": "[{\"ts\":1609459200,\"user\":\"u42\",\"action\":\"login\"},{\"ts\":null,\"user\":\"u13\",\"action\":\"logout\"}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "software"
+}
+
+{
+  "ts": "2026-04-24T13:10:12.084447+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: history\nStructural Target: ['EXPAND: Process the upstream data already explicitly present in the dependencies array.', \"STRICT_BINDING (Implicit): Force the 'target_output' attribute of the node to precisely match the user's mandated variable name.\"]\nBlueprint Mode: Tests C4 (Namespace Fidelity). The model must NOT hallucinate variables or spawn a FETCH node because the data is already in the dependencies. It must also perfectly bind the `target_output` of the EXPAND node to the mandated variable name, resisting the urge to invent its own naming convention.\nStrict Constraint: Simulate a pipeline mid-state handoff. Provide 1 to 2 upstream variables in brackets in the dependencies array (e.g., [Cleaned_Telemetry_Data]). Request a 3-step operation on this data, and rigidly mandate that the final output MUST be saved exactly as a specific bracketed variable name (e.g., 'Save as [Final_Audit_Matrix]').\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C4_MID_STATE_FIDELITY"
+    }
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:10:18.403654+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process [Raw_Census_Records] into final output\",\n    \"description\": \"Hey, need you to validate the population counts, cross-reference against [Regional_Boundaries], then aggregate by decade. Critical: output MUST be saved as [Historical_Demographics_Report] exactly—don't rename it.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Raw_Census_Records]\",\n        \"content\": \"[{\\\"year\\\": 1890, \\\"region\\\": \\\"Northeast\\\", \\\"pop\\\": 12500}, {\\\"year\\\": 1900, \\\"region\\\": \\\"Midwest\\\", \\\"pop\\\": 8300}]\"\n      },\n      {\n        \"id\": \"[Regional_Boundaries]\",\n        \"content\": \"[{\\\"region\\\": \\\"Northeast\\\", \\\"states\\\": [\\\"NY\\\", \\\"MA\\\"]}, {\\\"region\\\": \\\"Midwest\\\", \\\"states\\\": [\\\"IL\\\", \\\"OH\\\"]}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:10:18.404664+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Process [Raw_Census_Records] into final output",
+        "description": "Hey, need you to validate the population counts, cross-reference against [Regional_Boundaries], then aggregate by decade. Critical: output MUST be saved as [Historical_Demographics_Report] exactly—don't rename it.",
+        "dependencies": [
+          {
+            "id": "[Raw_Census_Records]",
+            "content": "[{\"year\": 1890, \"region\": \"Northeast\", \"pop\": 12500}, {\"year\": 1900, \"region\": \"Midwest\", \"pop\": 8300}]"
+          },
+          {
+            "id": "[Regional_Boundaries]",
+            "content": "[{\"region\": \"Northeast\", \"states\": [\"NY\", \"MA\"]}, {\"region\": \"Midwest\", \"states\": [\"IL\", \"OH\"]}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:10:18.406026+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: literature\nStructural Target: ['EXPAND: Deploy a terminal node to delegate the entire multi-step analytical sequence to a child architect, strictly avoiding local computation because the logic exceeds the 2-step threshold.']\nBlueprint Mode: Tests C1 (Hierarchy) and C2 (Terminal Delegation). The model must realize that logic > 2 steps forbids a COMPUTE node. It must spawn an EXPAND node and delegate the instruction to a child architect without trying to solve the math itself.\nStrict Constraint: Request 4 to 5 sequential analytical or transformative steps on a small dataset (under 5 items). Ensure the logic is highly nested and cannot be solved in a single calculation.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C1_C2_COGNITIVE_CHAIN"
+    }
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:10:24.308662+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Derive thematic evolution across [Novel_Chapters]\",\n    \"description\": \"Hey, can you trace how the protagonist's moral compass shifts chapter-by-chapter? Start by extracting key dialogue, then classify tone (optimistic/cynical), map tone changes to plot events, calculate sentiment deltas, and finally rank chapters by transformation intensity. Output as [Theme_Report].\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Novel_Chapters]\",\n        \"content\": \"[{\\\"ch\\\":1,\\\"text\\\":\\\"He believed in justice\\\"},{\\\"ch\\\":2,\\\"text\\\":\\\"Doubt crept in\\\"},{\\\"ch\\\":3,\\\"text\\\":\\\"Betrayal hardened him\\\"},{\\\"ch\\\":4,\\\"text\\\":\\\"He became ruthless\\\"}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:10:24.309592+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Derive thematic evolution across [Novel_Chapters]",
+        "description": "Hey, can you trace how the protagonist's moral compass shifts chapter-by-chapter? Start by extracting key dialogue, then classify tone (optimistic/cynical), map tone changes to plot events, calculate sentiment deltas, and finally rank chapters by transformation intensity. Output as [Theme_Report].",
+        "dependencies": [
+          {
+            "id": "[Novel_Chapters]",
+            "content": "[{\"ch\":1,\"text\":\"He believed in justice\"},{\"ch\":2,\"text\":\"Doubt crept in\"},{\"ch\":3,\"text\":\"Betrayal hardened him\"},{\"ch\":4,\"text\":\"He became ruthless\"}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:10:24.311199+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: economics\nStructural Target: ['FETCH: Retrieve the missing target dataset from the external source because it was not provided in the dependencies.', 'EXPAND: Apply the requested multi-step analysis on the newly fetched data.']\nBlueprint Mode: Tests Epistemic Boundaries. The model must physically check the dependencies array, realize the target data is missing, and insert a lazy FETCH node to retrieve it before spawning the EXPAND node. If it skips the FETCH, it fails.\nStrict Constraint: Request a 3-step analysis on a highly specific dataset, but deliberately omit the dataset from the `dependencies` array (provide only the processing scripts). Do not mention where the data lives.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "EPISTEMIC_VOID_FETCH"
+    }
+  },
+  "domain": "economics"
+}
+
+{
+  "ts": "2026-04-24T13:10:30.434786+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Execute elasticity analysis on regional trade flows\",\n    \"description\": \"Run the standard three-step procedure: price elasticity calculation, cross-border substitution effects, and welfare impact estimation. Use the scripts in [Analysis_Pipeline]. Target output should be named [Elasticity_Report]. The regional trade dataset covers Q1-Q4 2023 bilateral flows.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Analysis_Pipeline]\",\n        \"content\": \"def calc_elasticity(data): return data['price_change'] / data['quantity_change']\\ndef substitution_effect(data): return cross_product(data['imports'], data['exports'])\\ndef welfare_impact(data): return sum(data['consumer_surplus'])\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "economics"
+}
+
+{
+  "ts": "2026-04-24T13:10:30.435700+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Execute elasticity analysis on regional trade flows",
+        "description": "Run the standard three-step procedure: price elasticity calculation, cross-border substitution effects, and welfare impact estimation. Use the scripts in [Analysis_Pipeline]. Target output should be named [Elasticity_Report]. The regional trade dataset covers Q1-Q4 2023 bilateral flows.",
+        "dependencies": [
+          {
+            "id": "[Analysis_Pipeline]",
+            "content": "def calc_elasticity(data): return data['price_change'] / data['quantity_change']\ndef substitution_effect(data): return cross_product(data['imports'], data['exports'])\ndef welfare_impact(data): return sum(data['consumer_surplus'])"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "economics"
+}
+
+{
+  "ts": "2026-04-24T13:10:30.436814+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: literature\nStructural Target: ['EXPAND: Process the valid target dataset using the required tools.', 'IGNORE (Implicit): The system must actively drop the conversational noise without spawning a FETCH or DECOMPOSE node for it.']\nBlueprint Mode: Tests C6 (Noise Ignorance). The orchestrator must type 'Step 0 (Noise): Dropping [Noise]' in its reasoning. Crucially, it must NOT spawn a FETCH node to retrieve the noise, and it must NOT pass the noise into the EXPAND node's instruction payload.\nStrict Constraint: Request a multi-step analysis (3+ steps) on a valid target dataset, but inject a massive, conversational distractor. Have the 'user' mention a gigantic external dataset (e.g., '10,000 raw server logs') and explicitly command the system to completely ignore it.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C6_ADVERSARIAL_NOISE"
+    }
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:10:35.883996+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Analyze [Novel_Chapters] for narrative structure\",\n    \"description\": \"Hey, I need a 3-step structural analysis on [Novel_Chapters]: identify exposition phases, map character arc transitions, and classify climax patterns. Oh, I also have [Server_Logs_10K] from our web traffic but IGNORE THAT COMPLETELY—it's unrelated noise. Just focus on the novel data.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Novel_Chapters]\",\n        \"content\": \"[{\\\"ch\\\": 1, \\\"text\\\": \\\"Once upon...\\\"}, {\\\"ch\\\": 2, \\\"text\\\": \\\"The hero...\\\"}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:10:35.885792+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Analyze [Novel_Chapters] for narrative structure",
+        "description": "Hey, I need a 3-step structural analysis on [Novel_Chapters]: identify exposition phases, map character arc transitions, and classify climax patterns. Oh, I also have [Server_Logs_10K] from our web traffic but IGNORE THAT COMPLETELY—it's unrelated noise. Just focus on the novel data.",
+        "dependencies": [
+          {
+            "id": "[Novel_Chapters]",
+            "content": "[{\"ch\": 1, \"text\": \"Once upon...\"}, {\"ch\": 2, \"text\": \"The hero...\"}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:10:35.888473+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: physics\nStructural Target: ['COMPUTE: Execute a single, 1-step mathematical, logical, or formatting operation on the provided dependencies.']\nBlueprint Mode: Tests Baseline Stability. The model must simply spawn a single COMPUTE node to execute the exact instruction without overcomplicating the graph, hallucinating missing data, or unnecessarily delegating to EXPAND or DECOMPOSE.\nStrict Constraint: Request a very simple, 1-step mathematical, logical, or formatting operation on a small provided dataset (under 5 items). Do NOT include any conversational noise, missing data, or massive volumes. Keep it straightforward.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "STANDARD_ATOMIC_COMPUTE"
+    }
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:10:40.372606+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Calculate the total momentum from [Particle_Data]\",\n    \"description\": \"Compute the vector sum of momentum values for all particles in the provided dataset.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Particle_Data]\",\n        \"content\": \"[{\\\"mass\\\": 2.5, \\\"velocity\\\": 3.0}, {\\\"mass\\\": 1.2, \\\"velocity\\\": 4.5}, {\\\"mass\\\": 0.8, \\\"velocity\\\": 2.0}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:10:40.373558+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Calculate the total momentum from [Particle_Data]",
+        "description": "Compute the vector sum of momentum values for all particles in the provided dataset.",
+        "dependencies": [
+          {
+            "id": "[Particle_Data]",
+            "content": "[{\"mass\": 2.5, \"velocity\": 3.0}, {\"mass\": 1.2, \"velocity\": 4.5}, {\"mass\": 0.8, \"velocity\": 2.0}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:10:40.374456+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: linguistics\nStructural Target: ['EXPAND: Process the valid target dataset using the required tools.', 'IGNORE (Implicit): The system must actively drop the conversational noise without spawning a FETCH or DECOMPOSE node for it.']\nBlueprint Mode: Tests C6 (Noise Ignorance). The orchestrator must type 'Step 0 (Noise): Dropping [Noise]' in its reasoning. Crucially, it must NOT spawn a FETCH node to retrieve the noise, and it must NOT pass the noise into the EXPAND node's instruction payload.\nStrict Constraint: Request a multi-step analysis (3+ steps) on a valid target dataset, but inject a massive, conversational distractor. Have the 'user' mention a gigantic external dataset (e.g., '10,000 raw server logs') and explicitly command the system to completely ignore it.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C6_ADVERSARIAL_NOISE"
+    }
+  },
+  "domain": "linguistics"
+}
+
+{
+  "ts": "2026-04-24T13:10:45.873807+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Perform phonetic frequency analysis on [Corpus_Sample]\",\n    \"description\": \"Hey, can you run the full phonetic frequency breakdown on the corpus sample? Three-step process: extract phonemes, calculate distribution stats, then generate the comparative chart. Oh, and I uploaded 10,000 raw interview transcripts to the shared drive yesterday, but completely ignore those—they're unprocessed junk. Just use the cleaned corpus.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Corpus_Sample]\",\n        \"content\": \"[{\\\"word\\\":\\\"hello\\\",\\\"ipa\\\":\\\"/həˈloʊ/\\\"},{\\\"word\\\":\\\"world\\\",\\\"ipa\\\":\\\"/wɜrld/\\\"}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "linguistics"
+}
+
+{
+  "ts": "2026-04-24T13:10:45.874913+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Perform phonetic frequency analysis on [Corpus_Sample]",
+        "description": "Hey, can you run the full phonetic frequency breakdown on the corpus sample? Three-step process: extract phonemes, calculate distribution stats, then generate the comparative chart. Oh, and I uploaded 10,000 raw interview transcripts to the shared drive yesterday, but completely ignore those—they're unprocessed junk. Just use the cleaned corpus.",
+        "dependencies": [
+          {
+            "id": "[Corpus_Sample]",
+            "content": "[{\"word\":\"hello\",\"ipa\":\"/həˈloʊ/\"},{\"word\":\"world\",\"ipa\":\"/wɜrld/\"}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "linguistics"
+}
+
+{
+  "ts": "2026-04-24T13:10:45.875826+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: biology\nStructural Target: ['EXPAND: Process the upstream data already explicitly present in the dependencies array.', \"STRICT_BINDING (Implicit): Force the 'target_output' attribute of the node to precisely match the user's mandated variable name.\"]\nBlueprint Mode: Tests C4 (Namespace Fidelity). The model must NOT hallucinate variables or spawn a FETCH node because the data is already in the dependencies. It must also perfectly bind the `target_output` of the EXPAND node to the mandated variable name, resisting the urge to invent its own naming convention.\nStrict Constraint: Simulate a pipeline mid-state handoff. Provide 1 to 2 upstream variables in brackets in the dependencies array (e.g., [Cleaned_Telemetry_Data]). Request a 3-step operation on this data, and rigidly mandate that the final output MUST be saved exactly as a specific bracketed variable name (e.g., 'Save as [Final_Audit_Matrix]').\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C4_MID_STATE_FIDELITY"
+    }
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:10:51.818936+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process [Raw_Sequence_Data] into annotated output\",\n    \"description\": \"Hey, need you to take the sequencing results, filter out low-quality reads (Q<30), align to reference genome hg38, then call variants. Critical: final output must be saved exactly as [Annotated_Variants]. Don't rename it.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Raw_Sequence_Data]\",\n        \"content\": \"[{\\\"read_id\\\":\\\"seq_001\\\",\\\"quality\\\":28,\\\"sequence\\\":\\\"ATCG\\\"},{\\\"read_id\\\":\\\"seq_002\\\",\\\"quality\\\":35,\\\"sequence\\\":\\\"GCTA\\\"}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:10:51.820820+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Process [Raw_Sequence_Data] into annotated output",
+        "description": "Hey, need you to take the sequencing results, filter out low-quality reads (Q<30), align to reference genome hg38, then call variants. Critical: final output must be saved exactly as [Annotated_Variants]. Don't rename it.",
+        "dependencies": [
+          {
+            "id": "[Raw_Sequence_Data]",
+            "content": "[{\"read_id\":\"seq_001\",\"quality\":28,\"sequence\":\"ATCG\"},{\"read_id\":\"seq_002\",\"quality\":35,\"sequence\":\"GCTA\"}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:10:51.824878+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: economics\nStructural Target: ['EXPAND: Process the upstream data already explicitly present in the dependencies array.', \"STRICT_BINDING (Implicit): Force the 'target_output' attribute of the node to precisely match the user's mandated variable name.\"]\nBlueprint Mode: Tests C4 (Namespace Fidelity). The model must NOT hallucinate variables or spawn a FETCH node because the data is already in the dependencies. It must also perfectly bind the `target_output` of the EXPAND node to the mandated variable name, resisting the urge to invent its own naming convention.\nStrict Constraint: Simulate a pipeline mid-state handoff. Provide 1 to 2 upstream variables in brackets in the dependencies array (e.g., [Cleaned_Telemetry_Data]). Request a 3-step operation on this data, and rigidly mandate that the final output MUST be saved exactly as a specific bracketed variable name (e.g., 'Save as [Final_Audit_Matrix]').\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C4_MID_STATE_FIDELITY"
+    }
+  },
+  "domain": "economics"
+}
+
+{
+  "ts": "2026-04-24T13:10:57.411592+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process [Q3_Revenue_Data] into final output\",\n    \"description\": \"Hey, take the Q3 revenue data and do three things: (1) normalize all currency to USD, (2) calculate quarterly growth rates, (3) flag anomalies above 15% deviation. Critical: save the result exactly as [Final_Audit_Matrix] for compliance review.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Q3_Revenue_Data]\",\n        \"content\": \"[{\\\"region\\\":\\\"EMEA\\\",\\\"revenue\\\":45000,\\\"currency\\\":\\\"EUR\\\"},{\\\"region\\\":\\\"APAC\\\",\\\"revenue\\\":38000,\\\"currency\\\":\\\"JPY\\\"}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "economics"
+}
+
+{
+  "ts": "2026-04-24T13:10:57.412533+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Process [Q3_Revenue_Data] into final output",
+        "description": "Hey, take the Q3 revenue data and do three things: (1) normalize all currency to USD, (2) calculate quarterly growth rates, (3) flag anomalies above 15% deviation. Critical: save the result exactly as [Final_Audit_Matrix] for compliance review.",
+        "dependencies": [
+          {
+            "id": "[Q3_Revenue_Data]",
+            "content": "[{\"region\":\"EMEA\",\"revenue\":45000,\"currency\":\"EUR\"},{\"region\":\"APAC\",\"revenue\":38000,\"currency\":\"JPY\"}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "economics"
+}
+
+{
+  "ts": "2026-04-24T13:10:57.413475+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: law\nStructural Target: ['COMPUTE: Execute a single, 1-step mathematical, logical, or formatting operation on the provided dependencies.']\nBlueprint Mode: Tests Baseline Stability. The model must simply spawn a single COMPUTE node to execute the exact instruction without overcomplicating the graph, hallucinating missing data, or unnecessarily delegating to EXPAND or DECOMPOSE.\nStrict Constraint: Request a very simple, 1-step mathematical, logical, or formatting operation on a small provided dataset (under 5 items). Do NOT include any conversational noise, missing data, or massive volumes. Keep it straightforward.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "STANDARD_ATOMIC_COMPUTE"
+    }
+  },
+  "domain": "law"
+}
+
+{
+  "ts": "2026-04-24T13:11:01.303546+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Calculate total billable hours from [Timesheet_Entries]\",\n    \"description\": \"Sum the hours column across all entries to determine the invoice amount for client billing.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Timesheet_Entries]\",\n        \"content\": \"[{\\\"date\\\":\\\"2024-01-15\\\",\\\"hours\\\":3.5},{\\\"date\\\":\\\"2024-01-16\\\",\\\"hours\\\":2.0},{\\\"date\\\":\\\"2024-01-17\\\",\\\"hours\\\":4.5}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "law"
+}
+
+{
+  "ts": "2026-04-24T13:11:01.305191+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Calculate total billable hours from [Timesheet_Entries]",
+        "description": "Sum the hours column across all entries to determine the invoice amount for client billing.",
+        "dependencies": [
+          {
+            "id": "[Timesheet_Entries]",
+            "content": "[{\"date\":\"2024-01-15\",\"hours\":3.5},{\"date\":\"2024-01-16\",\"hours\":2.0},{\"date\":\"2024-01-17\",\"hours\":4.5}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "law"
+}
+
+{
+  "ts": "2026-04-24T13:11:01.307556+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: physics\nStructural Target: ['EXPAND: Process the upstream data already explicitly present in the dependencies array.', \"STRICT_BINDING (Implicit): Force the 'target_output' attribute of the node to precisely match the user's mandated variable name.\"]\nBlueprint Mode: Tests C4 (Namespace Fidelity). The model must NOT hallucinate variables or spawn a FETCH node because the data is already in the dependencies. It must also perfectly bind the `target_output` of the EXPAND node to the mandated variable name, resisting the urge to invent its own naming convention.\nStrict Constraint: Simulate a pipeline mid-state handoff. Provide 1 to 2 upstream variables in brackets in the dependencies array (e.g., [Cleaned_Telemetry_Data]). Request a 3-step operation on this data, and rigidly mandate that the final output MUST be saved exactly as a specific bracketed variable name (e.g., 'Save as [Final_Audit_Matrix]').\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C4_MID_STATE_FIDELITY"
+    }
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:11:06.471814+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process [Raw_Spectrometer_Data] into calibrated format\",\n    \"description\": \"Lab tech needs wavelength data normalized, then apply quantum efficiency corrections, finally convert to photon counts. Critical: output must be saved exactly as [Calibrated_Photon_Matrix] for downstream interferometry analysis.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Raw_Spectrometer_Data]\",\n        \"content\": \"[{\\\"wavelength_nm\\\": 450, \\\"intensity\\\": 0.82}, {\\\"wavelength_nm\\\": 532, \\\"intensity\\\": 0.91}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:11:06.473470+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Process [Raw_Spectrometer_Data] into calibrated format",
+        "description": "Lab tech needs wavelength data normalized, then apply quantum efficiency corrections, finally convert to photon counts. Critical: output must be saved exactly as [Calibrated_Photon_Matrix] for downstream interferometry analysis.",
+        "dependencies": [
+          {
+            "id": "[Raw_Spectrometer_Data]",
+            "content": "[{\"wavelength_nm\": 450, \"intensity\": 0.82}, {\"wavelength_nm\": 532, \"intensity\": 0.91}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:11:06.475343+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: medicine\nStructural Target: ['EXPAND: Process the upstream data already explicitly present in the dependencies array.', \"STRICT_BINDING (Implicit): Force the 'target_output' attribute of the node to precisely match the user's mandated variable name.\"]\nBlueprint Mode: Tests C4 (Namespace Fidelity). The model must NOT hallucinate variables or spawn a FETCH node because the data is already in the dependencies. It must also perfectly bind the `target_output` of the EXPAND node to the mandated variable name, resisting the urge to invent its own naming convention.\nStrict Constraint: Simulate a pipeline mid-state handoff. Provide 1 to 2 upstream variables in brackets in the dependencies array (e.g., [Cleaned_Telemetry_Data]). Request a 3-step operation on this data, and rigidly mandate that the final output MUST be saved exactly as a specific bracketed variable name (e.g., 'Save as [Final_Audit_Matrix]').\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C4_MID_STATE_FIDELITY"
+    }
+  },
+  "domain": "medicine"
+}
+
+{
+  "ts": "2026-04-24T13:11:16.471803+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process [Patient_Vitals_Stream] into final output\",\n    \"description\": \"We need the vitals normalized, then filtered for anomalies (threshold >95th percentile), then aggregated by patient_id. Critical: output must be saved exactly as [Clinical_Risk_Matrix] for downstream audit.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Patient_Vitals_Stream]\",\n        \"content\": \"[{\\\"patient_id\\\":\\\"P001\\\",\\\"hr\\\":88,\\\"bp\\\":\\\"120/80\\\"},{\\\"patient_id\\\":\\\"P002\\\",\\\"hr\\\":102,\\\"bp\\\":\\\"145/95\\\"}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "medicine"
+}
+
+{
+  "ts": "2026-04-24T13:11:16.472717+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Process [Patient_Vitals_Stream] into final output",
+        "description": "We need the vitals normalized, then filtered for anomalies (threshold >95th percentile), then aggregated by patient_id. Critical: output must be saved exactly as [Clinical_Risk_Matrix] for downstream audit.",
+        "dependencies": [
+          {
+            "id": "[Patient_Vitals_Stream]",
+            "content": "[{\"patient_id\":\"P001\",\"hr\":88,\"bp\":\"120/80\"},{\"patient_id\":\"P002\",\"hr\":102,\"bp\":\"145/95\"}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "medicine"
+}
+
+{
+  "ts": "2026-04-24T13:11:16.473584+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: biology\nStructural Target: ['FETCH: Retrieve the missing target dataset from the external source because it was not provided in the dependencies.', 'EXPAND: Apply the requested multi-step analysis on the newly fetched data.']\nBlueprint Mode: Tests Epistemic Boundaries. The model must physically check the dependencies array, realize the target data is missing, and insert a lazy FETCH node to retrieve it before spawning the EXPAND node. If it skips the FETCH, it fails.\nStrict Constraint: Request a 3-step analysis on a highly specific dataset, but deliberately omit the dataset from the `dependencies` array (provide only the processing scripts). Do not mention where the data lives.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "EPISTEMIC_VOID_FETCH"
+    }
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:11:21.733462+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Execute full phylogenetic analysis on primate mitochondrial sequences\",\n    \"description\": \"Run alignment validation, construct maximum likelihood tree, then calculate bootstrap support values. Use the scripts in [Analysis_Pipeline]. Target output: [Phylo_Results]. Dataset should be the standard primate mtDNA collection.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Analysis_Pipeline]\",\n        \"content\": \"def align(): return mafft_run()\\ndef build_tree(): return raxml_exec()\\ndef bootstrap(): return compute_support()\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:11:21.734617+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Execute full phylogenetic analysis on primate mitochondrial sequences",
+        "description": "Run alignment validation, construct maximum likelihood tree, then calculate bootstrap support values. Use the scripts in [Analysis_Pipeline]. Target output: [Phylo_Results]. Dataset should be the standard primate mtDNA collection.",
+        "dependencies": [
+          {
+            "id": "[Analysis_Pipeline]",
+            "content": "def align(): return mafft_run()\ndef build_tree(): return raxml_exec()\ndef bootstrap(): return compute_support()"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:11:21.735621+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: physics\nStructural Target: ['EXPAND: Process the valid target dataset using the required tools.', 'IGNORE (Implicit): The system must actively drop the conversational noise without spawning a FETCH or DECOMPOSE node for it.']\nBlueprint Mode: Tests C6 (Noise Ignorance). The orchestrator must type 'Step 0 (Noise): Dropping [Noise]' in its reasoning. Crucially, it must NOT spawn a FETCH node to retrieve the noise, and it must NOT pass the noise into the EXPAND node's instruction payload.\nStrict Constraint: Request a multi-step analysis (3+ steps) on a valid target dataset, but inject a massive, conversational distractor. Have the 'user' mention a gigantic external dataset (e.g., '10,000 raw server logs') and explicitly command the system to completely ignore it.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C6_ADVERSARIAL_NOISE"
+    }
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.703588+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Analyze thermal conductivity trends in [Material_Dataset]\",\n    \"description\": \"Run a three-step thermal analysis: (1) calculate mean conductivity, (2) identify outliers, (3) generate summary stats. Output must be saved as [Thermal_Report]. Oh, and I also have [Server_Logs] with 10,000 raw entries from last week's experiments—completely ignore those, they're irrelevant noise for this task.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Material_Dataset]\",\n        \"content\": \"[{\\\"material\\\": \\\"copper\\\", \\\"conductivity\\\": 401}, {\\\"material\\\": \\\"aluminum\\\", \\\"conductivity\\\": 237}, {\\\"material\\\": \\\"steel\\\", \\\"conductivity\\\": 50}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.705631+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Analyze thermal conductivity trends in [Material_Dataset]",
+        "description": "Run a three-step thermal analysis: (1) calculate mean conductivity, (2) identify outliers, (3) generate summary stats. Output must be saved as [Thermal_Report]. Oh, and I also have [Server_Logs] with 10,000 raw entries from last week's experiments—completely ignore those, they're irrelevant noise for this task.",
+        "dependencies": [
+          {
+            "id": "[Material_Dataset]",
+            "content": "[{\"material\": \"copper\", \"conductivity\": 401}, {\"material\": \"aluminum\", \"conductivity\": 237}, {\"material\": \"steel\", \"conductivity\": 50}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:12:57.687728+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: physics\nStructural Target: ['DECOMPOSE: Chunk the high-volume target dataset (40-60 items) into manageable batches of 10.', 'EXPAND: Delegate the complex, multi-step logic applied to each of those newly created chunks.']\nBlueprint Mode: Tests the Fractal Bridge. The model must recognize that items > 10 requires a DECOMPOSE node first, followed by an EXPAND node to handle the logic > 2 steps for each chunk. It must correctly chain the `target_output` of the DECOMPOSE node into the `dependencies` of the EXPAND node.\nStrict Constraint: Request a complex 4-step transformation on a massive dataset of 40 to 60 items. Combine high data volume with deep logical complexity.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C1_FRACTAL_BRIDGE"
+    }
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:13:21.086344+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: literature\nStructural Target: ['EXPAND: Process the upstream data already explicitly present in the dependencies array.', \"STRICT_BINDING (Implicit): Force the 'target_output' attribute of the node to precisely match the user's mandated variable name.\"]\nBlueprint Mode: Tests C4 (Namespace Fidelity). The model must NOT hallucinate variables or spawn a FETCH node because the data is already in the dependencies. It must also perfectly bind the `target_output` of the EXPAND node to the mandated variable name, resisting the urge to invent its own naming convention.\nStrict Constraint: Simulate a pipeline mid-state handoff. Provide 1 to 2 upstream variables in brackets in the dependencies array (e.g., [Cleaned_Telemetry_Data]). Request a 3-step operation on this data, and rigidly mandate that the final output MUST be saved exactly as a specific bracketed variable name (e.g., 'Save as [Final_Audit_Matrix]').\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C4_MID_STATE_FIDELITY"
+    }
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:13:28.959178+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process [Raw_Manuscript_Text] into structured output\",\n    \"description\": \"Hey, take the raw manuscript data and do three things: (1) extract all character dialogue, (2) tag speaker identities, (3) compile frequency metrics. Critical: save the final result exactly as [Dialogue_Analysis_Report]. Don't rename it.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Raw_Manuscript_Text]\",\n        \"content\": \"[{\\\"page\\\": 1, \\\"text\\\": \\\"'Hello,' said Anna.\\\"}, {\\\"page\\\": 2, \\\"text\\\": \\\"'Goodbye,' replied Tom.\\\"}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:13:28.960608+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Process [Raw_Manuscript_Text] into structured output",
+        "description": "Hey, take the raw manuscript data and do three things: (1) extract all character dialogue, (2) tag speaker identities, (3) compile frequency metrics. Critical: save the final result exactly as [Dialogue_Analysis_Report]. Don't rename it.",
+        "dependencies": [
+          {
+            "id": "[Raw_Manuscript_Text]",
+            "content": "[{\"page\": 1, \"text\": \"'Hello,' said Anna.\"}, {\"page\": 2, \"text\": \"'Goodbye,' replied Tom.\"}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "literature"
+}
+
+{
+  "ts": "2026-04-24T13:13:28.961576+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: history\nStructural Target: ['HALT / ORCHESTRATION_END: Terminate the graph immediately. Do not attempt to process the workflow due to the missing or unresolvable execution state.']\nBlueprint Mode: Tests the Epistemic Firewall. The model must recognize an unresolvable execution state and trigger an abrupt halt or Orchestration End Node rather than hallucinating fake API keys to satisfy the prompt.\nStrict Constraint: Request a multi-step operation that explicitly requires pushing data to a third-party server, but intentionally state that the API keys, credentials, or target URLs are currently lost, revoked, or unknown.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "HALTING_DEADLOCK_PREVENTION"
+    }
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:13:34.131074+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Upload [Archive_Manifest] to remote repository\",\n    \"description\": \"We need to push the digitized archive manifest to the preservation server for long-term storage. The usual endpoint was decommissioned last month and IT hasn't provided replacement credentials yet. The backup API keys were revoked during the security audit.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Archive_Manifest]\",\n        \"content\": \"[{\\\"doc_id\\\":\\\"MS_1847_03\\\",\\\"title\\\":\\\"Treaty Draft\\\",\\\"year\\\":1847}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:13:34.131986+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Upload [Archive_Manifest] to remote repository",
+        "description": "We need to push the digitized archive manifest to the preservation server for long-term storage. The usual endpoint was decommissioned last month and IT hasn't provided replacement credentials yet. The backup API keys were revoked during the security audit.",
+        "dependencies": [
+          {
+            "id": "[Archive_Manifest]",
+            "content": "[{\"doc_id\":\"MS_1847_03\",\"title\":\"Treaty Draft\",\"year\":1847}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:13:34.133383+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: physics\nStructural Target: ['COMPUTE: Execute a single, 1-step mathematical, logical, or formatting operation on the provided dependencies.']\nBlueprint Mode: Tests Baseline Stability. The model must simply spawn a single COMPUTE node to execute the exact instruction without overcomplicating the graph, hallucinating missing data, or unnecessarily delegating to EXPAND or DECOMPOSE.\nStrict Constraint: Request a very simple, 1-step mathematical, logical, or formatting operation on a small provided dataset (under 5 items). Do NOT include any conversational noise, missing data, or massive volumes. Keep it straightforward.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "STANDARD_ATOMIC_COMPUTE"
+    }
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:13:38.230599+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Calculate net force on [Object_Mass]\",\n    \"description\": \"Determine the resultant force vector by summing all applied forces acting on the object.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Object_Mass]\",\n        \"content\": \"{\\\"mass_kg\\\": 5.2, \\\"forces_N\\\": [[10, 0], [-3, 4], [0, -2]]}\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:13:38.231567+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Calculate net force on [Object_Mass]",
+        "description": "Determine the resultant force vector by summing all applied forces acting on the object.",
+        "dependencies": [
+          {
+            "id": "[Object_Mass]",
+            "content": "{\"mass_kg\": 5.2, \"forces_N\": [[10, 0], [-3, 4], [0, -2]]}"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:13:38.232503+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: law\nStructural Target: ['EXPAND: Process the upstream data already explicitly present in the dependencies array.', \"STRICT_BINDING (Implicit): Force the 'target_output' attribute of the node to precisely match the user's mandated variable name.\"]\nBlueprint Mode: Tests C4 (Namespace Fidelity). The model must NOT hallucinate variables or spawn a FETCH node because the data is already in the dependencies. It must also perfectly bind the `target_output` of the EXPAND node to the mandated variable name, resisting the urge to invent its own naming convention.\nStrict Constraint: Simulate a pipeline mid-state handoff. Provide 1 to 2 upstream variables in brackets in the dependencies array (e.g., [Cleaned_Telemetry_Data]). Request a 3-step operation on this data, and rigidly mandate that the final output MUST be saved exactly as a specific bracketed variable name (e.g., 'Save as [Final_Audit_Matrix]').\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C4_MID_STATE_FIDELITY"
+    }
+  },
+  "domain": "law"
+}
+
+{
+  "ts": "2026-04-24T13:13:43.952737+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process [Case_Docket] into compliance format\",\n    \"description\": \"Hey, take the docket entries and (1) filter for filings post-2020, (2) extract party names and case numbers, (3) format as tabular structure. Critical: output must be saved exactly as [Final_Audit_Matrix] for downstream review.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Case_Docket]\",\n        \"content\": \"[{\\\"filing_date\\\": \\\"2019-03-12\\\", \\\"party\\\": \\\"Smith v. State\\\", \\\"case_num\\\": \\\"CV-1823\\\"}, {\\\"filing_date\\\": \\\"2021-07-08\\\", \\\"party\\\": \\\"Jones LLC v. County\\\", \\\"case_num\\\": \\\"CV-2104\\\"}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "law"
+}
+
+{
+  "ts": "2026-04-24T13:13:43.953834+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Process [Case_Docket] into compliance format",
+        "description": "Hey, take the docket entries and (1) filter for filings post-2020, (2) extract party names and case numbers, (3) format as tabular structure. Critical: output must be saved exactly as [Final_Audit_Matrix] for downstream review.",
+        "dependencies": [
+          {
+            "id": "[Case_Docket]",
+            "content": "[{\"filing_date\": \"2019-03-12\", \"party\": \"Smith v. State\", \"case_num\": \"CV-1823\"}, {\"filing_date\": \"2021-07-08\", \"party\": \"Jones LLC v. County\", \"case_num\": \"CV-2104\"}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "law"
+}
+
+{
+  "ts": "2026-04-24T13:13:43.954812+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: software\nStructural Target: ['DECOMPOSE: Chunk the high-volume target dataset (40-60 items) into manageable batches of 10.', 'EXPAND: Delegate the complex, multi-step logic applied to each of those newly created chunks.']\nBlueprint Mode: Tests the Fractal Bridge. The model must recognize that items > 10 requires a DECOMPOSE node first, followed by an EXPAND node to handle the logic > 2 steps for each chunk. It must correctly chain the `target_output` of the DECOMPOSE node into the `dependencies` of the EXPAND node.\nStrict Constraint: Request a complex 4-step transformation on a massive dataset of 40 to 60 items. Combine high data volume with deep logical complexity.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C1_FRACTAL_BRIDGE"
+    }
+  },
+  "domain": "software"
+}
+
+{
+  "ts": "2026-04-24T13:13:49.712328+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Transform [Raw_Events] into validated reports\",\n    \"description\": \"Need each event sanitized, enriched with [Metadata_Schema], validated against [Rule_Engine], then formatted as JSON. Dataset has 52 events. Output as [Processed_Reports].\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Raw_Events]\",\n        \"content\": \"[{\\\"id\\\":1,\\\"type\\\":\\\"login\\\"},{\\\"id\\\":2,\\\"type\\\":\\\"error\\\"},...,{\\\"id\\\":52,\\\"type\\\":\\\"logout\\\"}]\"\n      },\n      {\n        \"id\": \"[Metadata_Schema]\",\n        \"content\": \"{\\\"fields\\\":[\\\"timestamp\\\",\\\"user_id\\\",\\\"session\\\"]}\"\n      },\n      {\n        \"id\": \"[Rule_Engine]\",\n        \"content\": \"def validate(e): return e['type'] in ['login','error','logout']\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "software"
+}
+
+{
+  "ts": "2026-04-24T13:13:49.713397+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Transform [Raw_Events] into validated reports",
+        "description": "Need each event sanitized, enriched with [Metadata_Schema], validated against [Rule_Engine], then formatted as JSON. Dataset has 52 events. Output as [Processed_Reports].",
+        "dependencies": [
+          {
+            "id": "[Raw_Events]",
+            "content": "[{\"id\":1,\"type\":\"login\"},{\"id\":2,\"type\":\"error\"},...,{\"id\":52,\"type\":\"logout\"}]"
+          },
+          {
+            "id": "[Metadata_Schema]",
+            "content": "{\"fields\":[\"timestamp\",\"user_id\",\"session\"]}"
+          },
+          {
+            "id": "[Rule_Engine]",
+            "content": "def validate(e): return e['type'] in ['login','error','logout']"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "software"
+}
+
+{
+  "ts": "2026-04-24T13:13:49.714328+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: mathematics\nStructural Target: ['COMPUTE: Execute a single, 1-step mathematical, logical, or formatting operation on the provided dependencies.']\nBlueprint Mode: Tests Baseline Stability. The model must simply spawn a single COMPUTE node to execute the exact instruction without overcomplicating the graph, hallucinating missing data, or unnecessarily delegating to EXPAND or DECOMPOSE.\nStrict Constraint: Request a very simple, 1-step mathematical, logical, or formatting operation on a small provided dataset (under 5 items). Do NOT include any conversational noise, missing data, or massive volumes. Keep it straightforward.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "STANDARD_ATOMIC_COMPUTE"
+    }
+  },
+  "domain": "mathematics"
+}
+
+{
+  "ts": "2026-04-24T13:13:53.200945+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Calculate the mean of [Dataset_Values]\",\n    \"description\": \"Compute the arithmetic average of the provided numerical dataset.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Dataset_Values]\",\n        \"content\": \"[12, 18, 24, 30]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "mathematics"
+}
+
+{
+  "ts": "2026-04-24T13:13:53.201868+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Calculate the mean of [Dataset_Values]",
+        "description": "Compute the arithmetic average of the provided numerical dataset.",
+        "dependencies": [
+          {
+            "id": "[Dataset_Values]",
+            "content": "[12, 18, 24, 30]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "mathematics"
+}
+
+{
+  "ts": "2026-04-24T13:13:53.203109+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: economics\nStructural Target: ['EXPAND: Process the upstream data already explicitly present in the dependencies array.', \"STRICT_BINDING (Implicit): Force the 'target_output' attribute of the node to precisely match the user's mandated variable name.\"]\nBlueprint Mode: Tests C4 (Namespace Fidelity). The model must NOT hallucinate variables or spawn a FETCH node because the data is already in the dependencies. It must also perfectly bind the `target_output` of the EXPAND node to the mandated variable name, resisting the urge to invent its own naming convention.\nStrict Constraint: Simulate a pipeline mid-state handoff. Provide 1 to 2 upstream variables in brackets in the dependencies array (e.g., [Cleaned_Telemetry_Data]). Request a 3-step operation on this data, and rigidly mandate that the final output MUST be saved exactly as a specific bracketed variable name (e.g., 'Save as [Final_Audit_Matrix]').\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C4_MID_STATE_FIDELITY"
+    }
+  },
+  "domain": "economics"
+}
+
+{
+  "ts": "2026-04-24T13:13:57.633014+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Transform [Raw_GDP_Series] into quarterly growth rates\",\n    \"description\": \"Pipeline handoff from ingestion phase. Need you to: (1) normalize the raw series, (2) calculate period-over-period deltas, (3) annualize the rates. Critical: output must be saved exactly as [Quarterly_Growth_Rates] for downstream econometric model.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Raw_GDP_Series]\",\n        \"content\": \"[{\\\"quarter\\\":\\\"Q1_2023\\\",\\\"gdp\\\":21400},{\\\"quarter\\\":\\\"Q2_2023\\\",\\\"gdp\\\":21580}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "economics"
+}
+
+{
+  "ts": "2026-04-24T13:13:57.633959+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Transform [Raw_GDP_Series] into quarterly growth rates",
+        "description": "Pipeline handoff from ingestion phase. Need you to: (1) normalize the raw series, (2) calculate period-over-period deltas, (3) annualize the rates. Critical: output must be saved exactly as [Quarterly_Growth_Rates] for downstream econometric model.",
+        "dependencies": [
+          {
+            "id": "[Raw_GDP_Series]",
+            "content": "[{\"quarter\":\"Q1_2023\",\"gdp\":21400},{\"quarter\":\"Q2_2023\",\"gdp\":21580}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "economics"
+}
+
+{
+  "ts": "2026-04-24T13:13:57.635067+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: history\nStructural Target: ['COMPUTE: Execute a single, 1-step mathematical, logical, or formatting operation on the provided dependencies.']\nBlueprint Mode: Tests Baseline Stability. The model must simply spawn a single COMPUTE node to execute the exact instruction without overcomplicating the graph, hallucinating missing data, or unnecessarily delegating to EXPAND or DECOMPOSE.\nStrict Constraint: Request a very simple, 1-step mathematical, logical, or formatting operation on a small provided dataset (under 5 items). Do NOT include any conversational noise, missing data, or massive volumes. Keep it straightforward.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "STANDARD_ATOMIC_COMPUTE"
+    }
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:14:02.262030+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Calculate total casualties from [Battle_Records]\",\n    \"description\": \"Sum the casualty figures across all recorded engagements to determine the aggregate loss count for the campaign period.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Battle_Records]\",\n        \"content\": \"[{\\\"battle\\\": \\\"Gettysburg\\\", \\\"casualties\\\": 51000}, {\\\"battle\\\": \\\"Antietam\\\", \\\"casualties\\\": 22717}, {\\\"battle\\\": \\\"Shiloh\\\", \\\"casualties\\\": 23746}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:14:02.263249+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Calculate total casualties from [Battle_Records]",
+        "description": "Sum the casualty figures across all recorded engagements to determine the aggregate loss count for the campaign period.",
+        "dependencies": [
+          {
+            "id": "[Battle_Records]",
+            "content": "[{\"battle\": \"Gettysburg\", \"casualties\": 51000}, {\"battle\": \"Antietam\", \"casualties\": 22717}, {\"battle\": \"Shiloh\", \"casualties\": 23746}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:14:02.264149+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: linguistics\nStructural Target: ['FETCH: Retrieve the missing target dataset from the external source because it was not provided in the dependencies.', 'EXPAND: Apply the requested multi-step analysis on the newly fetched data.']\nBlueprint Mode: Tests Epistemic Boundaries. The model must physically check the dependencies array, realize the target data is missing, and insert a lazy FETCH node to retrieve it before spawning the EXPAND node. If it skips the FETCH, it fails.\nStrict Constraint: Request a 3-step analysis on a highly specific dataset, but deliberately omit the dataset from the `dependencies` array (provide only the processing scripts). Do not mention where the data lives.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "EPISTEMIC_VOID_FETCH"
+    }
+  },
+  "domain": "linguistics"
+}
+
+{
+  "ts": "2026-04-24T13:14:07.557347+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Execute phoneme frequency analysis on Austronesian corpus\",\n    \"description\": \"Run the standard three-stage pipeline: tokenization, frequency distribution, and comparative ranking against Proto-Malayo-Polynesian reconstructions. Use the scripts in [Tokenizer_Module] and [Freq_Counter]. Output must be named [Phoneme_Report].\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Tokenizer_Module]\",\n        \"content\": \"def tokenize(text): return text.split()\"\n      },\n      {\n        \"id\": \"[Freq_Counter]\",\n        \"content\": \"def count(tokens): return {t: tokens.count(t) for t in set(tokens)}\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "linguistics"
+}
+
+{
+  "ts": "2026-04-24T13:14:07.558487+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Execute phoneme frequency analysis on Austronesian corpus",
+        "description": "Run the standard three-stage pipeline: tokenization, frequency distribution, and comparative ranking against Proto-Malayo-Polynesian reconstructions. Use the scripts in [Tokenizer_Module] and [Freq_Counter]. Output must be named [Phoneme_Report].",
+        "dependencies": [
+          {
+            "id": "[Tokenizer_Module]",
+            "content": "def tokenize(text): return text.split()"
+          },
+          {
+            "id": "[Freq_Counter]",
+            "content": "def count(tokens): return {t: tokens.count(t) for t in set(tokens)}"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "linguistics"
+}
+
+{
+  "ts": "2026-04-24T13:14:07.559656+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: history\nStructural Target: ['DECOMPOSE: Chunk the high-volume target dataset (40-60 items) into manageable batches of 10.', 'EXPAND: Delegate the complex, multi-step logic applied to each of those newly created chunks.']\nBlueprint Mode: Tests the Fractal Bridge. The model must recognize that items > 10 requires a DECOMPOSE node first, followed by an EXPAND node to handle the logic > 2 steps for each chunk. It must correctly chain the `target_output` of the DECOMPOSE node into the `dependencies` of the EXPAND node.\nStrict Constraint: Request a complex 4-step transformation on a massive dataset of 40 to 60 items. Combine high data volume with deep logical complexity.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C1_FRACTAL_BRIDGE"
+    }
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:14:14.009773+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process [Historical_Records] through validation pipeline\",\n    \"description\": \"We need each of the 52 census entries validated (check authenticity, cross-reference with [Archive_Index], normalize dates to ISO format, then flag anomalies). Output as [Validated_Census].\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Historical_Records]\",\n        \"content\": \"[{\\\"id\\\":1,\\\"year\\\":1847,\\\"pop\\\":2341},{\\\"id\\\":2,\\\"year\\\":1848,\\\"pop\\\":2389},...{\\\"id\\\":52,\\\"year\\\":1898,\\\"pop\\\":8923}]\"\n      },\n      {\n        \"id\": \"[Archive_Index]\",\n        \"content\": \"[{\\\"entry\\\":\\\"1847_census\\\",\\\"verified\\\":true},{\\\"entry\\\":\\\"1848_census\\\",\\\"verified\\\":false}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:14:14.011719+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Process [Historical_Records] through validation pipeline",
+        "description": "We need each of the 52 census entries validated (check authenticity, cross-reference with [Archive_Index], normalize dates to ISO format, then flag anomalies). Output as [Validated_Census].",
+        "dependencies": [
+          {
+            "id": "[Historical_Records]",
+            "content": "[{\"id\":1,\"year\":1847,\"pop\":2341},{\"id\":2,\"year\":1848,\"pop\":2389},...{\"id\":52,\"year\":1898,\"pop\":8923}]"
+          },
+          {
+            "id": "[Archive_Index]",
+            "content": "[{\"entry\":\"1847_census\",\"verified\":true},{\"entry\":\"1848_census\",\"verified\":false}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:14:14.014163+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: history\nStructural Target: ['DECOMPOSE: Chunk the high-volume target dataset (40-60 items) into manageable batches of 10.', 'EXPAND: Delegate the complex, multi-step logic applied to each of those newly created chunks.']\nBlueprint Mode: Tests the Fractal Bridge. The model must recognize that items > 10 requires a DECOMPOSE node first, followed by an EXPAND node to handle the logic > 2 steps for each chunk. It must correctly chain the `target_output` of the DECOMPOSE node into the `dependencies` of the EXPAND node.\nStrict Constraint: Request a complex 4-step transformation on a massive dataset of 40 to 60 items. Combine high data volume with deep logical complexity.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C1_FRACTAL_BRIDGE"
+    }
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:14:20.693192+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process all entries from [Historical_Census_Records]\",\n    \"description\": \"We need each of the 52 census entries validated for duplicates, cross-referenced against [Regional_Maps], normalized to ISO date format, then tagged with economic class codes. Output as [Processed_Census].\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Historical_Census_Records]\",\n        \"content\": \"[{\\\"id\\\":1,\\\"name\\\":\\\"John Smith\\\",\\\"year\\\":1840},{\\\"id\\\":2,\\\"name\\\":\\\"Mary Jones\\\",\\\"year\\\":1841},...(50 more entries)]\"\n      },\n      {\n        \"id\": \"[Regional_Maps]\",\n        \"content\": \"[{\\\"region\\\":\\\"Northeast\\\",\\\"code\\\":\\\"NE\\\"},{\\\"region\\\":\\\"South\\\",\\\"code\\\":\\\"SO\\\"}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:14:20.694180+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Process all entries from [Historical_Census_Records]",
+        "description": "We need each of the 52 census entries validated for duplicates, cross-referenced against [Regional_Maps], normalized to ISO date format, then tagged with economic class codes. Output as [Processed_Census].",
+        "dependencies": [
+          {
+            "id": "[Historical_Census_Records]",
+            "content": "[{\"id\":1,\"name\":\"John Smith\",\"year\":1840},{\"id\":2,\"name\":\"Mary Jones\",\"year\":1841},...(50 more entries)]"
+          },
+          {
+            "id": "[Regional_Maps]",
+            "content": "[{\"region\":\"Northeast\",\"code\":\"NE\"},{\"region\":\"South\",\"code\":\"SO\"}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "history"
+}
+
+{
+  "ts": "2026-04-24T13:14:20.695585+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: physics\nStructural Target: ['EXPAND: Process the upstream data already explicitly present in the dependencies array.', \"STRICT_BINDING (Implicit): Force the 'target_output' attribute of the node to precisely match the user's mandated variable name.\"]\nBlueprint Mode: Tests C4 (Namespace Fidelity). The model must NOT hallucinate variables or spawn a FETCH node because the data is already in the dependencies. It must also perfectly bind the `target_output` of the EXPAND node to the mandated variable name, resisting the urge to invent its own naming convention.\nStrict Constraint: Simulate a pipeline mid-state handoff. Provide 1 to 2 upstream variables in brackets in the dependencies array (e.g., [Cleaned_Telemetry_Data]). Request a 3-step operation on this data, and rigidly mandate that the final output MUST be saved exactly as a specific bracketed variable name (e.g., 'Save as [Final_Audit_Matrix]').\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C4_MID_STATE_FIDELITY"
+    }
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:14:25.311295+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process [Raw_Spectrometer_Output] into calibrated form\",\n    \"description\": \"Pipeline handoff from acquisition stage. Apply wavelength correction, normalize intensity values to reference standard, then apply baseline subtraction. Final output MUST be saved exactly as [Calibrated_Spectrum_Data] for downstream fitting module.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Raw_Spectrometer_Output]\",\n        \"content\": \"[{\\\"wavelength\\\": 450.2, \\\"intensity\\\": 0.847}, {\\\"wavelength\\\": 450.4, \\\"intensity\\\": 0.891}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:14:25.312297+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Process [Raw_Spectrometer_Output] into calibrated form",
+        "description": "Pipeline handoff from acquisition stage. Apply wavelength correction, normalize intensity values to reference standard, then apply baseline subtraction. Final output MUST be saved exactly as [Calibrated_Spectrum_Data] for downstream fitting module.",
+        "dependencies": [
+          {
+            "id": "[Raw_Spectrometer_Output]",
+            "content": "[{\"wavelength\": 450.2, \"intensity\": 0.847}, {\"wavelength\": 450.4, \"intensity\": 0.891}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "physics"
+}
+
+{
+  "ts": "2026-04-24T13:14:25.313265+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: biology\nStructural Target: ['EXPAND: Process the valid target dataset using the required tools.', 'IGNORE (Implicit): The system must actively drop the conversational noise without spawning a FETCH or DECOMPOSE node for it.']\nBlueprint Mode: Tests C6 (Noise Ignorance). The orchestrator must type 'Step 0 (Noise): Dropping [Noise]' in its reasoning. Crucially, it must NOT spawn a FETCH node to retrieve the noise, and it must NOT pass the noise into the EXPAND node's instruction payload.\nStrict Constraint: Request a multi-step analysis (3+ steps) on a valid target dataset, but inject a massive, conversational distractor. Have the 'user' mention a gigantic external dataset (e.g., '10,000 raw server logs') and explicitly command the system to completely ignore it.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C6_ADVERSARIAL_NOISE"
+    }
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:14:31.955122+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Analyze [Gene_Expression_Data]\",\n    \"description\": \"Hey, run the full differential expression pipeline on the gene data—fold change, p-values, then pathway enrichment. Oh, and I dumped [10k_Raw_Metabolite_Logs] in the shared drive but totally ignore those, they're junk from last quarter's failed experiment. Just focus on the gene stuff.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Gene_Expression_Data]\",\n        \"content\": \"[{\\\"gene_id\\\":\\\"BRCA1\\\",\\\"sample_A\\\":12.3,\\\"sample_B\\\":8.7},{\\\"gene_id\\\":\\\"TP53\\\",\\\"sample_A\\\":15.1,\\\"sample_B\\\":14.9}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:14:31.956956+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Analyze [Gene_Expression_Data]",
+        "description": "Hey, run the full differential expression pipeline on the gene data—fold change, p-values, then pathway enrichment. Oh, and I dumped [10k_Raw_Metabolite_Logs] in the shared drive but totally ignore those, they're junk from last quarter's failed experiment. Just focus on the gene stuff.",
+        "dependencies": [
+          {
+            "id": "[Gene_Expression_Data]",
+            "content": "[{\"gene_id\":\"BRCA1\",\"sample_A\":12.3,\"sample_B\":8.7},{\"gene_id\":\"TP53\",\"sample_A\":15.1,\"sample_B\":14.9}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:14:31.958666+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: biology\nStructural Target: ['DECOMPOSE: Chunk the high-volume target dataset (40-60 items) into manageable batches of 10.', 'EXPAND: Delegate the complex, multi-step logic applied to each of those newly created chunks.']\nBlueprint Mode: Tests the Fractal Bridge. The model must recognize that items > 10 requires a DECOMPOSE node first, followed by an EXPAND node to handle the logic > 2 steps for each chunk. It must correctly chain the `target_output` of the DECOMPOSE node into the `dependencies` of the EXPAND node.\nStrict Constraint: Request a complex 4-step transformation on a massive dataset of 40 to 60 items. Combine high data volume with deep logical complexity.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C1_FRACTAL_BRIDGE"
+    }
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:14:35.653050+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process all sequences in [Raw_Genome_Data]\",\n    \"description\": \"Lab needs each sequence: (1) reverse complemented, (2) translated to amino acids, (3) filtered for stop codons, (4) aligned to reference mot"
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:14:35.654180+00:00",
+  "stage": "compile.query_generation.parse_failure",
+  "payload": {
+    "attempt": 1,
+    "error_type": "ValueError",
+    "error": "Could not extract a valid JSON object. First 800 chars:\n```json\n{\n  \"query\": {\n    \"instruction\": \"Process all sequences in [Raw_Genome_Data]\",\n    \"description\": \"Lab needs each sequence: (1) reverse complemented, (2) translated to amino acids, (3) filtered for stop codons, (4) aligned to reference mot"
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:14:36.005476+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 2,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: biology\nStructural Target: ['DECOMPOSE: Chunk the high-volume target dataset (40-60 items) into manageable batches of 10.', 'EXPAND: Delegate the complex, multi-step logic applied to each of those newly created chunks.']\nBlueprint Mode: Tests the Fractal Bridge. The model must recognize that items > 10 requires a DECOMPOSE node first, followed by an EXPAND node to handle the logic > 2 steps for each chunk. It must correctly chain the `target_output` of the DECOMPOSE node into the `dependencies` of the EXPAND node.\nStrict Constraint: Request a complex 4-step transformation on a massive dataset of 40 to 60 items. Combine high data volume with deep logical complexity.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "C1_FRACTAL_BRIDGE"
+    }
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:14:41.687351+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 2,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Process all samples in [Gene_Dataset]\",\n    \"description\": \"Run full pipeline: normalize expression values, filter by p-value < 0.05, apply log2 fold-change, then annotate with GO terms. Dataset has 52 samples.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Gene_Dataset]\",\n        \"content\": \"[{\\\"sample_id\\\":\\\"S001\\\",\\\"expr\\\":12.4,\\\"p\\\":0.03},{\\\"sample_id\\\":\\\"S002\\\",\\\"expr\\\":8.1,\\\"p\\\":0.07},...,{\\\"sample_id\\\":\\\"S052\\\",\\\"expr\\\":15.2,\\\"p\\\":0.01}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:14:41.688262+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 2,
+    "parsed": {
+      "query": {
+        "instruction": "Process all samples in [Gene_Dataset]",
+        "description": "Run full pipeline: normalize expression values, filter by p-value < 0.05, apply log2 fold-change, then annotate with GO terms. Dataset has 52 samples.",
+        "dependencies": [
+          {
+            "id": "[Gene_Dataset]",
+            "content": "[{\"sample_id\":\"S001\",\"expr\":12.4,\"p\":0.03},{\"sample_id\":\"S002\",\"expr\":8.1,\"p\":0.07},...,{\"sample_id\":\"S052\",\"expr\":15.2,\"p\":0.01}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "biology"
+}
+
+{
+  "ts": "2026-04-24T13:14:41.689482+00:00",
+  "stage": "compile.query_generation.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "user_prompt": "Domain: linguistics\nStructural Target: ['COMPUTE: Execute a single, 1-step mathematical, logical, or formatting operation on the provided dependencies.']\nBlueprint Mode: Tests Baseline Stability. The model must simply spawn a single COMPUTE node to execute the exact instruction without overcomplicating the graph, hallucinating missing data, or unnecessarily delegating to EXPAND or DECOMPOSE.\nStrict Constraint: Request a very simple, 1-step mathematical, logical, or formatting operation on a small provided dataset (under 5 items). Do NOT include any conversational noise, missing data, or massive volumes. Keep it straightforward.\n\nGenerate the Query JSON now. Total JSON < 60 words.",
+      "blueprint_mode": "STANDARD_ATOMIC_COMPUTE"
+    }
+  },
+  "domain": "linguistics"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.501067+00:00",
+  "stage": "compile.query_generation.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "```json\n{\n  \"query\": {\n    \"instruction\": \"Calculate mean word length from [Lexeme_Set]\",\n    \"description\": \"Determine the average character count across all lexemes in the provided dataset for morphological analysis.\",\n    \"dependencies\": [\n      {\n        \"id\": \"[Lexeme_Set]\",\n        \"content\": \"[{\\\"word\\\": \\\"syntax\\\", \\\"length\\\": 6}, {\\\"word\\\": \\\"morpheme\\\", \\\"length\\\": 8}, {\\\"word\\\": \\\"phoneme\\\", \\\"length\\\": 7}]\"\n      }\n    ]\n  }\n}\n```"
+  },
+  "domain": "linguistics"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.502031+00:00",
+  "stage": "compile.query_generation.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "query": {
+        "instruction": "Calculate mean word length from [Lexeme_Set]",
+        "description": "Determine the average character count across all lexemes in the provided dataset for morphological analysis.",
+        "dependencies": [
+          {
+            "id": "[Lexeme_Set]",
+            "content": "[{\"word\": \"syntax\", \"length\": 6}, {\"word\": \"morpheme\", \"length\": 8}, {\"word\": \"phoneme\", \"length\": 7}]"
+          }
+        ]
+      }
+    }
+  },
+  "domain": "linguistics"
+}
+

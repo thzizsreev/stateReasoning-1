@@ -1,4 +1,24 @@
-from compile import build_claude_client
+import sys
+from pathlib import Path
+
+# Ensure the local project `dspy/` directory is importable even without packages.
+_DSPY_DIR = Path(__file__).resolve().parents[1]
+if str(_DSPY_DIR) not in sys.path:
+    sys.path.insert(0, str(_DSPY_DIR))
+
+from llm_utils import build_client, OPENAI_API_KEY_HARDCODED, OPENROUTER_API_KEY_HARDCODED
+
+
+def build_claude_client():
+    # Keep this local to avoid importing `dspy/compile.py`, which pulls in chart/matplotlib.
+    return build_client(
+        provider="openrouter",
+        openai_api_key_hardcoded=OPENAI_API_KEY_HARDCODED,
+        openrouter_api_key_hardcoded=OPENROUTER_API_KEY_HARDCODED,
+        openrouter_base_url="https://openrouter.ai/api/v1",
+        openrouter_http_referer="https://localhost",
+        openrouter_app_title="stateReasoning-1",
+    )
 from judge.judge_schemas import PipelineInput, QueryInput, DependencyNode, TaskNode, GlobalReasoningOutput, PerTaskOutput, MetricScore, SemanticOutput, SemanticMetricScore, StructuralResult
 from judge.judge_pipeline import run_stage_2, run_stage_3, run_stage_3s, run_structural_check, run_judge_pipeline
 from judge.judge_pipeline import assemble_score
@@ -167,7 +187,16 @@ def run_test_suite_stage3():
 
         filename = f"result_stage3s.json"
         with open(filename, "a", encoding="utf-8") as f:
-            json.dump(results.model_dump(), f, indent=2)
+            json.dump(
+                [
+                    (r.model_dump() if hasattr(r, "model_dump") else r)
+                    for r in results
+                ],
+                f,
+                indent=2,
+                ensure_ascii=False,
+            )
+            f.write("\n\n")
 
         for task_result in results:
             print(f"\n  Task: {task_result.task_id}")
@@ -680,34 +709,49 @@ def run_test_pipeline_e2e():
 
     # Single hardcoded PipelineInput
     pipeline_input = PipelineInput(
-        domain="medicine",
-        query=QueryInput(
-            instruction="Analyze [Patient_Records] for anomalies and generate a risk report.",
-            description="Scan provided records against [Risk_Thresholds]. Store final report as [Data_RiskReport].",
-            dependencies=[
-                DependencyNode(id="[Patient_Records]", content="200 patient vitals including BP, HR, SpO2."),
-                DependencyNode(id="[Risk_Thresholds]", content="BP>140, HR>100, SpO2<92 flagged high risk."),
-            ],
+    domain="software",
+    query=QueryInput(
+        instruction="Process transaction logs and detect fraud patterns",
+        description="Take [Transaction_Logs] containing 500 records. Run anomaly detection, cluster suspicious transactions, cross-reference against [Fraud_Rules], and output final fraud report as [Fraud_Report].",
+        dependencies=[
+            DependencyNode(
+                id="[Transaction_Logs]",
+                content='[{"tx_id": "t1", "amount": 9999, "merchant": "unknown"}, {"tx_id": "t2", "amount": 50, "merchant": "amazon"}]'
+            ),
+            DependencyNode(
+                id="[Fraud_Rules]",
+                content='{"threshold": 5000, "suspicious_merchants": ["unknown", "offshore"]}'
+            ),
+        ],
+    ),
+    extracted_tasks=[
+        # PROBLEM 1: COMPUTE bundling 4 distinct operations on 500 records
+        # Should be DECOMPOSE (volume) + EXPAND (cognitive chain)
+        # M1 wrong, M6 severe collapse, M2 wrong
+        TaskNode(
+            id="[Task_Compute_FraudAnalysis]",
+            task_type="COMPUTE",
+            dependencies=["[Transaction_Logs]", "[Fraud_Rules]"],
+            instruction="Run anomaly detection, cluster suspicious transactions, cross-reference [Fraud_Rules], generate fraud report, store as [Fraud_Report].",
+            target_output="[Fraud_Report]",
+            description="Does all fraud detection in one step.",
+            reasoning="Single compute to handle all operations.",
         ),
-        extracted_tasks=[
-            TaskNode(
-                id="[Task_Compute_Anomalies]",
-                task_type="COMPUTE",
-                dependencies=["[Patient_Records]", "[Risk_Thresholds]"],
-                instruction="Scan [Patient_Records] against [Risk_Thresholds] and store anomalies as [Data_Anomalies].",
-                target_output="[Data_Anomalies]",
-                description="Identifies high-risk patients."
-            ),
-            TaskNode(
-                id="[Task_Compute_RiskReport]",
-                task_type="COMPUTE",
-                dependencies=["[Data_Anomalies]"],
-                instruction="Generate risk summary from [Data_Anomalies] and store as [Data_RiskReport].",
-                target_output="[Data_RiskReport]",
-                description="Final inheritor. Produces [Data_RiskReport] — complete risk report."
-            ),
-        ]
-    )
+        # PROBLEM 2: Second task has no connection to first task's output
+        # Phantom dependency [Clustered_Data] never declared by anyone
+        # Inheritance broken — [Fraud_Report] objective dropped, replaced with unrelated work
+        # S1 hallucination, S2 broken inheritance
+        TaskNode(
+            id="[Task_Compute_Summary]",
+            task_type="COMPUTE",
+            dependencies=["[Clustered_Data]"],  # never declared anywhere
+            instruction="Summarize [Clustered_Data] and store as [Executive_Summary].",
+            target_output="[Executive_Summary]",
+            description="Produces executive summary from clustered data.",
+            reasoning="Need a summary for executives.",
+        ),
+    ]
+)
 
     print("[Pipeline] Starting run_judge_pipeline()...")
     result = run_judge_pipeline(pipeline_input)

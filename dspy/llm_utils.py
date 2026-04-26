@@ -3,12 +3,19 @@ from __future__ import annotations
 import json
 import os
 import re
-from typing import Any, Dict, Optional
+import time
+from typing import Any, Callable, Dict, Optional, TypeVar
 
 from openai import OpenAI
 
+try:
+    # Optional to avoid import cycles in contexts that don't need logging.
+    from log_utils import JsonlRunLogger
+except Exception:  # pragma: no cover
+    JsonlRunLogger = None  # type: ignore
+
 OPENAI_API_KEY_HARDCODED = ""
-OPENROUTER_API_KEY_HARDCODED = "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"
+OPENROUTER_API_KEY_HARDCODED = "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"
 
 def parse_llm_json_response(text: str) -> Dict[str, Any]:
     """
@@ -122,6 +129,103 @@ def parse_stage2_response(text: str) -> dict:
         return result
 
     raise ValueError(f"Could not extract Stage 2 fields. First 800 chars:\n{text[:800]}")
+
+
+TParsed = TypeVar("TParsed")
+
+
+def _is_retryable_parse_error(exc: BaseException) -> bool:
+    return isinstance(exc, (ValueError, json.JSONDecodeError))
+
+
+def parse_with_retries(
+    *,
+    call_llm: Callable[[int], str],
+    parser_name: str,
+    max_attempts: int = 3,
+    retry_sleep_s: float = 0.35,
+    logger: Optional[Any] = None,
+    log_stage: str = "llm_parse",
+    run_id: Optional[str] = None,
+    domain: Optional[str] = None,
+    request_payload: Optional[Dict[str, Any]] = None,
+    max_chars: int = 4000,
+) -> Any:
+    """
+    Call the LLM and parse the response, retrying on JSON parse/extraction failures.
+
+    - `call_llm(attempt)` must return the raw model text for that attempt (1-indexed)
+    - `parser_name` selects the project's custom parsers:
+        - "parse_llm_json_response"
+        - "parse_stage2_response"
+    - Retries only when the parser raises ValueError / JSONDecodeError
+    - If all attempts fail, re-raises the last exception (same behavior as before)
+    """
+    if max_attempts < 1:
+        raise ValueError("max_attempts must be >= 1")
+
+    last_exc: Optional[BaseException] = None
+
+    def _trunc(v: Any) -> Any:
+        if isinstance(v, str) and max_chars > 0 and len(v) > max_chars:
+            return v[:max_chars] + f"...[truncated:{len(v) - max_chars}]"
+        return v
+
+    def _log(event: str, payload: Dict[str, Any]) -> None:
+        if logger is None:
+            return
+        try:
+            # JsonlRunLogger signature: write(stage=..., payload=..., domain=..., run_id=...)
+            logger.write(
+                stage=f"{log_stage}.{event}",
+                payload={k: _trunc(v) for k, v in payload.items()},
+                domain=domain,
+                run_id=run_id,
+            )
+        except Exception:
+            return
+
+    for attempt in range(1, max_attempts + 1):
+        _log("request", {
+            "attempt": attempt,
+            "parser_name": parser_name,
+            "request_payload": request_payload or {},
+        })
+        raw = call_llm(attempt)
+        _log("response_raw", {
+            "attempt": attempt,
+            "raw": raw,
+        })
+        
+        try:
+            if parser_name == "parse_llm_json_response":
+                parsed = parse_llm_json_response(raw)
+                _log("parse_success", {"attempt": attempt, "parsed": parsed})
+                return parsed
+            if parser_name == "parse_stage2_response":
+                parsed = parse_stage2_response(raw)
+                _log("parse_success", {"attempt": attempt, "parsed": parsed})
+                return parsed
+            raise ValueError(f"Unknown parser_name={parser_name!r}")
+
+        except Exception as e:
+            _log("parse_failure", {
+                "attempt": attempt,
+                "error_type": type(e).__name__,
+                "error": str(e),
+            })
+            last_exc = e
+            if not _is_retryable_parse_error(e):
+                raise
+            if attempt >= max_attempts:
+                raise
+            if retry_sleep_s > 0:
+                time.sleep(retry_sleep_s * attempt)
+
+    # Unreachable, but keeps type-checkers happy.
+    if last_exc:
+        raise last_exc
+    raise RuntimeError("parse_with_retries reached impossible state")
 
 
 def get_api_key(provider: str, *, hardcoded: str = "", env_var: str = "") -> str:

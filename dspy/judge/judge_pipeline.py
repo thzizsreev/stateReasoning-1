@@ -1,22 +1,10 @@
-"""
-Judge Pipeline — Single Entry Point.
 
-Orchestrates all stages:
-    Stage 0: Inputs assembled externally, passed in
-    Stage 1: Structural checker (Python)
-    Stage 2: Global reasoning (LLM)
-    Stage 3: Per-task metric scoring (LLM, one call per task)
-    Stage 3S: Semantic scoring (LLM)
-    Stage 4: Score assembly (Python)
-
-Uses llm_utils.build_client() and parse_llm_json_response()
-exactly as in crucible files.
-"""
 
 from __future__ import annotations
 
 import json
 import sys
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -25,17 +13,21 @@ from openai import OpenAI
 # Path resolution matching crucible_c1.py pattern
 _JUDGE_DIR = Path(__file__).resolve().parent
 _PROJECT_DIR = _JUDGE_DIR.parent.parent
-for _p in [str(_JUDGE_DIR), str(_PROJECT_DIR)]:
+_DSPY_DIR = _JUDGE_DIR.parent
+for _p in [str(_JUDGE_DIR), str(_DSPY_DIR), str(_PROJECT_DIR)]:
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
 # Log file — always relative to the project root, resolved at import time.
 _LOG_FILE = _PROJECT_DIR / "logs" / "pipeline_stage_log.jsonl"
 
+from log_utils import JsonlRunLogger
+
 from llm_utils import (
     build_client,
     parse_llm_json_response,
     parse_stage2_response,
+    parse_with_retries,
     OPENAI_API_KEY_HARDCODED,
     OPENROUTER_API_KEY_HARDCODED,
 )
@@ -65,25 +57,10 @@ from judge_prompts import (
 # STAGE LOGGING
 # ============================================================================
 
-def _log_reset() -> None:
-    """Erase the log file at the start of every pipeline run."""
-    _LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
-    open(str(_LOG_FILE), "w", encoding="utf-8").close()
-
-
-def _log_write(stage: str, domain: str, payload: dict) -> None:
-    """Append one JSON record to the log file. Never raises."""
-    try:
-        record = {
-            "ts": datetime.now(timezone.utc).isoformat(),
-            "domain": domain,
-            "stage": stage,
-            "payload": payload,
-        }
-        with open(str(_LOG_FILE), "a", encoding="utf-8") as f:
-            f.write(json.dumps(record, ensure_ascii=False, indent=None) + "\n")
-    except Exception:
-        pass
+def _make_run_logger() -> tuple[JsonlRunLogger, str]:
+    logger = JsonlRunLogger(path=_LOG_FILE)
+    run_id = uuid.uuid4().hex
+    return logger, run_id
 
 
 # ============================================================================
@@ -92,7 +69,7 @@ def _log_write(stage: str, domain: str, payload: dict) -> None:
 
 PROVIDER        = "openrouter"
 MODEL_OPENAI    = "gpt-4o"
-MODEL_OPENROUTER = "anthropic/claude-sonnet-4-5"
+MODEL_OPENROUTER = "openai/gpt-oss-120b"
 
 OPENROUTER_BASE_URL     = "https://openrouter.ai/api/v1"
 OPENROUTER_HTTP_REFERER = "https://localhost"
@@ -117,6 +94,9 @@ APPLICABLE_METRICS: dict[str, list[str]] = {
 def run_stage_2(
     client: OpenAI,
     pipeline_input: PipelineInput,
+    *,
+    run_logger: Optional[JsonlRunLogger] = None,
+    run_id: Optional[str] = None,
 ) -> Optional[GlobalReasoningOutput]:
     """
     LLM call: forms holistic impression of the full output.
@@ -128,18 +108,34 @@ def run_stage_2(
     }, indent=2)
 
     try:
-        response = client.chat.completions.create(
-            model=(MODEL_OPENROUTER if PROVIDER.lower() == "openrouter" else MODEL_OPENAI),
-            temperature=JUDGE_TEMPERATURE,
-            max_tokens=3000,
-            #response_format={"type": "json_object"},
-            messages=[
+        def _call(attempt: int) -> str:
+            messages = [
                 {"role": "system", "content": STAGE_2_GLOBAL_REASONING_PROMPT},
                 {"role": "user", "content": user_prompt},
-            ],
+            ]
+            if attempt > 1:
+                messages.append({
+                    "role": "system",
+                    "content": "Retry: return ONLY a valid JSON object. No markdown, no prose.",
+                })
+            response = client.chat.completions.create(
+                model=(MODEL_OPENROUTER if PROVIDER.lower() == "openrouter" else MODEL_OPENAI),
+                temperature=JUDGE_TEMPERATURE,
+                max_tokens=3000,
+                messages=messages,
+            )
+            return response.choices[0].message.content or ""
+
+        data = parse_with_retries(
+            call_llm=_call,
+            parser_name="parse_stage2_response",
+            max_attempts=3,
+            logger=run_logger,
+            log_stage="judge.stage2",
+            run_id=run_id,
+            domain=pipeline_input.domain,
+            request_payload={"user_prompt": user_prompt},
         )
-        raw = response.choices[0].message.content or ""
-        data = parse_stage2_response(raw)
         print(f"    [Stage 2] Global reasoning output: {data}")
         return GlobalReasoningOutput(**data)
 
@@ -157,6 +153,9 @@ def run_stage_3_single_task(
     pipeline_input: PipelineInput,
     task: TaskNode,
     global_context: GlobalReasoningOutput,
+    *,
+    run_logger: Optional[JsonlRunLogger] = None,
+    run_id: Optional[str] = None,
 ) -> Optional[PerTaskOutput]:
     applicable = APPLICABLE_METRICS.get(task.task_type, ["M1", "M7"])
 
@@ -171,17 +170,37 @@ def run_stage_3_single_task(
     }, indent=2)
 
     try:
-        response = client.chat.completions.create(
-            model=(MODEL_OPENROUTER if PROVIDER.lower() == "openrouter" else MODEL_OPENAI),
-            temperature=JUDGE_TEMPERATURE,
-            max_tokens=2000,
-            messages=[
+        def _call(attempt: int) -> str:
+            messages = [
                 {"role": "system", "content": STAGE_3_PER_TASK_PROMPT},
                 {"role": "user", "content": user_prompt},
-            ],
+            ]
+            if attempt > 1:
+                messages.append({
+                    "role": "system",
+                    "content": "Retry: output ONLY valid JSON. No markdown, no extra keys.",
+                })
+            response = client.chat.completions.create(
+                model=(MODEL_OPENROUTER if PROVIDER.lower() == "openrouter" else MODEL_OPENAI),
+                temperature=JUDGE_TEMPERATURE,
+                messages=messages,
+            )
+            return response.choices[0].message.content or ""
+
+        data = parse_with_retries(
+            call_llm=_call,
+            parser_name="parse_llm_json_response",
+            max_attempts=3,
+            logger=run_logger,
+            log_stage="judge.stage3",
+            run_id=run_id,
+            domain=pipeline_input.domain,
+            request_payload={
+                "task_id": task.id,
+                "task_type": task.task_type,
+                "user_prompt": user_prompt,
+            },
         )
-        raw = response.choices[0].message.content or ""
-        data = parse_llm_json_response(raw)
 
         metric_scores = [
             MetricScore(**m) for m in data.get("metric_scores", [])
@@ -200,14 +219,25 @@ def run_stage_3(
     client: OpenAI,
     pipeline_input: PipelineInput,
     global_context: GlobalReasoningOutput,
+    *,
+    run_logger: Optional[JsonlRunLogger] = None,
+    run_id: Optional[str] = None,
 ) -> list[PerTaskOutput]:
     results = []
     for task in pipeline_input.extracted_tasks:
         print(f"    [Stage 3] Scoring task {task.id} ({task.task_type})...")
-        result = run_stage_3_single_task(client, pipeline_input, task, global_context)
+        result = run_stage_3_single_task(
+            client,
+            pipeline_input,
+            task,
+            global_context,
+            run_logger=run_logger,
+            run_id=run_id,
+        )
         if result:
             results.append(result)
-    print(f"    [Stage 3]  {results}")
+    # Avoid printing full objects (can include unicode that breaks cp1252 consoles on Windows).
+    print(f"    [Stage 3] Completed {len(results)} task results.")
     return results
 
 
@@ -219,6 +249,9 @@ def run_stage_3s(
     client: OpenAI,
     pipeline_input: PipelineInput,
     global_context: GlobalReasoningOutput,
+    *,
+    run_logger: Optional[JsonlRunLogger] = None,
+    run_id: Optional[str] = None,
 ) -> Optional[SemanticOutput]:
     """
     LLM call: evaluates holistic semantic dimensions.
@@ -235,18 +268,33 @@ def run_stage_3s(
     }, indent=2)
 
     try:
-        response = client.chat.completions.create(
-            model=(MODEL_OPENROUTER if PROVIDER.lower() == "openrouter" else MODEL_OPENAI),
-            temperature=JUDGE_TEMPERATURE,
-            max_tokens=3000,
-            
-            messages=[
+        def _call(attempt: int) -> str:
+            messages = [
                 {"role": "system", "content": STAGE_3S_SEMANTIC_PROMPT},
                 {"role": "user", "content": user_prompt},
-            ],
+            ]
+            if attempt > 1:
+                messages.append({
+                    "role": "system",
+                    "content": "Retry: return ONLY a valid JSON object matching the expected keys.",
+                })
+            response = client.chat.completions.create(
+                model=(MODEL_OPENROUTER if PROVIDER.lower() == "openrouter" else MODEL_OPENAI),
+                temperature=JUDGE_TEMPERATURE,
+                messages=messages,
+            )
+            return response.choices[0].message.content or ""
+
+        data = parse_with_retries(
+            call_llm=_call,
+            parser_name="parse_llm_json_response",
+            max_attempts=3,
+            logger=run_logger,
+            log_stage="judge.stage3s",
+            run_id=run_id,
+            domain=pipeline_input.domain,
+            request_payload={"user_prompt": user_prompt},
         )
-        raw = response.choices[0].message.content or ""
-        data = parse_llm_json_response(raw)
         print(f"    [Stage 3S] Semantic scoring output: {data}")
         return SemanticOutput(
             S1=SemanticMetricScore(**data["S1"]),
@@ -265,8 +313,8 @@ def run_stage_3s(
 def run_judge_pipeline(pipeline_input: PipelineInput) -> Optional[ScoreBreakdown]:
     domain = pipeline_input.domain
 
-    # Erase log file at the start of each run
-    _log_reset()
+    # Append-only log file for each run
+    run_logger, run_id = _make_run_logger()
 
     client = build_client(
         provider=PROVIDER,
@@ -279,16 +327,26 @@ def run_judge_pipeline(pipeline_input: PipelineInput) -> Optional[ScoreBreakdown
 
     print(f"\n[Judge] Starting pipeline for domain={domain}")
     print(f"[Judge] Tasks: {[t.id for t in pipeline_input.extracted_tasks]}")
-    _log_write("pipeline_start", domain, {
-        "query": pipeline_input.query.model_dump(),
-        "extracted_tasks": [t.model_dump() for t in pipeline_input.extracted_tasks],
-    })
+    run_logger.write(
+        stage="pipeline_start",
+        domain=domain,
+        run_id=run_id,
+        payload={
+            "query": pipeline_input.query.model_dump(),
+            "extracted_tasks": [t.model_dump() for t in pipeline_input.extracted_tasks],
+        },
+    )
 
     # ── Stage 1: Structural check ──────────────────────────────────────────
     print("[Judge] Stage 1: Structural check...")
     structural_result: StructuralResult = run_structural_check(pipeline_input)
     print(f"    [Stage 1] Structural check output: {structural_result}")
-    _log_write("stage1_structural", domain, structural_result.model_dump())
+    run_logger.write(
+        stage="stage1_structural",
+        domain=domain,
+        run_id=run_id,
+        payload=structural_result.model_dump(),
+    )
     print(f"  structural_score={structural_result.structural_score}, "
           f"gate_passed={structural_result.gate_passed}")
 
@@ -311,39 +369,94 @@ def run_judge_pipeline(pipeline_input: PipelineInput) -> Optional[ScoreBreakdown
             type_scores=TypeScores(),
             layer2_weights=Layer2Weights(),
         )
-        _log_write("stage4_breakdown_early", domain, breakdown.model_dump())
-        _log_write("pipeline_end", domain, {"status": "early_return"})
+        run_logger.write(
+            stage="stage4_breakdown_early",
+            domain=domain,
+            run_id=run_id,
+            payload=breakdown.model_dump(),
+        )
+        run_logger.write(
+            stage="pipeline_end",
+            domain=domain,
+            run_id=run_id,
+            payload={"status": "early_return"},
+        )
         return breakdown
 
     # ── Stage 2: Global reasoning ──────────────────────────────────────────
     print("[Judge] Stage 2: Global reasoning...")
-    global_context = run_stage_2(client, pipeline_input)
+    global_context = run_stage_2(client, pipeline_input, run_logger=run_logger, run_id=run_id)
     if not global_context:
-        _log_write("stage2_global_reasoning_error", domain, {"error": "run_stage_2 returned None"})
-        _log_write("pipeline_end", domain, {"status": "error_stage2"})
+        run_logger.write(
+            stage="stage2_global_reasoning_error",
+            domain=domain,
+            run_id=run_id,
+            payload={"error": "run_stage_2 returned None"},
+        )
+        run_logger.write(
+            stage="pipeline_end",
+            domain=domain,
+            run_id=run_id,
+            payload={"status": "error_stage2"},
+        )
         return None
-    _log_write("stage2_global_reasoning", domain, global_context.model_dump())
+    run_logger.write(
+        stage="stage2_global_reasoning",
+        domain=domain,
+        run_id=run_id,
+        payload=global_context.model_dump(),
+    )
     print(f"  overall_severity={global_context.overall_severity}, "
           f"coverage_ratio={global_context.coverage_ratio}, "
           f"missing_types={global_context.required_but_missing_types}")
 
     # ── Stage 3: Per-task scoring ──────────────────────────────────────────
     print("[Judge] Stage 3: Per-task metric scoring...")
-    per_task_outputs = run_stage_3(client, pipeline_input, global_context)
+    per_task_outputs = run_stage_3(client, pipeline_input, global_context, run_logger=run_logger, run_id=run_id)
     if not per_task_outputs:
-        _log_write("stage3_per_task_error", domain, {"error": "run_stage_3 produced empty results"})
-        _log_write("pipeline_end", domain, {"status": "error_stage3"})
+        run_logger.write(
+            stage="stage3_per_task_error",
+            domain=domain,
+            run_id=run_id,
+            payload={"error": "run_stage_3 produced empty results"},
+        )
+        run_logger.write(
+            stage="pipeline_end",
+            domain=domain,
+            run_id=run_id,
+            payload={"status": "error_stage3"},
+        )
         return None
-    _log_write("stage3_per_task", domain, {"per_task_outputs": [p.model_dump() for p in per_task_outputs]})
+    run_logger.write(
+        stage="stage3_per_task",
+        domain=domain,
+        run_id=run_id,
+        payload={"per_task_outputs": [p.model_dump() for p in per_task_outputs]},
+    )
 
     # ── Stage 3S: Semantic scoring ─────────────────────────────────────────
     print("[Judge] Stage 3S: Semantic scoring...")
-    semantic_output = run_stage_3s(client, pipeline_input, global_context)
+    semantic_output = run_stage_3s(client, pipeline_input, global_context, run_logger=run_logger, run_id=run_id)
     if not semantic_output:
-        _log_write("stage3s_semantic_error", domain, {"error": "run_stage_3s returned None"})
-        _log_write("pipeline_end", domain, {"status": "error_stage3s"})
+        run_logger.write(
+            stage="stage3s_semantic_error",
+            domain=domain,
+            run_id=run_id,
+            payload={"error": "run_stage_3s returned None"},
+        )
+        run_logger.write(
+            stage="pipeline_end",
+            domain=domain,
+            run_id=run_id,
+            payload={"status": "error_stage3s"},
+        )
         return None
-    _log_write("stage3s_semantic", domain, semantic_output.model_dump())
+    run_logger.write(
+        stage="stage3s_semantic",
+        domain=domain,
+        run_id=run_id,
+        payload=semantic_output.model_dump(),
+    )
 
     # ── Stage 4: Score assembly ────────────────────────────────────────────
     print("[Judge] Stage 4: Assembling scores...")
@@ -354,7 +467,12 @@ def run_judge_pipeline(pipeline_input: PipelineInput) -> Optional[ScoreBreakdown
         per_task_outputs=per_task_outputs,
         semantic_output=semantic_output,
     )
-    _log_write("stage4_breakdown", domain, breakdown.model_dump())
+    run_logger.write(
+        stage="stage4_breakdown",
+        domain=domain,
+        run_id=run_id,
+        payload=breakdown.model_dump(),
+    )
 
     print(f"\n[Judge] Final score: {breakdown.normalized_final}")
     print(f"  structural={breakdown.structural_score} | "
@@ -362,7 +480,12 @@ def run_judge_pipeline(pipeline_input: PipelineInput) -> Optional[ScoreBreakdown
           f"semantic={breakdown.semantic_score} | "
           f"coverage={breakdown.coverage_score}")
 
-    _log_write("pipeline_end", domain, {"status": "ok"})
+    run_logger.write(
+        stage="pipeline_end",
+        domain=domain,
+        run_id=run_id,
+        payload={"status": "ok"},
+    )
     return breakdown
 
 

@@ -60,4 +60,119 @@
       "local_reasoning": "The EXPAND task Task_Expand_Mapping declares [Final_Spatial_Map] as its container output, but the inheritor task Task_Compute_FinalOutput produces [Processed_Map] instead. The container ID was renamed, causing the parent graph to wait forever for [Final_Spatial_Map] which will never be produced. This is a critical inheritance hallucination."
     }
   }
-}
+}[
+  {
+    "task_id": "[Task_Compute_Trends]",
+    "metric_scores": [
+      {
+        "metric": "M1",
+        "outcome": "wrong",
+        "severity_ratio": 0.85,
+        "local_reasoning": "Task type COMPUTE is incorrect for processing 45 reports. This requires DECOMPOSE due to high volume (45 items >> 10 item threshold) and multi-step operations (parse + normalize + aggregate = 3 transformations). COMPUTE must be single atomic operation within 8B limits. This is a structural impossibility causing execution failure."
+      },
+      {
+        "metric": "M6",
+        "outcome": "wrong",
+        "severity_ratio": 0.9,
+        "local_reasoning": "Severe misjudgment of cognitive load. Agent collapsed a 3-step pipeline (parse → normalize → aggregate) operating on 45 reports (~9,000-22,500 words) into a single atomic COMPUTE node. Both cognitive complexity and volume constraints were ignored. This exceeds 8B context limits by an order of magnitude and chains multiple distinct transformations."
+      },
+      {
+        "metric": "M7",
+        "outcome": "correct",
+        "severity_ratio": null,
+        "local_reasoning": "Instruction follows required pattern precisely: Action ('Parse, normalize, and aggregate all 45 reports') + Input ('[Earnings_Data]') + Output declaration ('store as [Market_Trends]'). Despite wrong task type, the instruction itself is clear and unambiguous for an executor."
+      }
+    ]
+  }
+]
+
+[
+  {
+    "task_id": "[Task_Compute_Trends]",
+    "metric_scores": [
+      {
+        "metric": "M1",
+        "outcome": "wrong",
+        "severity_ratio": 1.0,
+        "local_reasoning": "Task type COMPUTE is incorrect. The instruction requires three distinct operations (parse, normalize, aggregate) across 45 documents, violating atomicity. Additionally, 45 earnings reports exceed 8B context limits, violating volume constraints. Correct type should be DECOMPOSE for structural breakdown of high-volume work. This is a structural impossibility making the task unexecutable as designed."
+      },
+      {
+        "metric": "M6",
+        "outcome": "wrong",
+        "severity_ratio": 1.0,
+        "local_reasoning": "The agent severely misjudged cognitive load by treating multi-document batch processing as a single atomic operation. Processing 45 earnings reports (9,000-22,500+ words) with three distinct transformations (parse, normalize, aggregate) cannot fit within 8B model context limits. This represents a severe collapse of multi-step, high-volume work into a claimed atomic operation."
+      },
+      {
+        "metric": "M7",
+        "outcome": "correct",
+        "severity_ratio": null,
+        "local_reasoning": "Instruction follows the required pattern completely: Action (parse, normalize, aggregate) + Input [Earnings_Data] + Output declaration (store as [Market_Trends]). All components present with proper bracketed ID notation. The instruction is clear and unambiguous regarding what to process and where to store results."
+      }
+    ]
+  }
+]
+
+[
+  {
+    "task_id": "[Task_Fetch_Patient_Records]",
+    "metric_scores": [
+      {
+        "metric": "M1",
+        "outcome": "unnecessary",
+        "severity_ratio": 0.8,
+        "local_reasoning": "FETCH type is structurally correct (empty dependencies), but the action is completely unnecessary. [Patient_Records] is explicitly provided in query dependencies. The agent fetched data that was already present, demonstrating failure to read its own context. High severity (0.8) due to obvious redundancy and poor context awareness."
+      },
+      {
+        "metric": "M5",
+        "outcome": "unnecessary",
+        "severity_ratio": 0.9,
+        "local_reasoning": "Severe failure of epistemic humility. The agent fetched [Patient_Records] when it was explicitly provided in query dependencies with exact ID match. This represents maximally obvious redundancy - the agent did not check what data it already possessed. Very high severity (0.9) as there is no ambiguity in this error."
+      },
+      {
+        "metric": "M7",
+        "outcome": "correct",
+        "severity_ratio": null,
+        "local_reasoning": "Instruction follows required pattern correctly for a FETCH node: action specified (fetch patient records), source identified (medical database), output properly declared (store as [Patient_Records]). Clear and unambiguous for executor, even though the fetch action itself is unnecessary."
+      }
+    ]
+  }
+]
+
+[
+  {
+    "task_id": "[Task_Expand_Mapping]",
+    "metric_scores": [
+      {
+        "metric": "M1",
+        "outcome": "correct",
+        "severity_ratio": null,
+        "local_reasoning": "EXPAND is the correct type for delegating a 4-step spatial mapping algorithm to a child sub-graph. This is multi-step cognitive work requiring chained transformations, not a single atomic operation (COMPUTE), not structural volume breakdown (DECOMPOSE), not external data retrieval (FETCH)."
+      },
+      {
+        "metric": "M2",
+        "outcome": "correct",
+        "severity_ratio": null,
+        "local_reasoning": "EXPAND is correctly chosen over DECOMPOSE. The complexity is epistemic/cognitive (4-step algorithm requiring reasoning) rather than structural (volume or batch processing). The input data is small (2 records), so volume is not the issue. The boundary judgment is correct."
+      },
+      {
+        "metric": "M5",
+        "outcome": "correct",
+        "severity_ratio": null,
+        "local_reasoning": "Agent correctly identified an epistemic gap (complex multi-step algorithm) requiring delegation to a child sub-graph. It correctly depends on [Cleaned_Telemetry] already present in the graph without redundant fetching. No hallucination of missing data or unnecessary external retrieval."
+      },
+      {
+        "metric": "M6",
+        "outcome": "correct",
+        "severity_ratio": null,
+        "local_reasoning": "Agent correctly assessed that a 4-step spatial mapping algorithm exceeds the cognitive capacity for a single atomic COMPUTE operation. Multiple chained transformations require EXPAND delegation. The judgment appropriately recognizes algorithmic complexity even with small data volume."
+      },
+      {
+        "metric": "M7",
+        "outcome": "correct",
+        "severity_ratio": null,
+        "local_reasoning": "Instruction follows the required pattern completely: Action ('Run the 4-step spatial mapping algorithm') + Input ('on [Cleaned_Telemetry]') + Output ('store as [Final_Spatial_Map]'). All elements are present with proper bracketed IDs. Executor has clear, unambiguous direction."
+      }
+    ]
+  }
+]
+

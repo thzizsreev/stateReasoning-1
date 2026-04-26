@@ -36,10 +36,10 @@ from judge_schemas import (
 # ============================================================================
 
 # Final weighted sum weights
-W_STRUCTURAL = 0.30
-W_TASK       = 0.40
-W_SEMANTIC   = 0.20
-W_COVERAGE   = 0.10
+W_STRUCTURAL = 0.20  # namespace violations caught but not primary signal
+W_TASK       = 0.35  # per-task cognitive capability measurement
+W_SEMANTIC   = 0.35  # semantic consistency + epistemic humility (primary)
+W_COVERAGE   = 0.10  # context coverage
 
 # Layer 2 importance weights
 IMPORTANCE = {
@@ -55,9 +55,9 @@ POWER_ALPHA = 1.5
 RAW_MIN = -1.5
 RAW_MAX = +1.0
 
-# Semantic weights
-W_S1 = 0.55
-W_S2 = 0.45
+# Semantic weights — S2 is primary semantic signal
+W_S1 = 0.30  # namespace integrity — narrow, specific
+W_S2 = 0.70  # semantic inheritance continuity — primary
 
 
 # ============================================================================
@@ -234,16 +234,6 @@ def assemble_score(
     active_types = list(type_scores_full.keys())
     weights = power_norm_weights(active_types)
 
-    # Force every entry into the canonical PerTaskOutput model (from judge_schemas).
-    # This avoids failures when test code constructs a same-shaped model from a different import path.
-    per_task_detail: list[PerTaskOutput] = []
-    for t in (per_task_outputs or []):
-        if isinstance(t, PerTaskOutput):
-            per_task_detail.append(t)
-            continue
-        payload = t.model_dump() if hasattr(t, "model_dump") else t
-        per_task_detail.append(PerTaskOutput.model_validate(payload))
-
     return ScoreBreakdown(
         structural_score=round(structural_result.structural_score, 4),
         per_task_score=round(per_task_score, 4),
@@ -251,7 +241,7 @@ def assemble_score(
         coverage_score=round(coverage_score, 4),
         raw_final=round(raw_final, 4),
         normalized_final=round(normalized_final, 4),
-        per_task_detail=per_task_detail,
+        per_task_detail=per_task_outputs,
         type_scores=TypeScores(**{
             t: round(v, 4) for t, v in type_scores_full.items()
         }),

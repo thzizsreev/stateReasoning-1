@@ -66,7 +66,7 @@ class GlobalReasoningOutput(BaseModel):
     global_reasoning: str
     overall_severity: float = Field(ge=0.0, le=1.0)
     required_but_missing_types: List[
-        Literal["FETCH", "COMPUTE", "DECOMPOSE", "EXPAND"]
+        Literal["FETCH", "COMPUTE", "DECOMPOSE", "EXPAND", "OUTPUT"]
     ] = Field(default_factory=list)
     coverage_ratio: float = Field(ge=0.0, le=1.0)
 

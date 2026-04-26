@@ -71,9 +71,9 @@ def configure_lm(backend: str = "openrouter", model: Optional[str] = None):
         lm = dspy.LM(
             model=f"openai/{model}",
             api_base=api_base,
-            api_key="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",
-            temperature=0.0,
-            max_tokens=2048,
+            api_key="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",
+            temperature=0.7,
+            max_tokens=3000,
         )
     elif backend == "ollama":
         #model = model or os.getenv("OLLAMA_MODEL", "mistral")

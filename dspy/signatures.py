@@ -317,7 +317,7 @@ class ExpanderTaskNode(BaseModel):
         ...,
         description="The bracketed ID of the task. Format: [Task_<verb>_<noun>]."
     )
-    task_type: Literal["FETCH", "EXPAND", "COMPUTE", "DECOMPOSE", "OUTPUT"] = Field(
+    task_type: Literal["FETCH", "EXPAND", "COMPUTE", "DECOMPOSE"] = Field(
         ...,
         description=(
             "The strict operational type. "
@@ -408,28 +408,7 @@ class ExpanderSignature(dspy.Signature):
     Never list an [ID] in dependencies that has not been declared as target_output by a prior task.
     Write: ORDER: [task order with dependency justification]
  
-    STEP 5 — OUTPUT JSON:
-    Produce the final JSON inside a fenced ```json block. Nothing after it.
-    reasoning field per node = your LOAD decision for that node in one sentence.
-    instruction field = Action + [InputIDs] + "store as [OutputID]".
-    description field = what this node produces and why it exists.
-    Final inheritor's description must name the container output ID.
- 
-    ```json
-    {
-      "extracted_tasks": [
-        {
-          "id": "[Task_verb_noun]",
-          "task_type": "FETCH | COMPUTE | DECOMPOSE | EXPAND | OUTPUT",
-          "reasoning": "One-sentence LOAD decision for this node.",
-          "dependencies": ["[BracketedID]"],
-          "instruction": "Action + [InputIDs] + store as [OutputID].",
-          "target_output": "[OutputID]",
-          "description": "What this node produces and why."
-        }
-      ]
-    }
-    ```
+    
     """
  
     explicit_target: str = dspy.InputField(

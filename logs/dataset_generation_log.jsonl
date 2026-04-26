@@ -1,0 +1,730 @@
+
+
+{
+  "ts": "2026-04-24T11:54:16.108879+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 62,
+    "domain": "software",
+    "blueprint_mode": "C1_FRACTAL_BRIDGE",
+    "explicit_target": {
+      "instruction": "Transform [Raw_Events] into normalized output",
+      "description": "We need each record validated against schema, enriched with metadata from lookup tables, deduplicated by composite key, then serialized to protobuf format. The [Raw_Events] contains 52 transaction objects.",
+      "dependencies": [
+        {
+          "id": "[Raw_Events]",
+          "content": "[{\"tx_id\":\"a1\",\"amt\":500},{\"tx_id\":\"a2\",\"amt\":320},{\"tx_id\":\"a3\",\"amt\":780},{\"tx_id\":\"a4\",\"amt\":210},{\"tx_id\":\"a5\",\"amt\":650},{\"tx_id\":\"a6\",\"amt\":430},{\"tx_id\":\"a7\",\"amt\":890},{\"tx_id\":\"a8\",\"amt\":120},{\"tx_id\":\"a9\",\"amt\":560},{\"tx_id\":\"a10\",\"amt\":340},{\"tx_id\":\"a11\",\"amt\":720},{\"tx_id\":\"a12\",\"amt\":480},{\"tx_id\":\"a13\",\"amt\":610},{\"tx_id\":\"a14\",\"amt\":290},{\"tx_id\":\"a15\",\"amt\":830},{\"tx_id\":\"a16\",\"amt\":150},{\"tx_id\":\"a17\",\"amt\":670},{\"tx_id\":\"a18\",\"amt\":410},{\"tx_id\":\"a19\",\"amt\":750},{\"tx_id\":\"a20\",\"amt\":520},{\"tx_id\":\"a21\",\"amt\":640},{\"tx_id\":\"a22\",\"amt\":380},{\"tx_id\":\"a23\",\"amt\":810},{\"tx_id\":\"a24\",\"amt\":230},{\"tx_id\":\"a25\",\"amt\":690},{\"tx_id\":\"a26\",\"amt\":460},{\"tx_id\":\"a27\",\"amt\":770},{\"tx_id\":\"a28\",\"amt\":310},{\"tx_id\":\"a29\",\"amt\":850},{\"tx_id\":\"a30\",\"amt\":190},{\"tx_id\":\"a31\",\"amt\":630},{\"tx_id\":\"a32\",\"amt\":420},{\"tx_id\":\"a33\",\"amt\":740},{\"tx_id\":\"a34\",\"amt\":280},{\"tx_id\":\"a35\",\"amt\":870},{\"tx_id\":\"a36\",\"amt\":160},{\"tx_id\":\"a37\",\"amt\":710},{\"tx_id\":\"a38\",\"amt\":490},{\"tx_id\":\"a39\",\"amt\":820},{\"tx_id\":\"a40\",\"amt\":250},{\"tx_id\":\"a41\",\"amt\":680},{\"tx_id\":\"a42\",\"amt\":440},{\"tx_id\":\"a43\",\"amt\":790},{\"tx_id\":\"a44\",\"amt\":330},{\"tx_id\":\"a45\",\"amt\":860},{\"tx_id\":\"a46\",\"amt\":180},{\"tx_id\":\"a47\",\"amt\":700},{\"tx_id\":\"a48\",\"amt\":510},{\"tx_id\":\"a49\",\"amt\":840},{\"tx_id\":\"a50\",\"amt\":270},{\"tx_id\":\"a51\",\"amt\":760},{\"tx_id\":\"a52\",\"amt\":450}]"
+        }
+      ]
+    }
+  },
+  "domain": "software",
+  "run_id": "92eec672dc614575b53018d80cff6212"
+}
+
+{
+  "ts": "2026-04-24T11:54:16.109487+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 63,
+    "domain": "law",
+    "blueprint_mode": "C6_ADVERSARIAL_NOISE",
+    "explicit_target": {
+      "instruction": "Analyze [Case_Precedents] for liability patterns",
+      "description": "Hey, run a 3-step analysis on the precedent data: (1) extract liability themes, (2) rank by citation frequency, (3) output as [Liability_Report]. Oh, and I uploaded [Server_Logs_10K] by accident—completely ignore those, don't touch them at all.",
+      "dependencies": [
+        {
+          "id": "[Case_Precedents]",
+          "content": "[{\"case_id\": \"TX-2019-04\", \"ruling\": \"negligence\"}, {\"case_id\": \"CA-2020-11\", \"ruling\": \"strict_liability\"}]"
+        }
+      ]
+    }
+  },
+  "domain": "law",
+  "run_id": "92eec672dc614575b53018d80cff6212"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.707975+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 0,
+    "domain": "biology",
+    "blueprint_mode": "C4_MID_STATE_FIDELITY",
+    "explicit_target": {
+      "instruction": "Process [Raw_Sequence_Data] into final output",
+      "description": "Hey, need you to validate the sequences, filter out any with quality scores below 30, then normalize the remaining reads. Critical: the final result MUST be saved exactly as [Validated_Genome_Set]. Don't rename it.",
+      "dependencies": [
+        {
+          "id": "[Raw_Sequence_Data]",
+          "content": "[{\"seq_id\": \"ACT001\", \"read\": \"ATCGATCG\", \"quality\": 28}, {\"seq_id\": \"ACT002\", \"read\": \"GCTAGCTA\", \"quality\": 35}]"
+        }
+      ]
+    }
+  },
+  "domain": "biology",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.709930+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 1,
+    "domain": "software",
+    "blueprint_mode": "C4_MID_STATE_FIDELITY",
+    "explicit_target": {
+      "instruction": "Process [Raw_Logs] into audit format",
+      "description": "Hey, take the [Raw_Logs] dependency, strip nulls, normalize timestamps to UTC, then aggregate by user_id. Critical: output MUST be named exactly [Final_Audit_Matrix] for downstream compliance checks.",
+      "dependencies": [
+        {
+          "id": "[Raw_Logs]",
+          "content": "[{\"ts\":1609459200,\"user\":\"u42\",\"action\":\"login\"},{\"ts\":null,\"user\":\"u13\",\"action\":\"logout\"}]"
+        }
+      ]
+    }
+  },
+  "domain": "software",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.711245+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 2,
+    "domain": "history",
+    "blueprint_mode": "C4_MID_STATE_FIDELITY",
+    "explicit_target": {
+      "instruction": "Process [Raw_Census_Records] into final output",
+      "description": "Hey, need you to validate the population counts, cross-reference against [Regional_Boundaries], then aggregate by decade. Critical: output MUST be saved as [Historical_Demographics_Report] exactly—don't rename it.",
+      "dependencies": [
+        {
+          "id": "[Raw_Census_Records]",
+          "content": "[{\"year\": 1890, \"region\": \"Northeast\", \"pop\": 12500}, {\"year\": 1900, \"region\": \"Midwest\", \"pop\": 8300}]"
+        },
+        {
+          "id": "[Regional_Boundaries]",
+          "content": "[{\"region\": \"Northeast\", \"states\": [\"NY\", \"MA\"]}, {\"region\": \"Midwest\", \"states\": [\"IL\", \"OH\"]}]"
+        }
+      ]
+    }
+  },
+  "domain": "history",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.713763+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 3,
+    "domain": "literature",
+    "blueprint_mode": "C1_C2_COGNITIVE_CHAIN",
+    "explicit_target": {
+      "instruction": "Derive thematic evolution across [Novel_Chapters]",
+      "description": "Hey, can you trace how the protagonist's moral compass shifts chapter-by-chapter? Start by extracting key dialogue, then classify tone (optimistic/cynical), map tone changes to plot events, calculate sentiment deltas, and finally rank chapters by transformation intensity. Output as [Theme_Report].",
+      "dependencies": [
+        {
+          "id": "[Novel_Chapters]",
+          "content": "[{\"ch\":1,\"text\":\"He believed in justice\"},{\"ch\":2,\"text\":\"Doubt crept in\"},{\"ch\":3,\"text\":\"Betrayal hardened him\"},{\"ch\":4,\"text\":\"He became ruthless\"}]"
+        }
+      ]
+    }
+  },
+  "domain": "literature",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.715105+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 4,
+    "domain": "economics",
+    "blueprint_mode": "EPISTEMIC_VOID_FETCH",
+    "explicit_target": {
+      "instruction": "Execute elasticity analysis on regional trade flows",
+      "description": "Run the standard three-step procedure: price elasticity calculation, cross-border substitution effects, and welfare impact estimation. Use the scripts in [Analysis_Pipeline]. Target output should be named [Elasticity_Report]. The regional trade dataset covers Q1-Q4 2023 bilateral flows.",
+      "dependencies": [
+        {
+          "id": "[Analysis_Pipeline]",
+          "content": "def calc_elasticity(data): return data['price_change'] / data['quantity_change']\ndef substitution_effect(data): return cross_product(data['imports'], data['exports'])\ndef welfare_impact(data): return sum(data['consumer_surplus'])"
+        }
+      ]
+    }
+  },
+  "domain": "economics",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.718384+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 5,
+    "domain": "literature",
+    "blueprint_mode": "C6_ADVERSARIAL_NOISE",
+    "explicit_target": {
+      "instruction": "Analyze [Novel_Chapters] for narrative structure",
+      "description": "Hey, I need a 3-step structural analysis on [Novel_Chapters]: identify exposition phases, map character arc transitions, and classify climax patterns. Oh, I also have [Server_Logs_10K] from our web traffic but IGNORE THAT COMPLETELY—it's unrelated noise. Just focus on the novel data.",
+      "dependencies": [
+        {
+          "id": "[Novel_Chapters]",
+          "content": "[{\"ch\": 1, \"text\": \"Once upon...\"}, {\"ch\": 2, \"text\": \"The hero...\"}]"
+        }
+      ]
+    }
+  },
+  "domain": "literature",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.720060+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 6,
+    "domain": "physics",
+    "blueprint_mode": "STANDARD_ATOMIC_COMPUTE",
+    "explicit_target": {
+      "instruction": "Calculate the total momentum from [Particle_Data]",
+      "description": "Compute the vector sum of momentum values for all particles in the provided dataset.",
+      "dependencies": [
+        {
+          "id": "[Particle_Data]",
+          "content": "[{\"mass\": 2.5, \"velocity\": 3.0}, {\"mass\": 1.2, \"velocity\": 4.5}, {\"mass\": 0.8, \"velocity\": 2.0}]"
+        }
+      ]
+    }
+  },
+  "domain": "physics",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.721665+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 7,
+    "domain": "linguistics",
+    "blueprint_mode": "C6_ADVERSARIAL_NOISE",
+    "explicit_target": {
+      "instruction": "Perform phonetic frequency analysis on [Corpus_Sample]",
+      "description": "Hey, can you run the full phonetic frequency breakdown on the corpus sample? Three-step process: extract phonemes, calculate distribution stats, then generate the comparative chart. Oh, and I uploaded 10,000 raw interview transcripts to the shared drive yesterday, but completely ignore those—they're unprocessed junk. Just use the cleaned corpus.",
+      "dependencies": [
+        {
+          "id": "[Corpus_Sample]",
+          "content": "[{\"word\":\"hello\",\"ipa\":\"/həˈloʊ/\"},{\"word\":\"world\",\"ipa\":\"/wɜrld/\"}]"
+        }
+      ]
+    }
+  },
+  "domain": "linguistics",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.722938+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 8,
+    "domain": "biology",
+    "blueprint_mode": "C4_MID_STATE_FIDELITY",
+    "explicit_target": {
+      "instruction": "Process [Raw_Sequence_Data] into annotated output",
+      "description": "Hey, need you to take the sequencing results, filter out low-quality reads (Q<30), align to reference genome hg38, then call variants. Critical: final output must be saved exactly as [Annotated_Variants]. Don't rename it.",
+      "dependencies": [
+        {
+          "id": "[Raw_Sequence_Data]",
+          "content": "[{\"read_id\":\"seq_001\",\"quality\":28,\"sequence\":\"ATCG\"},{\"read_id\":\"seq_002\",\"quality\":35,\"sequence\":\"GCTA\"}]"
+        }
+      ]
+    }
+  },
+  "domain": "biology",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.724512+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 9,
+    "domain": "economics",
+    "blueprint_mode": "C4_MID_STATE_FIDELITY",
+    "explicit_target": {
+      "instruction": "Process [Q3_Revenue_Data] into final output",
+      "description": "Hey, take the Q3 revenue data and do three things: (1) normalize all currency to USD, (2) calculate quarterly growth rates, (3) flag anomalies above 15% deviation. Critical: save the result exactly as [Final_Audit_Matrix] for compliance review.",
+      "dependencies": [
+        {
+          "id": "[Q3_Revenue_Data]",
+          "content": "[{\"region\":\"EMEA\",\"revenue\":45000,\"currency\":\"EUR\"},{\"region\":\"APAC\",\"revenue\":38000,\"currency\":\"JPY\"}]"
+        }
+      ]
+    }
+  },
+  "domain": "economics",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.726269+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 10,
+    "domain": "law",
+    "blueprint_mode": "STANDARD_ATOMIC_COMPUTE",
+    "explicit_target": {
+      "instruction": "Calculate total billable hours from [Timesheet_Entries]",
+      "description": "Sum the hours column across all entries to determine the invoice amount for client billing.",
+      "dependencies": [
+        {
+          "id": "[Timesheet_Entries]",
+          "content": "[{\"date\":\"2024-01-15\",\"hours\":3.5},{\"date\":\"2024-01-16\",\"hours\":2.0},{\"date\":\"2024-01-17\",\"hours\":4.5}]"
+        }
+      ]
+    }
+  },
+  "domain": "law",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.727458+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 11,
+    "domain": "physics",
+    "blueprint_mode": "C4_MID_STATE_FIDELITY",
+    "explicit_target": {
+      "instruction": "Process [Raw_Spectrometer_Data] into calibrated format",
+      "description": "Lab tech needs wavelength data normalized, then apply quantum efficiency corrections, finally convert to photon counts. Critical: output must be saved exactly as [Calibrated_Photon_Matrix] for downstream interferometry analysis.",
+      "dependencies": [
+        {
+          "id": "[Raw_Spectrometer_Data]",
+          "content": "[{\"wavelength_nm\": 450, \"intensity\": 0.82}, {\"wavelength_nm\": 532, \"intensity\": 0.91}]"
+        }
+      ]
+    }
+  },
+  "domain": "physics",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.730052+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 12,
+    "domain": "medicine",
+    "blueprint_mode": "C4_MID_STATE_FIDELITY",
+    "explicit_target": {
+      "instruction": "Process [Patient_Vitals_Stream] into final output",
+      "description": "We need the vitals normalized, then filtered for anomalies (threshold >95th percentile), then aggregated by patient_id. Critical: output must be saved exactly as [Clinical_Risk_Matrix] for downstream audit.",
+      "dependencies": [
+        {
+          "id": "[Patient_Vitals_Stream]",
+          "content": "[{\"patient_id\":\"P001\",\"hr\":88,\"bp\":\"120/80\"},{\"patient_id\":\"P002\",\"hr\":102,\"bp\":\"145/95\"}]"
+        }
+      ]
+    }
+  },
+  "domain": "medicine",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.731316+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 13,
+    "domain": "biology",
+    "blueprint_mode": "EPISTEMIC_VOID_FETCH",
+    "explicit_target": {
+      "instruction": "Execute full phylogenetic analysis on primate mitochondrial sequences",
+      "description": "Run alignment validation, construct maximum likelihood tree, then calculate bootstrap support values. Use the scripts in [Analysis_Pipeline]. Target output: [Phylo_Results]. Dataset should be the standard primate mtDNA collection.",
+      "dependencies": [
+        {
+          "id": "[Analysis_Pipeline]",
+          "content": "def align(): return mafft_run()\ndef build_tree(): return raxml_exec()\ndef bootstrap(): return compute_support()"
+        }
+      ]
+    }
+  },
+  "domain": "biology",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:11:26.733616+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 14,
+    "domain": "physics",
+    "blueprint_mode": "C6_ADVERSARIAL_NOISE",
+    "explicit_target": {
+      "instruction": "Analyze thermal conductivity trends in [Material_Dataset]",
+      "description": "Run a three-step thermal analysis: (1) calculate mean conductivity, (2) identify outliers, (3) generate summary stats. Output must be saved as [Thermal_Report]. Oh, and I also have [Server_Logs] with 10,000 raw entries from last week's experiments—completely ignore those, they're irrelevant noise for this task.",
+      "dependencies": [
+        {
+          "id": "[Material_Dataset]",
+          "content": "[{\"material\": \"copper\", \"conductivity\": 401}, {\"material\": \"aluminum\", \"conductivity\": 237}, {\"material\": \"steel\", \"conductivity\": 50}]"
+        }
+      ]
+    }
+  },
+  "domain": "physics",
+  "run_id": "7ab9ed36103741b7af2bc03f949f4923"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.503172+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 0,
+    "domain": "literature",
+    "blueprint_mode": "C4_MID_STATE_FIDELITY",
+    "explicit_target": {
+      "instruction": "Process [Raw_Manuscript_Text] into structured output",
+      "description": "Hey, take the raw manuscript data and do three things: (1) extract all character dialogue, (2) tag speaker identities, (3) compile frequency metrics. Critical: save the final result exactly as [Dialogue_Analysis_Report]. Don't rename it.",
+      "dependencies": [
+        {
+          "id": "[Raw_Manuscript_Text]",
+          "content": "[{\"page\": 1, \"text\": \"'Hello,' said Anna.\"}, {\"page\": 2, \"text\": \"'Goodbye,' replied Tom.\"}]"
+        }
+      ]
+    }
+  },
+  "domain": "literature",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.503889+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 1,
+    "domain": "history",
+    "blueprint_mode": "HALTING_DEADLOCK_PREVENTION",
+    "explicit_target": {
+      "instruction": "Upload [Archive_Manifest] to remote repository",
+      "description": "We need to push the digitized archive manifest to the preservation server for long-term storage. The usual endpoint was decommissioned last month and IT hasn't provided replacement credentials yet. The backup API keys were revoked during the security audit.",
+      "dependencies": [
+        {
+          "id": "[Archive_Manifest]",
+          "content": "[{\"doc_id\":\"MS_1847_03\",\"title\":\"Treaty Draft\",\"year\":1847}]"
+        }
+      ]
+    }
+  },
+  "domain": "history",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.504910+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 2,
+    "domain": "physics",
+    "blueprint_mode": "STANDARD_ATOMIC_COMPUTE",
+    "explicit_target": {
+      "instruction": "Calculate net force on [Object_Mass]",
+      "description": "Determine the resultant force vector by summing all applied forces acting on the object.",
+      "dependencies": [
+        {
+          "id": "[Object_Mass]",
+          "content": "{\"mass_kg\": 5.2, \"forces_N\": [[10, 0], [-3, 4], [0, -2]]}"
+        }
+      ]
+    }
+  },
+  "domain": "physics",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.505506+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 3,
+    "domain": "law",
+    "blueprint_mode": "C4_MID_STATE_FIDELITY",
+    "explicit_target": {
+      "instruction": "Process [Case_Docket] into compliance format",
+      "description": "Hey, take the docket entries and (1) filter for filings post-2020, (2) extract party names and case numbers, (3) format as tabular structure. Critical: output must be saved exactly as [Final_Audit_Matrix] for downstream review.",
+      "dependencies": [
+        {
+          "id": "[Case_Docket]",
+          "content": "[{\"filing_date\": \"2019-03-12\", \"party\": \"Smith v. State\", \"case_num\": \"CV-1823\"}, {\"filing_date\": \"2021-07-08\", \"party\": \"Jones LLC v. County\", \"case_num\": \"CV-2104\"}]"
+        }
+      ]
+    }
+  },
+  "domain": "law",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.506030+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 4,
+    "domain": "software",
+    "blueprint_mode": "C1_FRACTAL_BRIDGE",
+    "explicit_target": {
+      "instruction": "Transform [Raw_Events] into validated reports",
+      "description": "Need each event sanitized, enriched with [Metadata_Schema], validated against [Rule_Engine], then formatted as JSON. Dataset has 52 events. Output as [Processed_Reports].",
+      "dependencies": [
+        {
+          "id": "[Raw_Events]",
+          "content": "[{\"id\":1,\"type\":\"login\"},{\"id\":2,\"type\":\"error\"},...,{\"id\":52,\"type\":\"logout\"}]"
+        },
+        {
+          "id": "[Metadata_Schema]",
+          "content": "{\"fields\":[\"timestamp\",\"user_id\",\"session\"]}"
+        },
+        {
+          "id": "[Rule_Engine]",
+          "content": "def validate(e): return e['type'] in ['login','error','logout']"
+        }
+      ]
+    }
+  },
+  "domain": "software",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.506548+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 5,
+    "domain": "mathematics",
+    "blueprint_mode": "STANDARD_ATOMIC_COMPUTE",
+    "explicit_target": {
+      "instruction": "Calculate the mean of [Dataset_Values]",
+      "description": "Compute the arithmetic average of the provided numerical dataset.",
+      "dependencies": [
+        {
+          "id": "[Dataset_Values]",
+          "content": "[12, 18, 24, 30]"
+        }
+      ]
+    }
+  },
+  "domain": "mathematics",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.507474+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 6,
+    "domain": "economics",
+    "blueprint_mode": "C4_MID_STATE_FIDELITY",
+    "explicit_target": {
+      "instruction": "Transform [Raw_GDP_Series] into quarterly growth rates",
+      "description": "Pipeline handoff from ingestion phase. Need you to: (1) normalize the raw series, (2) calculate period-over-period deltas, (3) annualize the rates. Critical: output must be saved exactly as [Quarterly_Growth_Rates] for downstream econometric model.",
+      "dependencies": [
+        {
+          "id": "[Raw_GDP_Series]",
+          "content": "[{\"quarter\":\"Q1_2023\",\"gdp\":21400},{\"quarter\":\"Q2_2023\",\"gdp\":21580}]"
+        }
+      ]
+    }
+  },
+  "domain": "economics",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.508403+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 7,
+    "domain": "history",
+    "blueprint_mode": "STANDARD_ATOMIC_COMPUTE",
+    "explicit_target": {
+      "instruction": "Calculate total casualties from [Battle_Records]",
+      "description": "Sum the casualty figures across all recorded engagements to determine the aggregate loss count for the campaign period.",
+      "dependencies": [
+        {
+          "id": "[Battle_Records]",
+          "content": "[{\"battle\": \"Gettysburg\", \"casualties\": 51000}, {\"battle\": \"Antietam\", \"casualties\": 22717}, {\"battle\": \"Shiloh\", \"casualties\": 23746}]"
+        }
+      ]
+    }
+  },
+  "domain": "history",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.508963+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 8,
+    "domain": "linguistics",
+    "blueprint_mode": "EPISTEMIC_VOID_FETCH",
+    "explicit_target": {
+      "instruction": "Execute phoneme frequency analysis on Austronesian corpus",
+      "description": "Run the standard three-stage pipeline: tokenization, frequency distribution, and comparative ranking against Proto-Malayo-Polynesian reconstructions. Use the scripts in [Tokenizer_Module] and [Freq_Counter]. Output must be named [Phoneme_Report].",
+      "dependencies": [
+        {
+          "id": "[Tokenizer_Module]",
+          "content": "def tokenize(text): return text.split()"
+        },
+        {
+          "id": "[Freq_Counter]",
+          "content": "def count(tokens): return {t: tokens.count(t) for t in set(tokens)}"
+        }
+      ]
+    }
+  },
+  "domain": "linguistics",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.509491+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 9,
+    "domain": "history",
+    "blueprint_mode": "C1_FRACTAL_BRIDGE",
+    "explicit_target": {
+      "instruction": "Process [Historical_Records] through validation pipeline",
+      "description": "We need each of the 52 census entries validated (check authenticity, cross-reference with [Archive_Index], normalize dates to ISO format, then flag anomalies). Output as [Validated_Census].",
+      "dependencies": [
+        {
+          "id": "[Historical_Records]",
+          "content": "[{\"id\":1,\"year\":1847,\"pop\":2341},{\"id\":2,\"year\":1848,\"pop\":2389},...{\"id\":52,\"year\":1898,\"pop\":8923}]"
+        },
+        {
+          "id": "[Archive_Index]",
+          "content": "[{\"entry\":\"1847_census\",\"verified\":true},{\"entry\":\"1848_census\",\"verified\":false}]"
+        }
+      ]
+    }
+  },
+  "domain": "history",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.510251+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 10,
+    "domain": "history",
+    "blueprint_mode": "C1_FRACTAL_BRIDGE",
+    "explicit_target": {
+      "instruction": "Process all entries from [Historical_Census_Records]",
+      "description": "We need each of the 52 census entries validated for duplicates, cross-referenced against [Regional_Maps], normalized to ISO date format, then tagged with economic class codes. Output as [Processed_Census].",
+      "dependencies": [
+        {
+          "id": "[Historical_Census_Records]",
+          "content": "[{\"id\":1,\"name\":\"John Smith\",\"year\":1840},{\"id\":2,\"name\":\"Mary Jones\",\"year\":1841},...(50 more entries)]"
+        },
+        {
+          "id": "[Regional_Maps]",
+          "content": "[{\"region\":\"Northeast\",\"code\":\"NE\"},{\"region\":\"South\",\"code\":\"SO\"}]"
+        }
+      ]
+    }
+  },
+  "domain": "history",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.512234+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 11,
+    "domain": "physics",
+    "blueprint_mode": "C4_MID_STATE_FIDELITY",
+    "explicit_target": {
+      "instruction": "Process [Raw_Spectrometer_Output] into calibrated form",
+      "description": "Pipeline handoff from acquisition stage. Apply wavelength correction, normalize intensity values to reference standard, then apply baseline subtraction. Final output MUST be saved exactly as [Calibrated_Spectrum_Data] for downstream fitting module.",
+      "dependencies": [
+        {
+          "id": "[Raw_Spectrometer_Output]",
+          "content": "[{\"wavelength\": 450.2, \"intensity\": 0.847}, {\"wavelength\": 450.4, \"intensity\": 0.891}]"
+        }
+      ]
+    }
+  },
+  "domain": "physics",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.512869+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 12,
+    "domain": "biology",
+    "blueprint_mode": "C6_ADVERSARIAL_NOISE",
+    "explicit_target": {
+      "instruction": "Analyze [Gene_Expression_Data]",
+      "description": "Hey, run the full differential expression pipeline on the gene data—fold change, p-values, then pathway enrichment. Oh, and I dumped [10k_Raw_Metabolite_Logs] in the shared drive but totally ignore those, they're junk from last quarter's failed experiment. Just focus on the gene stuff.",
+      "dependencies": [
+        {
+          "id": "[Gene_Expression_Data]",
+          "content": "[{\"gene_id\":\"BRCA1\",\"sample_A\":12.3,\"sample_B\":8.7},{\"gene_id\":\"TP53\",\"sample_A\":15.1,\"sample_B\":14.9}]"
+        }
+      ]
+    }
+  },
+  "domain": "biology",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.513507+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 13,
+    "domain": "biology",
+    "blueprint_mode": "C1_FRACTAL_BRIDGE",
+    "explicit_target": {
+      "instruction": "Process all samples in [Gene_Dataset]",
+      "description": "Run full pipeline: normalize expression values, filter by p-value < 0.05, apply log2 fold-change, then annotate with GO terms. Dataset has 52 samples.",
+      "dependencies": [
+        {
+          "id": "[Gene_Dataset]",
+          "content": "[{\"sample_id\":\"S001\",\"expr\":12.4,\"p\":0.03},{\"sample_id\":\"S002\",\"expr\":8.1,\"p\":0.07},...,{\"sample_id\":\"S052\",\"expr\":15.2,\"p\":0.01}]"
+        }
+      ]
+    }
+  },
+  "domain": "biology",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+
+{
+  "ts": "2026-04-24T13:14:45.514048+00:00",
+  "stage": "dataset_example",
+  "payload": {
+    "index": 14,
+    "domain": "linguistics",
+    "blueprint_mode": "STANDARD_ATOMIC_COMPUTE",
+    "explicit_target": {
+      "instruction": "Calculate mean word length from [Lexeme_Set]",
+      "description": "Determine the average character count across all lexemes in the provided dataset for morphological analysis.",
+      "dependencies": [
+        {
+          "id": "[Lexeme_Set]",
+          "content": "[{\"word\": \"syntax\", \"length\": 6}, {\"word\": \"morpheme\", \"length\": 8}, {\"word\": \"phoneme\", \"length\": 7}]"
+        }
+      ]
+    }
+  },
+  "domain": "linguistics",
+  "run_id": "df633f78f5ad4c548ef06fef6a81df17"
+}
+

@@ -1,0 +1,108 @@
+{
+  "reason": "below_threshold",
+  "threshold": 0.4,
+  "score": 0.3869,
+  "domain": "linguistics",
+  "blueprint_mode": "EPISTEMIC_VOID_FETCH",
+  "query": {
+    "instruction": "Execute phoneme frequency analysis on Austronesian corpus",
+    "description": "Run the standard three-stage pipeline: tokenization, frequency distribution, and comparative ranking against Proto-Malayo-Polynesian reconstructions. Use the scripts in [Tokenizer_Module] and [Freq_Counter]. Output must be named [Phoneme_Report].",
+    "dependencies": [
+      {
+        "id": "[Tokenizer_Module]",
+        "content": "def tokenize(text): return text.split()"
+      },
+      {
+        "id": "[Freq_Counter]",
+        "content": "def count(tokens): return {t: tokens.count(t) for t in set(tokens)}"
+      }
+    ]
+  },
+  "predicted_tasks": [
+    {
+      "id": "[Freq_Analyzer]",
+      "task_type": "COMPUTE",
+      "instruction": "Execute [Tokenizer_Module] and [Freq_Counter], store as [Phoneme_Report]",
+      "dependencies": [],
+      "target_output": "[Phoneme_Report]",
+      "description": "Tokenize Austronesian corpus, count frequencies, and output report",
+      "reasoning": "Single 1-to-1 transformation: tokenization + frequency distribution"
+    }
+  ],
+  "score_breakdown": {
+    "structural_score": 1.0,
+    "per_task_score": -1.4371,
+    "semantic_score": -0.485,
+    "coverage_score": -0.6,
+    "raw_final": -0.5327,
+    "normalized_final": 0.3869,
+    "per_task_detail": [
+      {
+        "task_id": "[Freq_Analyzer]",
+        "metric_scores": [
+          {
+            "metric": "M1",
+            "outcome": "hallucinated",
+            "severity_ratio": 0.85,
+            "local_reasoning": "METRIC 1 STEP A: The query demands a three-stage pipeline (tokenization, frequency distribution, comparative ranking) on an Austronesian corpus. The task description mentions tokenizing and counting but omits the comparative ranking stage entirely. The dependencies list is empty, yet the instruction references [Tokenizer_Module] and [Freq_Counter] as if they were dependencies.\n\nMETRIC 1 STEP B: COMPUTE requires atomic logic on already-present, already-processed values. This task has multiple critical violations: (1) The Austronesian corpus is external data not present in the graph, requiring FETCH first. (2) The task bundles tokenization + frequency counting + implicit corpus processing into one operation, violating the single 1-to-1 transformation rule. (3) The empty dependencies list means the referenced modules aren't actually available. (4) Raw corpus data would need DECOMPOSE or EXPAND before COMPUTE could process it. The task type creates a structural impossibility.\n\nMETRIC 1 STEP C: Against overall_severity of 0.75, this represents a severe structural failure. The task cannot execute as specified because it attempts to compute on non-existent data with non-existent dependencies while bundling multiple operations. This is not a recoverable type mismatch but a fundamental misunderstanding of the data flow requirements.\n\nMETRIC 1 STEP D: outcome=hallucinated, severity_ratio=0.85"
+          },
+          {
+            "metric": "M6",
+            "outcome": "hallucinated",
+            "severity_ratio": 0.9,
+            "local_reasoning": "METRIC 6 STEP A: The query explicitly describes a 'three-stage pipeline' and requires 'comparative ranking against Proto-Malayo-Polynesian reconstructions' — abstract linguistic analysis requiring domain knowledge. The task reasoning claims this is a 'Single 1-to-1 transformation: tokenization + frequency distribution,' which already contradicts itself by listing two operations.\n\nMETRIC 6 STEP B: This represents catastrophic cognitive load misjudgment. The agent collapsed: (1) corpus acquisition, (2) tokenization, (3) frequency counting, (4) comparative linguistic analysis against reconstructed proto-language forms, and (5) report generation into a single COMPUTE node. The comparative ranking alone requires epistemic reasoning beyond 8B model capacity — it's abstract goal-oriented work requiring EXPAND. The multi-stage structural pipeline requires DECOMPOSE. The agent failed to recognize that bundling 4-5 distinct operations with varying cognitive demands far exceeds atomic computation limits. The reasoning explicitly contradicts itself by claiming 'single 1-to-1' while listing multiple operations.\n\nMETRIC 6 STEP C: Against overall_severity 0.75, this is maximally severe. The agent demonstrated complete failure to assess its own processing limits, treating complex multi-stage linguistic analysis as if it were a simple function call. This is not a boundary case but a fundamental misunderstanding of cognitive capacity.\n\nMETRIC 6 STEP D: outcome=hallucinated, severity_ratio=0.9"
+          },
+          {
+            "metric": "M7",
+            "outcome": "wrong",
+            "severity_ratio": 0.6,
+            "local_reasoning": "METRIC 7 STEP A: The instruction reads 'Execute [Tokenizer_Module] and [Freq_Counter], store as [Phoneme_Report].' This references two modules and declares an output. The description adds 'Tokenize Austronesian corpus, count frequencies, and output report.'\n\nMETRIC 7 STEP B: The instruction has structural clarity issues but isn't completely opaque. An executor would understand the general intent (use these modules, produce this output), but critical information is missing: (1) Where is the Austronesian corpus input? (2) The dependencies list is empty, so how would the executor access the referenced modules? (3) The comparative ranking requirement from the query is absent. The instruction follows the Action + Input + Output pattern loosely, but the missing corpus input and empty dependencies create ambiguity about what data to process.\n\nMETRIC 7 STEP C: Against overall_severity 0.75, this is moderate severity. An executor could infer the general workflow but would be blocked by missing inputs. This is recoverable with clarification, unlike the structural impossibilities in M1 and M6.\n\nMETRIC 7 STEP D: outcome=wrong, severity_ratio=0.6"
+          }
+        ]
+      }
+    ],
+    "type_scores": {
+      "FETCH": -1.5,
+      "COMPUTE": -0.6833,
+      "DECOMPOSE": -1.5,
+      "EXPAND": -1.5
+    },
+    "layer2_weights": {
+      "FETCH": 0.2179,
+      "COMPUTE": 0.0771,
+      "DECOMPOSE": 0.3046,
+      "EXPAND": 0.4004
+    }
+  }
+}
+
+{
+  "reason": "pipeline_returned_none",
+  "threshold": 0.4,
+  "domain": "history",
+  "blueprint_mode": "HALTING_DEADLOCK_PREVENTION",
+  "query": {
+    "instruction": "Upload [Archive_Manifest] to remote repository",
+    "description": "We need to push the digitized archive manifest to the preservation server for long-term storage. The usual endpoint was decommissioned last month and IT hasn't provided replacement credentials yet. The backup API keys were revoked during the security audit.",
+    "dependencies": [
+      {
+        "id": "[Archive_Manifest]",
+        "content": "[{\"doc_id\":\"MS_1847_03\",\"title\":\"Treaty Draft\",\"year\":1847}]"
+      }
+    ]
+  },
+  "predicted_tasks": [
+    {
+      "id": "[Upload_Archive_Manifest]",
+      "task_type": "EXPAND",
+      "instruction": "Upload [Archive_Manifest] to remote repository",
+      "dependencies": [
+        "[Archive_Manifest]"
+      ],
+      "target_output": "[Archive_Manifest]",
+      "description": "Upload digitized archive manifest to preservation server for long-term storage",
+      "reasoning": "Upload archive manifest to remote repository, requires manual intervention due to missing credentials"
+    }
+  ]
+}
+

@@ -1,5 +1,7 @@
-from modules import SemanticRouter, DecomposerAgent, ComputeAgent, DataExtractorAgent, ExpanderAgent
+from modules import SemanticRouter, DecomposerAgent, ComputeAgent, DataExtractorAgent
 import dspy
+import litellm
+import os
 from config import configure_lm
 
 # In your main engine runtime
@@ -32,23 +34,32 @@ The Scenario: A marketing director types a single, highly abstract goal into the
 User Query: > "Generate a personalized AI welcome video for our new enterprise client, Acme Corp, and email it to their lead.
 """
 if __name__ == "__main__":
+    #os.environ["OPENROUTER_API_KEY"] = "your_key_here"
+
+    response = litellm.completion(
+        model="openrouter/meta-llama/llama-3.1-8b-instruct",
+        messages=[{"role": "user", "content": "Say hello."}],
+        api_base="https://openrouter.ai/api/v1",
+        api_key="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",
+    )
+    print(response)
     # 1. WAKE UP THE ENGINE
-    print("Booting up Language Model...")
-    # configure_lm(backend="openrouter") # You MUST have an active LM to run inference!
-    configure_lm(backend="openrouter")
-    # 2. INSTANTIATE THE BLANK ARCHITECTURE
-    print("Initializing Semantic Router architecture...")
-    # router = SemanticRouter() 
-    # decomposer = DecomposerAgent()
-    # compute = ComputeAgent() 
-    #extractor = DataExtractorAgent()
-    expander = ExpanderAgent()
-    print(f"\nTesting Query: {query_1}\n")
-    output = expander(explicit_target=query_1)
-    print(output.model_dump_json(indent=4))
-    for task in output.extracted_tasks:
-        for k, v in task.model_dump().items():
-            print(f"{k}: {v}")
+    # print("Booting up Language Model...")
+    # # configure_lm(backend="openrouter") # You MUST have an active LM to run inference!
+    # configure_lm(backend="openrouter")
+    # # 2. INSTANTIATE THE BLANK ARCHITECTURE
+    # print("Initializing Semantic Router architecture...")
+    # # router = SemanticRouter() 
+    # # decomposer = DecomposerAgent()
+    # # compute = ComputeAgent() 
+    # #extractor = DataExtractorAgent()
+    # expander = ExpanderAgent()
+    # print(f"\nTesting Query: {query_1}\n")
+    # output = expander(explicit_target=query_1)
+    # print(output.model_dump_json(indent=4))
+    # for task in output.extracted_tasks:
+    #     for k, v in task.model_dump().items():
+    #         print(f"{k}: {v}")
 
     # print(f"\nTesting Query: {query}\n")
     # output = compute(instruction=query, target_output_id="[Data_B]")

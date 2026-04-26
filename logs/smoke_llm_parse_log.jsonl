@@ -1,0 +1,33 @@
+{
+  "ts": "2026-04-24T11:35:27.531909+00:00",
+  "stage": "smoke.request",
+  "payload": {
+    "attempt": 1,
+    "parser_name": "parse_llm_json_response",
+    "request_payload": {
+      "purpose": "verify append-only logging"
+    }
+  }
+}
+
+{
+  "ts": "2026-04-24T11:35:27.532901+00:00",
+  "stage": "smoke.response_raw",
+  "payload": {
+    "attempt": 1,
+    "raw": "{\"ok\": true, \"msg\": \"hello\"}"
+  }
+}
+
+{
+  "ts": "2026-04-24T11:35:27.534085+00:00",
+  "stage": "smoke.parse_success",
+  "payload": {
+    "attempt": 1,
+    "parsed": {
+      "ok": true,
+      "msg": "hello"
+    }
+  }
+}
+
