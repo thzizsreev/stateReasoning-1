@@ -145,7 +145,46 @@ async def run_task_decomposer(user_query: str, llm) -> TaskNodesList:
     try:
         raw_json_dict = llm.generate_json(DECOMPOSER_PROMPT, user_prompt)
         print(f"Raw JSON Dictionary: {raw_json_dict}")
-        task_nodes = TaskNodesList.model_validate(raw_json_dict)
+
+        # Minimal pre-processing for the expected format:
+        # {
+        #   "task_nodes": [...],
+        #   "terminal_node": null OR {...}
+        # }
+        if not isinstance(raw_json_dict, dict):
+            raise TypeError(f"Expected dict from decomposer, got {type(raw_json_dict).__name__}")
+
+        task_nodes_raw = raw_json_dict.get("task_nodes") or []
+        if not isinstance(task_nodes_raw, list):
+            raise TypeError("Expected 'task_nodes' to be a list")
+
+        validated_tasks: list[TaskNode] = []
+        for t in task_nodes_raw:
+            if not isinstance(t, dict):
+                continue
+            # Model sometimes emits STATUS; map to OUTPUT to satisfy TaskNode.task_type Literal.
+            if t.get("task_type") == "STATUS":
+                t = {**t, "task_type": "OUTPUT"}
+            if "description" not in t or t["description"] is None:
+                t = {**t, "description": ""}
+            validated_tasks.append(TaskNode.model_validate(t))
+
+        terminal_node_raw = raw_json_dict.get("terminal_node")
+        if terminal_node_raw is not None:
+            if not isinstance(terminal_node_raw, dict):
+                print(f"no terminal node found")
+            terminal_task = {
+                "id": terminal_node_raw.get("id", "[TERMINAL_NODE]"),
+                "dependencies": terminal_node_raw.get("dependencies", []),
+                "instruction": terminal_node_raw.get("instruction", "Output terminal state."),
+                "description": terminal_node_raw.get("description", "") or "",
+                "task_type": terminal_node_raw.get("task_type", "OUTPUT"),
+                "status": terminal_node_raw.get("status", "PENDING"),
+                "parent_task": terminal_node_raw.get("parent_task"),
+            }
+            validated_tasks.append(TaskNode.model_validate(terminal_task))
+
+        task_nodes = TaskNodesList(task_nodes=validated_tasks)
         log_pydantic_output("TaskNodesList.decomposer", task_nodes)
         return task_nodes
     except Exception as e:
@@ -160,7 +199,36 @@ async def run_compute_agent(user_query: str, llm) -> TaskNodesList:
     try:
         raw_json_dict = llm.generate_json(COMPUTE_AGENT_PROMPT, user_prompt)
         print(f"Raw JSON Dictionary: {raw_json_dict}")
-        task_nodes = TaskNodesList.model_validate(raw_json_dict)
+
+        # Minimal normalization for compute-agent output:
+        # The model may return a list of task dicts (common), or a dict with "task_nodes".
+        tasks_raw = []
+        if isinstance(raw_json_dict, list):
+            tasks_raw = raw_json_dict
+        elif isinstance(raw_json_dict, dict):
+            tasks_raw = raw_json_dict.get("task_nodes") or []
+        else:
+            tasks_raw = []
+
+        if not isinstance(tasks_raw, list):
+            tasks_raw = []
+
+        validated_tasks: list[TaskNode] = []
+        for t in tasks_raw:
+            if not isinstance(t, dict):
+                continue
+            # Allow older key naming from model
+            if "target_output" not in t:
+                tos = t.get("target_outputs")
+                if isinstance(tos, list) and tos:
+                    t = {**t, "target_output": tos[0]}
+            if t.get("task_type") == "STATUS":
+                t = {**t, "task_type": "OUTPUT"}
+            if "description" not in t or t["description"] is None:
+                t = {**t, "description": ""}
+            validated_tasks.append(TaskNode.model_validate(t))
+
+        task_nodes = TaskNodesList(task_nodes=validated_tasks)
         log_pydantic_output("TaskNodesList.compute", task_nodes)
         return task_nodes
     except Exception as e:
@@ -170,14 +238,14 @@ async def run_compute_agent(user_query: str, llm) -> TaskNodesList:
 async def process_query(user_query: str, llm) -> FinalPipelinePayload:
     # 1. Get the routing decision and snippets
     decision = await run_semantic_router(user_query, llm)
-    print(f"  [Router Flags] Data: {decision.requires_data_extraction} | Decompose: {decision.requires_decomposition} | Compute: {decision.requires_computation}")
+    print(f"  [Router Flags] Data: {decision.requires_data_extraction} | Decompose: {decision.route_to_decompose} | Compute: {decision.route_to_compute_agent} | Expand: {decision.route_to_expand}")
 
     pending_tasks = []
     final_payload = FinalPipelinePayload()
 
     # 2. Queue the required agents WITH THEIR SPECIFIC SNIPPETS
     if decision.requires_data_extraction:
-        print(f"  -> Passing to Data Extractor: '{decision.data_snippet}'")
+        print(f"  -> Passing to Data Extractor: '{user_query}'")
 #         framed_prompt = f"""--- GLOBAL CONTEXT (For reference only. DO NOT evaluate your rules against this) ---
 # {user_query}
 
@@ -185,29 +253,23 @@ async def process_query(user_query: str, llm) -> FinalPipelinePayload:
 # {decision.decomposition_snippet}"""
         pending_tasks.append(run_data_extractor(user_query, llm))
         
-    if decision.requires_decomposition :
+    if decision.route_to_decompose :
         # Build the Tunnel Vision Prompt
-        framed_prompt = f"""
-
-        --- YOUR EXPLICIT TARGET (You MUST apply your rules ONLY to this text) ---
-        {decision.decomposition_snippet}"""
+        framed_prompt = f"""--- User Query ---
+{user_query}"""
         
         pending_tasks.append(run_task_decomposer(framed_prompt, llm))
 
-    if decision.requires_expansion:
-        framed_prompt = f"""
-
-        --- YOUR EXPLICIT TARGET (You MUST apply your rules ONLY to this text) ---
-        {decision.expansion_snippet}"""
+    if decision.route_to_expand:
+        framed_prompt = f"""--- User Query ---
+{user_query}"""
         
         pending_tasks.append(run_task_decomposer(framed_prompt, llm))
 
-    if decision.requires_computation:
+    if decision.route_to_compute_agent:
         # Build the Tunnel Vision Prompt
-        framed_prompt = f"""
-
-        --- YOUR EXPLICIT TARGET (You MUST apply your rules ONLY to this text) ---
-        {decision.computation_snippet}"""
+        framed_prompt = f"""--- User Query ---
+{user_query}"""
         
         pending_tasks.append(run_compute_agent(framed_prompt, llm))
 

@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from base import Neo4jOrchestrator
 
 
-DEFAULT_SNAPSHOT_PATH = Path(__file__).resolve().parent / "data" / "stage2.json"
+DEFAULT_SNAPSHOT_PATH = Path(__file__).resolve().parent / "data" / "stage3.json"
 
 
 def export_neo4j_snapshot(
@@ -170,4 +170,4 @@ if __name__ == "__main__":
     db = Neo4jOrchestrator(password="password")
     # path = export_neo4j_snapshot(db)
     # print(f"Snapshot written to: {path}")
-    load_neo4j_snapshot(db)
+    load_neo4j_snapshot(db)   

@@ -1,0 +1,1101 @@
+{
+  "meta": {
+    "created_at": "2026-04-27T20:22:49.917426+00:00",
+    "format": "stateReasoning-1.neo4j_snapshot.v1"
+  },
+  "nodes": [
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "End Orchestration.",
+        "unresolved_deps": 11,
+        "name": "[END_ORCHESTRATION]",
+        "description": "[INTENT]: Finalize the DAG execution.\n[TERMINAL_LEDGER]: Extracted [Point_B], [Point_C], [Point_D], [Line_AB], [Line_BC], [Line_DC], [Line_DA], [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: No task IDs included.",
+        "id": "[END_ORCHESTRATION]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Filled_AB]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Filled_BC]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Filled_DC]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Filled_DA]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R2]",
+        "content": "Rule R2 (VerticalExtension): store this entire rule as a data node.\nthis is a rule that extends a vertical line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Point P, an Integer Length L.\nOUTPUT: A new Point Q = (P.row + L, P.col).}}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R3]",
+        "content": "Rule R3 (CornerCompletion): store this entire rule as a data node.\nthis is a rule that completes a corner of a square by connecting two lines. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (r2, c1).}}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R4_HORIZONTAL]",
+        "content": "Rule R4 (Strict Successor-Based Line Filling) - Horizontal: store this entire rule as a data node.\nthis is a rule that fills a horizontal line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Horizontal Line L with start_point(r, c_start) and end_point(r, c_end).\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R4_VERTICAL]",
+        "content": "Rule R4 (Strict Successor-Based Line Filling) - Vertical: store this entire rule as a data node.\nthis is a rule that fills a vertical line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Vertical Line L with start_point(r_start, c) and end_point(r_end, c).\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "Semaphore"
+      ],
+      "props": {
+        "pending_count": 18,
+        "id": "GLOBAL"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_A]",
+        "content": "{\"x\": 0, \"y\": 0}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_L]",
+        "content": "4",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "construct a square with the point A(0,0) and side length 4.",
+        "unresolved_deps": 0,
+        "description": "[INTENT]: Construct a geometric shape. [DEFERRED LOGIC]: Calculate the coordinates of the square's vertices. [SHELL ARCHITECTURE]: [Square_A]. [PRUNED DEPENDENCIES]: None.",
+        "id": "[Construct_Square]",
+        "task_type": "DECOMPOSE",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[DEF_PRIMITIVES]",
+        "content": "PRIMITIVE OBJECTS:\nPoint(name, row, col)\nLine(name, orientation, start_point, end_point)\nFilled(row, col)",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R1]",
+        "content": "Rule R1 (HorizontalExtension): store this entire rule as a data node.\nthis is a rule that extends a horizontal line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{\nINPUT: A Point P, an Integer Length L.\nOUTPUT: A new Point Q = (P.row, P.col + L).}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "PHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to a point B.\nTask 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to a point D.\nTask 1.3: Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to a point C.",
+        "unresolved_deps": 0,
+        "name": "[Phase_1_Point_Derivation]",
+        "description": "[INTENT]: Derive points B, D, and C using rules R1, R2, and R3.\n[DEFERRED LOGIC]: Apply rules to generate points.\n[SHELL ARCHITECTURE]: [Point_B], [Point_D], [Point_C]\n[PRUNED DEPENDENCIES]: [Data_A], [Data_L], [RULE_R1], [RULE_R2], [RULE_R3]",
+        "id": "[Phase_1_Point_Derivation]",
+        "task_type": "DECOMPOSE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "PHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Create a Horizontal Line from [Data_A] to the point B. Save output to a new Line AB.\nTask 2.2: Create a Vertical Line from the point B to the point C. Save output to a new Line BC.\nTask 2.3: Create a Horizontal Line from the point D to the point C. Save output to a new Line DC.\nTask 2.4: Create a Vertical Line from the point D to the [Data_A]. Save output to a new Line DA.",
+        "unresolved_deps": 3,
+        "name": "[Phase_2_Line_Derivation]",
+        "description": "[INTENT]: Derive lines AB, BC, DC, and DA using points B, C, and D.\n[DEFERRED LOGIC]: Create lines using points.\n[SHELL ARCHITECTURE]: [Line_AB], [Line_BC], [Line_DC], [Line_DA]\n[PRUNED DEPENDENCIES]: [Data_A], [Point_B], [Point_C], [Point_D]",
+        "id": "[Phase_2_Line_Derivation]",
+        "task_type": "DECOMPOSE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Point_B]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Point_C]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Point_D]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "PHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply [RULE_R4_HORIZONTAL] to the first horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply [RULE_R4_VERTICAL] to the first vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply [RULE_R4_HORIZONTAL] to the second horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply [RULE_R4_VERTICAL] to the second vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.",
+        "unresolved_deps": 4,
+        "name": "[Phase_3_Line_Filling]",
+        "description": "[INTENT]: Fill lines AB, BC, DC, and DA using rules R4.\n[DEFERRED LOGIC]: Apply rules to fill lines.\n[SHELL ARCHITECTURE]: [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: [Line_AB], [Line_BC], [Line_DC], [Line_DA], [RULE_R4_HORIZONTAL], [RULE_R4_VERTICAL]",
+        "id": "[Phase_3_Line_Filling]",
+        "task_type": "DECOMPOSE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Line_AB]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Line_BC]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Line_DC]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Line_DA]",
+        "status": "UNRESOLVED"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Filled_AB]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "End Orchestration.",
+          "unresolved_deps": 11,
+          "name": "[END_ORCHESTRATION]",
+          "description": "[INTENT]: Finalize the DAG execution.\n[TERMINAL_LEDGER]: Extracted [Point_B], [Point_C], [Point_D], [Line_AB], [Line_BC], [Line_DC], [Line_DA], [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: No task IDs included.",
+          "id": "[END_ORCHESTRATION]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Filled_BC]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "End Orchestration.",
+          "unresolved_deps": 11,
+          "name": "[END_ORCHESTRATION]",
+          "description": "[INTENT]: Finalize the DAG execution.\n[TERMINAL_LEDGER]: Extracted [Point_B], [Point_C], [Point_D], [Line_AB], [Line_BC], [Line_DC], [Line_DA], [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: No task IDs included.",
+          "id": "[END_ORCHESTRATION]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Filled_DC]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "End Orchestration.",
+          "unresolved_deps": 11,
+          "name": "[END_ORCHESTRATION]",
+          "description": "[INTENT]: Finalize the DAG execution.\n[TERMINAL_LEDGER]: Extracted [Point_B], [Point_C], [Point_D], [Line_AB], [Line_BC], [Line_DC], [Line_DA], [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: No task IDs included.",
+          "id": "[END_ORCHESTRATION]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Filled_DA]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "End Orchestration.",
+          "unresolved_deps": 11,
+          "name": "[END_ORCHESTRATION]",
+          "description": "[INTENT]: Finalize the DAG execution.\n[TERMINAL_LEDGER]: Extracted [Point_B], [Point_C], [Point_D], [Line_AB], [Line_BC], [Line_DC], [Line_DA], [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: No task IDs included.",
+          "id": "[END_ORCHESTRATION]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R2]",
+          "content": "Rule R2 (VerticalExtension): store this entire rule as a data node.\nthis is a rule that extends a vertical line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Point P, an Integer Length L.\nOUTPUT: A new Point Q = (P.row + L, P.col).}}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to a point B.\nTask 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to a point D.\nTask 1.3: Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to a point C.",
+          "unresolved_deps": 0,
+          "name": "[Phase_1_Point_Derivation]",
+          "description": "[INTENT]: Derive points B, D, and C using rules R1, R2, and R3.\n[DEFERRED LOGIC]: Apply rules to generate points.\n[SHELL ARCHITECTURE]: [Point_B], [Point_D], [Point_C]\n[PRUNED DEPENDENCIES]: [Data_A], [Data_L], [RULE_R1], [RULE_R2], [RULE_R3]",
+          "id": "[Phase_1_Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R3]",
+          "content": "Rule R3 (CornerCompletion): store this entire rule as a data node.\nthis is a rule that completes a corner of a square by connecting two lines. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (r2, c1).}}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to a point B.\nTask 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to a point D.\nTask 1.3: Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to a point C.",
+          "unresolved_deps": 0,
+          "name": "[Phase_1_Point_Derivation]",
+          "description": "[INTENT]: Derive points B, D, and C using rules R1, R2, and R3.\n[DEFERRED LOGIC]: Apply rules to generate points.\n[SHELL ARCHITECTURE]: [Point_B], [Point_D], [Point_C]\n[PRUNED DEPENDENCIES]: [Data_A], [Data_L], [RULE_R1], [RULE_R2], [RULE_R3]",
+          "id": "[Phase_1_Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R4_HORIZONTAL]",
+          "content": "Rule R4 (Strict Successor-Based Line Filling) - Horizontal: store this entire rule as a data node.\nthis is a rule that fills a horizontal line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Horizontal Line L with start_point(r, c_start) and end_point(r, c_end).\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply [RULE_R4_HORIZONTAL] to the first horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply [RULE_R4_VERTICAL] to the first vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply [RULE_R4_HORIZONTAL] to the second horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply [RULE_R4_VERTICAL] to the second vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 4,
+          "name": "[Phase_3_Line_Filling]",
+          "description": "[INTENT]: Fill lines AB, BC, DC, and DA using rules R4.\n[DEFERRED LOGIC]: Apply rules to fill lines.\n[SHELL ARCHITECTURE]: [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: [Line_AB], [Line_BC], [Line_DC], [Line_DA], [RULE_R4_HORIZONTAL], [RULE_R4_VERTICAL]",
+          "id": "[Phase_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R4_VERTICAL]",
+          "content": "Rule R4 (Strict Successor-Based Line Filling) - Vertical: store this entire rule as a data node.\nthis is a rule that fills a vertical line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{{\nINPUT: A Vertical Line L with start_point(r_start, c) and end_point(r_end, c).\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply [RULE_R4_HORIZONTAL] to the first horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply [RULE_R4_VERTICAL] to the first vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply [RULE_R4_HORIZONTAL] to the second horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply [RULE_R4_VERTICAL] to the second vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 4,
+          "name": "[Phase_3_Line_Filling]",
+          "description": "[INTENT]: Fill lines AB, BC, DC, and DA using rules R4.\n[DEFERRED LOGIC]: Apply rules to fill lines.\n[SHELL ARCHITECTURE]: [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: [Line_AB], [Line_BC], [Line_DC], [Line_DA], [RULE_R4_HORIZONTAL], [RULE_R4_VERTICAL]",
+          "id": "[Phase_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_A]",
+          "content": "{\"x\": 0, \"y\": 0}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to a point B.\nTask 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to a point D.\nTask 1.3: Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to a point C.",
+          "unresolved_deps": 0,
+          "name": "[Phase_1_Point_Derivation]",
+          "description": "[INTENT]: Derive points B, D, and C using rules R1, R2, and R3.\n[DEFERRED LOGIC]: Apply rules to generate points.\n[SHELL ARCHITECTURE]: [Point_B], [Point_D], [Point_C]\n[PRUNED DEPENDENCIES]: [Data_A], [Data_L], [RULE_R1], [RULE_R2], [RULE_R3]",
+          "id": "[Phase_1_Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_A]",
+          "content": "{\"x\": 0, \"y\": 0}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Create a Horizontal Line from [Data_A] to the point B. Save output to a new Line AB.\nTask 2.2: Create a Vertical Line from the point B to the point C. Save output to a new Line BC.\nTask 2.3: Create a Horizontal Line from the point D to the point C. Save output to a new Line DC.\nTask 2.4: Create a Vertical Line from the point D to the [Data_A]. Save output to a new Line DA.",
+          "unresolved_deps": 3,
+          "name": "[Phase_2_Line_Derivation]",
+          "description": "[INTENT]: Derive lines AB, BC, DC, and DA using points B, C, and D.\n[DEFERRED LOGIC]: Create lines using points.\n[SHELL ARCHITECTURE]: [Line_AB], [Line_BC], [Line_DC], [Line_DA]\n[PRUNED DEPENDENCIES]: [Data_A], [Point_B], [Point_C], [Point_D]",
+          "id": "[Phase_2_Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_L]",
+          "content": "4",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to a point B.\nTask 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to a point D.\nTask 1.3: Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to a point C.",
+          "unresolved_deps": 0,
+          "name": "[Phase_1_Point_Derivation]",
+          "description": "[INTENT]: Derive points B, D, and C using rules R1, R2, and R3.\n[DEFERRED LOGIC]: Apply rules to generate points.\n[SHELL ARCHITECTURE]: [Point_B], [Point_D], [Point_C]\n[PRUNED DEPENDENCIES]: [Data_A], [Data_L], [RULE_R1], [RULE_R2], [RULE_R3]",
+          "id": "[Phase_1_Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4.",
+          "unresolved_deps": 0,
+          "description": "[INTENT]: Construct a geometric shape. [DEFERRED LOGIC]: Calculate the coordinates of the square's vertices. [SHELL ARCHITECTURE]: [Square_A]. [PRUNED DEPENDENCIES]: None.",
+          "id": "[Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "End Orchestration.",
+          "unresolved_deps": 11,
+          "name": "[END_ORCHESTRATION]",
+          "description": "[INTENT]: Finalize the DAG execution.\n[TERMINAL_LEDGER]: Extracted [Point_B], [Point_C], [Point_D], [Line_AB], [Line_BC], [Line_DC], [Line_DA], [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: No task IDs included.",
+          "id": "[END_ORCHESTRATION]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4.",
+          "unresolved_deps": 0,
+          "description": "[INTENT]: Construct a geometric shape. [DEFERRED LOGIC]: Calculate the coordinates of the square's vertices. [SHELL ARCHITECTURE]: [Square_A]. [PRUNED DEPENDENCIES]: None.",
+          "id": "[Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to a point B.\nTask 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to a point D.\nTask 1.3: Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to a point C.",
+          "unresolved_deps": 0,
+          "name": "[Phase_1_Point_Derivation]",
+          "description": "[INTENT]: Derive points B, D, and C using rules R1, R2, and R3.\n[DEFERRED LOGIC]: Apply rules to generate points.\n[SHELL ARCHITECTURE]: [Point_B], [Point_D], [Point_C]\n[PRUNED DEPENDENCIES]: [Data_A], [Data_L], [RULE_R1], [RULE_R2], [RULE_R3]",
+          "id": "[Phase_1_Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4.",
+          "unresolved_deps": 0,
+          "description": "[INTENT]: Construct a geometric shape. [DEFERRED LOGIC]: Calculate the coordinates of the square's vertices. [SHELL ARCHITECTURE]: [Square_A]. [PRUNED DEPENDENCIES]: None.",
+          "id": "[Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Create a Horizontal Line from [Data_A] to the point B. Save output to a new Line AB.\nTask 2.2: Create a Vertical Line from the point B to the point C. Save output to a new Line BC.\nTask 2.3: Create a Horizontal Line from the point D to the point C. Save output to a new Line DC.\nTask 2.4: Create a Vertical Line from the point D to the [Data_A]. Save output to a new Line DA.",
+          "unresolved_deps": 3,
+          "name": "[Phase_2_Line_Derivation]",
+          "description": "[INTENT]: Derive lines AB, BC, DC, and DA using points B, C, and D.\n[DEFERRED LOGIC]: Create lines using points.\n[SHELL ARCHITECTURE]: [Line_AB], [Line_BC], [Line_DC], [Line_DA]\n[PRUNED DEPENDENCIES]: [Data_A], [Point_B], [Point_C], [Point_D]",
+          "id": "[Phase_2_Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "construct a square with the point A(0,0) and side length 4.",
+          "unresolved_deps": 0,
+          "description": "[INTENT]: Construct a geometric shape. [DEFERRED LOGIC]: Calculate the coordinates of the square's vertices. [SHELL ARCHITECTURE]: [Square_A]. [PRUNED DEPENDENCIES]: None.",
+          "id": "[Construct_Square]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply [RULE_R4_HORIZONTAL] to the first horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply [RULE_R4_VERTICAL] to the first vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply [RULE_R4_HORIZONTAL] to the second horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply [RULE_R4_VERTICAL] to the second vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 4,
+          "name": "[Phase_3_Line_Filling]",
+          "description": "[INTENT]: Fill lines AB, BC, DC, and DA using rules R4.\n[DEFERRED LOGIC]: Apply rules to fill lines.\n[SHELL ARCHITECTURE]: [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: [Line_AB], [Line_BC], [Line_DC], [Line_DA], [RULE_R4_HORIZONTAL], [RULE_R4_VERTICAL]",
+          "id": "[Phase_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R1]",
+          "content": "Rule R1 (HorizontalExtension): store this entire rule as a data node.\nthis is a rule that extends a horizontal line by a given length. which will be used my llm's upon calling. the \nentire instruction is as follows:\n{\nINPUT: A Point P, an Integer Length L.\nOUTPUT: A new Point Q = (P.row, P.col + L).}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to a point B.\nTask 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to a point D.\nTask 1.3: Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to a point C.",
+          "unresolved_deps": 0,
+          "name": "[Phase_1_Point_Derivation]",
+          "description": "[INTENT]: Derive points B, D, and C using rules R1, R2, and R3.\n[DEFERRED LOGIC]: Apply rules to generate points.\n[SHELL ARCHITECTURE]: [Point_B], [Point_D], [Point_C]\n[PRUNED DEPENDENCIES]: [Data_A], [Data_L], [RULE_R1], [RULE_R2], [RULE_R3]",
+          "id": "[Phase_1_Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Point_B]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "End Orchestration.",
+          "unresolved_deps": 11,
+          "name": "[END_ORCHESTRATION]",
+          "description": "[INTENT]: Finalize the DAG execution.\n[TERMINAL_LEDGER]: Extracted [Point_B], [Point_C], [Point_D], [Line_AB], [Line_BC], [Line_DC], [Line_DA], [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: No task IDs included.",
+          "id": "[END_ORCHESTRATION]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Point_B]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Create a Horizontal Line from [Data_A] to the point B. Save output to a new Line AB.\nTask 2.2: Create a Vertical Line from the point B to the point C. Save output to a new Line BC.\nTask 2.3: Create a Horizontal Line from the point D to the point C. Save output to a new Line DC.\nTask 2.4: Create a Vertical Line from the point D to the [Data_A]. Save output to a new Line DA.",
+          "unresolved_deps": 3,
+          "name": "[Phase_2_Line_Derivation]",
+          "description": "[INTENT]: Derive lines AB, BC, DC, and DA using points B, C, and D.\n[DEFERRED LOGIC]: Create lines using points.\n[SHELL ARCHITECTURE]: [Line_AB], [Line_BC], [Line_DC], [Line_DA]\n[PRUNED DEPENDENCIES]: [Data_A], [Point_B], [Point_C], [Point_D]",
+          "id": "[Phase_2_Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Point_C]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "End Orchestration.",
+          "unresolved_deps": 11,
+          "name": "[END_ORCHESTRATION]",
+          "description": "[INTENT]: Finalize the DAG execution.\n[TERMINAL_LEDGER]: Extracted [Point_B], [Point_C], [Point_D], [Line_AB], [Line_BC], [Line_DC], [Line_DA], [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: No task IDs included.",
+          "id": "[END_ORCHESTRATION]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Point_C]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Create a Horizontal Line from [Data_A] to the point B. Save output to a new Line AB.\nTask 2.2: Create a Vertical Line from the point B to the point C. Save output to a new Line BC.\nTask 2.3: Create a Horizontal Line from the point D to the point C. Save output to a new Line DC.\nTask 2.4: Create a Vertical Line from the point D to the [Data_A]. Save output to a new Line DA.",
+          "unresolved_deps": 3,
+          "name": "[Phase_2_Line_Derivation]",
+          "description": "[INTENT]: Derive lines AB, BC, DC, and DA using points B, C, and D.\n[DEFERRED LOGIC]: Create lines using points.\n[SHELL ARCHITECTURE]: [Line_AB], [Line_BC], [Line_DC], [Line_DA]\n[PRUNED DEPENDENCIES]: [Data_A], [Point_B], [Point_C], [Point_D]",
+          "id": "[Phase_2_Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Point_D]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "End Orchestration.",
+          "unresolved_deps": 11,
+          "name": "[END_ORCHESTRATION]",
+          "description": "[INTENT]: Finalize the DAG execution.\n[TERMINAL_LEDGER]: Extracted [Point_B], [Point_C], [Point_D], [Line_AB], [Line_BC], [Line_DC], [Line_DA], [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: No task IDs included.",
+          "id": "[END_ORCHESTRATION]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Point_D]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Create a Horizontal Line from [Data_A] to the point B. Save output to a new Line AB.\nTask 2.2: Create a Vertical Line from the point B to the point C. Save output to a new Line BC.\nTask 2.3: Create a Horizontal Line from the point D to the point C. Save output to a new Line DC.\nTask 2.4: Create a Vertical Line from the point D to the [Data_A]. Save output to a new Line DA.",
+          "unresolved_deps": 3,
+          "name": "[Phase_2_Line_Derivation]",
+          "description": "[INTENT]: Derive lines AB, BC, DC, and DA using points B, C, and D.\n[DEFERRED LOGIC]: Create lines using points.\n[SHELL ARCHITECTURE]: [Line_AB], [Line_BC], [Line_DC], [Line_DA]\n[PRUNED DEPENDENCIES]: [Data_A], [Point_B], [Point_C], [Point_D]",
+          "id": "[Phase_2_Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_AB]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "End Orchestration.",
+          "unresolved_deps": 11,
+          "name": "[END_ORCHESTRATION]",
+          "description": "[INTENT]: Finalize the DAG execution.\n[TERMINAL_LEDGER]: Extracted [Point_B], [Point_C], [Point_D], [Line_AB], [Line_BC], [Line_DC], [Line_DA], [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: No task IDs included.",
+          "id": "[END_ORCHESTRATION]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_AB]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply [RULE_R4_HORIZONTAL] to the first horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply [RULE_R4_VERTICAL] to the first vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply [RULE_R4_HORIZONTAL] to the second horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply [RULE_R4_VERTICAL] to the second vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 4,
+          "name": "[Phase_3_Line_Filling]",
+          "description": "[INTENT]: Fill lines AB, BC, DC, and DA using rules R4.\n[DEFERRED LOGIC]: Apply rules to fill lines.\n[SHELL ARCHITECTURE]: [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: [Line_AB], [Line_BC], [Line_DC], [Line_DA], [RULE_R4_HORIZONTAL], [RULE_R4_VERTICAL]",
+          "id": "[Phase_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_BC]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "End Orchestration.",
+          "unresolved_deps": 11,
+          "name": "[END_ORCHESTRATION]",
+          "description": "[INTENT]: Finalize the DAG execution.\n[TERMINAL_LEDGER]: Extracted [Point_B], [Point_C], [Point_D], [Line_AB], [Line_BC], [Line_DC], [Line_DA], [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: No task IDs included.",
+          "id": "[END_ORCHESTRATION]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_BC]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply [RULE_R4_HORIZONTAL] to the first horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply [RULE_R4_VERTICAL] to the first vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply [RULE_R4_HORIZONTAL] to the second horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply [RULE_R4_VERTICAL] to the second vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 4,
+          "name": "[Phase_3_Line_Filling]",
+          "description": "[INTENT]: Fill lines AB, BC, DC, and DA using rules R4.\n[DEFERRED LOGIC]: Apply rules to fill lines.\n[SHELL ARCHITECTURE]: [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: [Line_AB], [Line_BC], [Line_DC], [Line_DA], [RULE_R4_HORIZONTAL], [RULE_R4_VERTICAL]",
+          "id": "[Phase_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_DC]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "End Orchestration.",
+          "unresolved_deps": 11,
+          "name": "[END_ORCHESTRATION]",
+          "description": "[INTENT]: Finalize the DAG execution.\n[TERMINAL_LEDGER]: Extracted [Point_B], [Point_C], [Point_D], [Line_AB], [Line_BC], [Line_DC], [Line_DA], [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: No task IDs included.",
+          "id": "[END_ORCHESTRATION]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_DC]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply [RULE_R4_HORIZONTAL] to the first horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply [RULE_R4_VERTICAL] to the first vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply [RULE_R4_HORIZONTAL] to the second horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply [RULE_R4_VERTICAL] to the second vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 4,
+          "name": "[Phase_3_Line_Filling]",
+          "description": "[INTENT]: Fill lines AB, BC, DC, and DA using rules R4.\n[DEFERRED LOGIC]: Apply rules to fill lines.\n[SHELL ARCHITECTURE]: [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: [Line_AB], [Line_BC], [Line_DC], [Line_DA], [RULE_R4_HORIZONTAL], [RULE_R4_VERTICAL]",
+          "id": "[Phase_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_DA]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "End Orchestration.",
+          "unresolved_deps": 11,
+          "name": "[END_ORCHESTRATION]",
+          "description": "[INTENT]: Finalize the DAG execution.\n[TERMINAL_LEDGER]: Extracted [Point_B], [Point_C], [Point_D], [Line_AB], [Line_BC], [Line_DC], [Line_DA], [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: No task IDs included.",
+          "id": "[END_ORCHESTRATION]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_DA]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply [RULE_R4_HORIZONTAL] to the first horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply [RULE_R4_VERTICAL] to the first vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply [RULE_R4_HORIZONTAL] to the second horizontal line generated in Phase 2. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply [RULE_R4_VERTICAL] to the second vertical line generated in Phase 2. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 4,
+          "name": "[Phase_3_Line_Filling]",
+          "description": "[INTENT]: Fill lines AB, BC, DC, and DA using rules R4.\n[DEFERRED LOGIC]: Apply rules to fill lines.\n[SHELL ARCHITECTURE]: [Filled_AB], [Filled_BC], [Filled_DC], [Filled_DA]\n[PRUNED DEPENDENCIES]: [Line_AB], [Line_BC], [Line_DC], [Line_DA], [RULE_R4_HORIZONTAL], [RULE_R4_VERTICAL]",
+          "id": "[Phase_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    }
+  ]
+}

@@ -172,7 +172,8 @@ class Neo4jOrchestrator:
         query = """
         // 1) Upsert TaskNode and basic properties
         MERGE (t:TaskNode {id: $task_id})
-        SET t.instruction = $instruction,
+        SET t.name = $task_id,
+            t.instruction = $instruction,
             t.description = $description,
             t.task_type = $task_type,
             t.status = $status

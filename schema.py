@@ -33,13 +33,13 @@ class TaskNode(BaseModel):
         default=None,
         description="A description of the Task node."
     )
-    # target_output: Optional[str] = Field(
-    #     default=None,
-    #     description=(
-    #         "Bracketed ID of the DataNode this task creates; null allowed for DECOMPOSE "
-    #         "or tasks that do not materialize a single output node."
-    #     ),
-    # )
+    target_output: Optional[str] = Field(
+        default=None,
+        description=(
+            "Bracketed ID of the DataNode this task creates; null allowed for DECOMPOSE "
+            "or tasks that do not materialize a single output node."
+        ),
+    )
     task_type: Literal["COMPUTE", "DECOMPOSE", "OUTPUT"] = Field(
         description="'COMPUTE' if a Worker can solve this. 'DECOMPOSE' if it needs breakdown."
     )
@@ -76,21 +76,18 @@ class FinalPipelinePayload(BaseModel):
     task_nodes: List[TaskNode] = []
 
 class RouterDecision(BaseModel):
-    data_scratchpad: str = Field(description="The exact text substring containing the facts. Empty string if none.")
-    requires_data_extraction: bool = Field(description="True if explicit facts/numbers are provided.")
-    data_snippet: str = Field(description="The exact text substring containing the facts. Empty string if none.")
-    
-    decompose_scratchpad: str = Field(description="The exact text substring containing the decomposition. Empty string if none.")
-    requires_decomposition: bool
-    decomposition_snippet: str = Field(description="CRITICAL: Must be a continuous, verbatim substring copied EXACTLY from the prompt. DO NOT summarize. DO NOT use ellipses. If the workflow is 300 words, copy the exact first and last words to encompass it.")
-    
-    compute_scratchpad: str = Field(description="The exact text substring containing the computation. Empty string if none.")
-    requires_computation: bool
-    computation_snippet: str = Field(description="CRITICAL: Must be a continuous, verbatim substring copied EXACTLY from the prompt. DO NOT summarize.")
-    
-    expand_scratchpad: str = Field(description="The exact text substring containing the expansion. Empty string if none.")
-    requires_expansion: bool
-    expansion_snippet: str = Field(description="CRITICAL: Must be a continuous, verbatim substring copied EXACTLY from the prompt. DO NOT summarize.")
+    requires_data_extraction: bool = Field(
+        description="True if the payload contains explicit, root-level literal value assignments (e.g., 'Set [Timeout] to 30', '[Max_Retries] = 5') that exist outside of the Machine Context."
+    )
+    route_to_decompose: bool = Field(
+        description="True if the payload contains massive, multi-phase structures that will overload context if not chunked."
+    )
+    route_to_expand: bool = Field(
+        description="True if the payload contains a single, high-cognition task demanding a complex outcome where the explicit sub-steps are missing entirely."
+    )
+    route_to_compute_agent: bool = Field(
+        description="True if the payload contains a single, scoped work block of explicitly enumerated tasks (e.g., Step 1, Step 2, Step 3) that are tightly coupled and ready for a Micro-Architect to extract them into atomic nodes and map their internal dependencies."
+    )
 # ==========================================
 # 2. ENFORCEMENT DEMONSTRATION
 # ==========================================

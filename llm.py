@@ -1,12 +1,12 @@
 #import ollama
 import json
 import re
-from typing import Dict, Any
+from typing import Any, Dict, Union
 from openai import OpenAI
 import os
 
 
-def parse_llm_json_response(text: str) -> Dict[str, Any]:
+def parse_llm_json_response(text: str) -> Union[Dict[str, Any], list]:
     """
     Extract the first valid JSON object or array from an LLM response.
     Handles embedded newlines inside JSON string values via regex pre-processing.
@@ -48,29 +48,30 @@ def parse_llm_json_response(text: str) -> Dict[str, Any]:
         if result is not None:
             return result
 
-    # 2) Largest { } or [ ] span
-    for pattern in (r"\{[\s\S]*\}", r"\[[\s\S]*\]"):
-        for cand in re.findall(pattern, text):
-            result = try_parse(cand)
-            if result is not None:
-                return result
-
-    # 3) Brace-balanced scan for both { and [
-    for open_ch, close_ch in [('{', '}'), ('[', ']')]:
-        start = text.find(open_ch)
-        if start == -1:
+    # 2) Robust scan: JSONDecoder.raw_decode across the whole text.
+    # This avoids false positives from bracketed IDs like "[Data_A]" in scratchpads.
+    decoder = json.JSONDecoder()
+    candidates = []
+    for start_idx in [m.start() for m in re.finditer(r"[\[\{]", text)]:
+        snippet = text[start_idx:].lstrip()
+        if not snippet:
             continue
-        depth = 0
-        for i in range(start, len(text)):
-            if text[i] == open_ch:
-                depth += 1
-            elif text[i] == close_ch:
-                depth -= 1
-                if depth == 0:
-                    result = try_parse(text[start:i + 1])
-                    if result is not None:
-                        return result
-                    break
+
+        # Try decode on raw snippet first
+        try:
+            parsed, _ = decoder.raw_decode(snippet)
+            if isinstance(parsed, (dict, list)):
+                return parsed
+        except json.JSONDecodeError:
+            pass
+
+        # Try decode on sanitized snippet (fixes literal newlines inside strings)
+        try:
+            parsed, _ = decoder.raw_decode(sanitize(snippet))
+            if isinstance(parsed, (dict, list)):
+                return parsed
+        except json.JSONDecodeError:
+            continue
 
     raise ValueError(f"Could not extract valid JSON. First 800 chars:\n{text[:800]}")
 

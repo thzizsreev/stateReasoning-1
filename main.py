@@ -94,6 +94,7 @@ def fetch_executable_tasks(db: Neo4jOrchestrator) -> list:
         OPTIONAL MATCH (t)-[:GENERATES]->(out:DataNode)
         RETURN t.id AS id, 
                t.instruction AS instruction, 
+               t.description AS description,
                t.task_type AS task_type, 
                out.id AS target_output
         """
@@ -103,6 +104,7 @@ def fetch_executable_tasks(db: Neo4jOrchestrator) -> list:
                 {
                     "id": record["id"], 
                     "instruction": record["instruction"], 
+                    "description": record["description"],
                     "task_type": record["task_type"],
                     "target_output": record["target_output"]
                 } for record in result
@@ -200,7 +202,7 @@ def fetch_resolved_dependencies_for_task(db: Neo4jOrchestrator, task_id: str) ->
         return deps
 
 
-async def run_execution_engine(db: Neo4jOrchestrator, llm, terminal_node: str):
+async def run_execution_engine(db: Neo4jOrchestrator, llm, terminal_node: str = "[END_ORCHESTRATION]"):
     print("\n🚀 [ENGINE] Booting Runtime Execution Engine...")
     
     while True:
@@ -230,6 +232,7 @@ async def run_execution_engine(db: Neo4jOrchestrator, llm, terminal_node: str):
                 description: {task['description']}
                 dependencies: {deps}
                 """
+                print(f"framed_prompt: {framed_prompt}")
                 await process_and_upsert_query(framed_prompt, llm, db, parent_task_id=task['id'])
                 db.mark_task_complete(task['id'])
                 
@@ -277,6 +280,10 @@ if __name__ == "__main__":
         }, {
             "id": "[RULE_R4_VERTICAL]",
             "content": PROMPTS["RULE_R4_VERTICAL"]
+        },
+        {
+            "id": "[RULE_CREATE_LINE]",
+            "content": PROMPTS["RULE_CREATE_LINE"]
         }
         ],
         "task_nodes": []
@@ -286,18 +293,16 @@ if __name__ == "__main__":
         
         # 2. Fetch & Return the Template
         print("  -> Dependencies loaded. Returning execution template.")
-        # phase_text = PROMPTS["SQUARE_CONSTRUCTION"]
-        
-        # return phase_text  
+        phase_text = f"""{PROMPTS["SQUARE_CONSTRUCTION"]}\n dependencies: \n{json.dumps(predef_datanodes, indent=4)}\n -------------
+[SYS_FLAG: TERMINATE_DAG]"""
+        print(f"phase_text: {phase_text}")
+        return phase_text  
     "-------------- real code---------------------------"
     my_llm = OpenRouterClient()
     db = Neo4jOrchestrator(password="password")
     
     PYDANTIC_LOG_PATH = Path(__file__).resolve().parent / "docs" / "data" / "pydantic_outputs.jsonl"
     _clear_pydantic_log(PYDANTIC_LOG_PATH)
-    # Mock data
-    #known_keys = ["DEF_PRIMITIVES", "RULE_R1", "RULE_R2", "RULE_R3"]
-    #phase_text = PROMPTS["TASK_PHASE_1"]
 
 
     # db._clear_db()
@@ -305,57 +310,41 @@ if __name__ == "__main__":
     # datanodes = asyncio.run(process_query(query, my_llm))
     # datanodes = process_datanodes_output(datanodes)
     # insert_datanodes_into_graph(datanodes, db)
-    # ##print_datanodes_nodes(datanodes)
-    # insert_datanodes_into_graph(datanodes, db)
-    # phase_text = """First, analyze the [Client_Requirements_Doc] to extract a core [Feature_List]. Next, take that 
-    # [Feature_List] and use it to build a full, production-ready [ECommerce_Web_Application]. Building a web application is
-    #  a massive undertaking that requires designing  a database, writing frontend React code, and configuring backend APIs. 
-    #  Once the web application is fully built, deploy it to AWS to generate a [Live_Production_URL]. Finally, trigger a 
-    #  [STATE_DEPLOYMENT_COMPLETE]."""
-
-
-    # plan = Extract_datanodes(phase_text, my_llm)
-    # plan = process_datanodes_output(plan)
-    # print_datanodes_nodes(plan)
-    # insert_datanodes_into_graph(plan, db)
     
-    # Step 3: Loop and Create Nodes
-    # print("\n--- INJECTING TASK GRAPH ---")
-    # for task in plan.tasks:
-    #     db.insert_task(task)
         
-    # ========================================================================
-    # 2. RAG RETRIEVAL & PRIMITIVE INJECTION
-    # ========================================================================
-    print("\n=== STAGE 2: FETCHING EXPERIENTIAL MEMORY ===")
-    # Pass the instruction to the mock RAG. It handles injecting the primitives 
-    # internally and returns the template we need to decompose.
-    #mock_RAG(db)
-    #template_text = mock_RAG(db)
-    template_text = f"""{PROMPTS["SQUARE_CONSTRUCTION"]}\n after the task is done, Output a final status node named: [END_ORCHESTRATION]."""
-    # ========================================================================
-    # 3. TEMPLATE CHUNKING & HIERARCHY CONJUNCTION
-    # ========================================================================
-    print("\n=== STAGE 3: DECOMPOSING TEMPLATE & BUILDING HIERARCHY ===")
-    # Process the returned template, passing the root_task_id so the function 
-    # natively draws the [:CREATES] edges from the root to these new sub-tasks.
-    root_task = fetch_first_decompose_task(db)
-    print(root_task)
-    # if root_task is None:
-    #     raise RuntimeError("No DECOMPOSE TaskNode found in graph; cannot set root_task.")
-    root_task_id = root_task.id
-    print(f"root_task_id: {root_task_id}")
-    plan_payload = asyncio.run(process_and_upsert_query(template_text, my_llm, db, parent_task_id=root_task_id))
+    # # ========================================================================
+    # # 2. RAG RETRIEVAL & PRIMITIVE INJECTION
+    # # ========================================================================
+    # print("\n=== STAGE 2: FETCHING EXPERIENTIAL MEMORY ===")
     
-    # ========================================================================
-    # 4. ADVANCE STATE
-    # ========================================================================
-    with db.driver.session() as session:
-        session.run("""
-            MATCH (t:TaskNode {id: $id}) 
-            SET t.status = 'COMPLETE'
-        """, id=db._normalize_id(root_task_id))
-        print(f"\n🟢 ROOT TASK '{root_task_id}' COMPLETED (Successfully decomposed).")
 
-    print("\n✅ Setup Complete. Open Neo4j Browser and run: MATCH (n) RETURN n")
-    # asyncio.run(run_execution_engine(db, my_llm, terminal_node="[STATE_PHASE_3_DONE]"))
+    # mock_RAG(db)
+#     template_text = mock_RAG(db)
+# #     template_text = f"""{PROMPTS["SQUARE_CONSTRUCTION"]}\n dependencies: {deps}\n -------------
+# # [SYS_FLAG: TERMINATE_DAG]"""
+#     # ========================================================================
+#     # 3. TEMPLATE CHUNKING & HIERARCHY CONJUNCTION
+#     # ========================================================================
+#     print("\n=== STAGE 3: DECOMPOSING TEMPLATE & BUILDING HIERARCHY ===")
+#     # Process the returned template, passing the root_task_id so the function 
+#     # natively draws the [:CREATES] edges from the root to these new sub-tasks.
+#     root_task = fetch_first_decompose_task(db)
+#     print(root_task)
+#     # if root_task is None:
+#     #     raise RuntimeError("No DECOMPOSE TaskNode found in graph; cannot set root_task.")
+#     root_task_id = root_task.id
+#     print(f"root_task_id: {root_task_id}")
+#     plan_payload = asyncio.run(process_and_upsert_query(template_text, my_llm, db, parent_task_id=root_task_id))
+    
+#     # ========================================================================
+#     # 4. ADVANCE STATE
+#     # ========================================================================
+#     with db.driver.session() as session:
+#         session.run("""
+#             MATCH (t:TaskNode {id: $id}) 
+#             SET t.status = 'COMPLETE'
+#         """, id=db._normalize_id(root_task_id))
+#         print(f"\n🟢 ROOT TASK '{root_task_id}' COMPLETED (Successfully decomposed).")
+
+#     print("\n✅ Setup Complete. Open Neo4j Browser and run: MATCH (n) RETURN n")
+    asyncio.run(run_execution_engine(db, my_llm))
