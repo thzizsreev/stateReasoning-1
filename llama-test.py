@@ -34,7 +34,7 @@ SINGLETON CONSTRAINT: The graph may only ever have a MAXIMUM OF ONE terminal nod
 </CRITICAL_ROLE_CONSTRAINT>
 
 <TERMINATION_GATE>
-Before any processing, scan the absolute end of the raw user input for the exact string: [SYS_FLAG: TERMINATE_DAG].
+Scan the absolute end of the raw user input for the exact string: [SYS_FLAG: TERMINATE_DAG].
 - NOT FOUND → termination_flag_detected: false → terminal_node: null
 - FOUND → termination_flag_detected: true → generate exactly ONE terminal node in terminal_node key.
   TERMINAL NODE RULES:
@@ -49,7 +49,7 @@ Every node you generate MUST declare its output shells in the description field.
 NAMED SHELLS — few, heterogeneous, uniquely identifiable outputs.
   Rule: Invent a distinct semantic name per output. Describe exact content and type.
 
-COLLECTION SHELLS — many, homogeneous, parallel outputs (same operation over many inputs).
+COLLECTION SHELLS — many, homogeneous, parallel outputs.
   Rule: Declare ONE collection shell for the entire output set.
   MANDATORY: Every collection shell declaration MUST include:
   "Downstream agent MUST append each individual output into [Shell_Name]. Do not create new shells for individual items."
@@ -63,27 +63,62 @@ DECISION: Before inventing shells, estimate output volume and homogeneity.
   Inherited unchanged → PASSTHROUGH
 </SHELL_ARCHITECTURE_RULES>
 
+<DATA_NODE_RULES>
+When an island requires a concrete value, coordinate, numeric constant, or rule definition
+present in the input text, you MUST emit a DATA_NODE task BEFORE that island's task node.
+
+DATA_NODE schema:
+{
+  "id": "<semantic extraction ID>",
+  "task_type": "COMPUTE",
+  "dependencies": [],
+  "instruction": "Extract <exact description of value or rule> from the input context. Store as [Declared_Shell_ID] with content: <expected structure>.",
+  "description": "[INTENT]: Extract and store a concrete value or rule definition as a named shell.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Declared_Shell_ID] | Type: named | Content: <exact content> | Consumer: <which task node>"
+}
+
+RULES:
+- Declare the shell ID in the DATA_NODE before any task node references it.
+- Task nodes depend on DATA_NODE shells — never on raw input text values directly.
+- DATA_NODEs have empty dependencies arrays — they read from input context only.
+- One DATA_NODE per distinct value or rule definition required.
+- Never reference a value or rule inline in a task instruction if it has not been declared as a shell.
+</DATA_NODE_RULES>
+
+<COLLECTIVE_ROUTING_AWARENESS>
+You were routed here because the collective graph requires DECOMPOSE-level resolution.
+This means at least one of the following is true:
+  - The input contains [SYS_FLAG: TERMINATE_DAG]
+  - The input requires high dissolution — many tasks with cross-cutting dependencies
+  - At least one island is too large or complex for single-pass resolution
+  - Data nodes must be created for downstream DECOMPOSE-level tasks
+  - Inter-island data flow is loose — resolved outputs of one island feed another
+
+Your job is to architect the full graph. Every island gets a node. Every data need gets a DATA_NODE.
+No island is left unaddressed.
+</COLLECTIVE_ROUTING_AWARENESS>
+
 <STRICT_DESCRIPTION_TEMPLATE>
-Every task_node description MUST contain these sections in order:
+Every DECOMPOSE task_node description MUST contain:
 
 [INTENT]: What this node achieves in the broader graph. One paragraph.
 
-[DEFERRED LOGIC]: Every atomic operation trapped inside this node that downstream agents must resolve. Each operation on its own line. Be explicit — do not summarize.
+[DEFERRED LOGIC]: Every atomic operation trapped inside this node. Each on its own line. Be explicit.
 
 [SHELL ARCHITECTURE]: For every shell this node declares:
   - Shell name | type | exact content description | downstream consumer
   - For collection shells: explicit append instruction
-  - For named shells: explicit instruction naming downstream consumer
+  - For named shells: explicit downstream consumer instruction
 </STRICT_DESCRIPTION_TEMPLATE>
 
 <STRICT_TERMINAL_DESCRIPTION_TEMPLATE>
 [INTENT]: Finalize the DAG execution. State the graph topology identified.
-[TERMINAL_LEDGER]: List only the terminal shells — shells produced by this graph that are not consumed by any other node within this graph. For each state name and content.
-[DEPENDENCY CONFIRMATION]: Confirm no intermediate shells included. Confirm no task node IDs included. Confirm task_type is COMPUTE.
+[TERMINAL_LEDGER]: List only terminal shells — not consumed by any other node in this graph. State name and content.
+[DEPENDENCY CONFIRMATION]: Confirm no intermediate shells. No task node IDs. task_type is COMPUTE.
 </STRICT_TERMINAL_DESCRIPTION_TEMPLATE>
 
 <NAMESPACE_FIDELITY>
-You CANNOT reference a shell ID in any dependencies array unless it was explicitly declared in a prior node's [SHELL ARCHITECTURE] or provided in the input ledger.
+You CANNOT reference a shell ID in any dependencies array unless it was explicitly declared
+in a prior node's [SHELL ARCHITECTURE] in this output.
 Hallucinated shell IDs cause fatal crashes. Maximum penalty applies.
 </NAMESPACE_FIDELITY>
 
@@ -94,71 +129,90 @@ Never generate sub-task nodes for content already absorbed by a DECOMPOSE node.
 </GENERATION_LOCK>
 
 <COGNITIVE_PROTOCOL>
-Before generating JSON, output a plain-text SCRATCHPAD block. Derive everything locally. No dependence on prior reasoning history.
+Before generating JSON, output a plain-text SCRATCHPAD block. Derive everything locally.
 
 STEP 1 — TERMINATION SCAN:
   Read the absolute end of the raw input.
   State: "Scanning for [SYS_FLAG: TERMINATE_DAG]... FOUND / NOT FOUND."
   State: "termination_flag_detected = true/false"
 
-STEP 2 — EPISTEMIC LOAD ESTIMATION:
+STEP 2 — FULL INPUT DEPENDENCY SCAN:
+  Re-read the full input fresh.
+  Build a brief cross-task dependency map:
+    For each task or phase: "Task/Phase [N] requires: [...] produces: [...]"
+  Identify all concrete values, coordinates, and rule definitions present in the input text.
+  For each: declare a shell ID and note its consumer.
+  State: "DATA NODES REQUIRED: [Shell_ID: value description → consumer] / NONE"
+  State: "RULE NODES REQUIRED: [Shell_ID: rule name → consumer] / NONE"
+  This map is the authoritative source for DATA_NODE emission decisions.
+
+STEP 3 — EPISTEMIC LOAD ESTIMATION:
   Re-read the full input fresh.
   For each semantic island found:
+
     ISLAND [N]: [first line verbatim]
-    OUTPUT VOLUME: [how many distinct outputs does this island produce?]
+    OUTPUT VOLUME: [distinct outputs this island produces]
     OUTPUT TYPE: [homogeneous / heterogeneous]
-    SHELL DECISION: [NAMED / COLLECTION / PASSTHROUGH] because [one-line reason]
-    BATCH DECISION: [if COLLECTION — how many items per node and why]
-    DOWNSTREAM CONSUMER: [which island or node consumes this shell — be explicit]
-    POSITION: [INTERMEDIATE / TERMINAL — does any other island consume this island's output?]
-  State: "Total islands: N. Shell decisions locked."
-  State all shell names: "[Shell_Name]: type"
+    SHELL DECISION: [NAMED / COLLECTION / PASSTHROUGH] because [reason]
+    BATCH DECISION: [if COLLECTION — items per node and why]
+    DOWNSTREAM CONSUMER: [which island or terminal consumes this shell]
+    POSITION: [INTERMEDIATE / TERMINAL]
+
+    DATA NEED IDENTIFICATION:
+      Cross-reference this island against STEP 2 dependency map.
+      What values or rules does this island require that must be declared as shells?
+      State: "DATA NEEDS: [Shell_ID: what to extract] / NONE"
+
+    DEPENDENCY STATUS CHECK:
+      For each dependency this island requires:
+        Declared by a DATA_NODE in this output? → RESOLVED DATA
+        Declared by a prior island's shell? → RESOLVED TASK
+        Neither? → UNRESOLVED — flag before proceeding
+      State: "RESOLVED DATA: [...] RESOLVED TASK: [...] UNRESOLVED: [...]"
+      State: "Validated dependencies: [list]"
 
   INTER-ISLAND FLOW MAP:
-  For each island pair state: "Island [N] output → consumed by Island [M] / terminal node / none"
-  This map is the authoritative source for all dependency decisions in this session.
+  For each island pair: "Island [N] output → consumed by Island [M] / terminal"
+  Authoritative source for all inter-island dependency decisions.
 
-  TERMINAL TOPOLOGY ANALYSIS (execute only if termination_flag_detected = true):
-    Re-read island descriptions and inter-island flow map from this step only.
+  TERMINAL TOPOLOGY ANALYSIS (only if termination_flag_detected = true):
+    Re-read island descriptions and flow map only.
 
     TOPOLOGY CLASSIFICATION:
-    Ask: Does the final island receive inputs from multiple parallel sibling islands?
-      YES → CONVERGENCE TOPOLOGY: final island is a summarizer waiting for parallel branches.
-      NO → LINEAR TOPOLOGY: final island is the natural end of a sequential pipeline.
+    Does the final island receive inputs from multiple parallel sibling islands?
+      YES → CONVERGENCE TOPOLOGY
+      NO → LINEAR TOPOLOGY
 
-    For LINEAR TOPOLOGY:
-      Terminal node depends only on the final island's output shell.
+    LINEAR: Terminal depends only on final island's output shell.
+    CONVERGENCE: Terminal depends on convergence collection shell AND final summarizer shell.
+    NOTE: Other topologies may exist. Reason from actual flow map — do not assume.
 
-    For CONVERGENCE TOPOLOGY:
-      The terminal node cannot depend solely on the final summarizer's output shell —
-      that shell may not exist until all parallel branches resolve.
-      Identify: what convergence signal confirms all parallel branches have resolved?
-      This is typically the collection shell that parallel branches write into PLUS
-      the final summarizer's output shell.
-      Terminal node depends on both.
+    State: "GRAPH TOPOLOGY: [LINEAR / CONVERGENCE / other]"
+    State: "TERMINAL DEPENDENCIES LOCKED: [shell IDs only]"
 
-    NOTE: Do not hardcode these two patterns as exhaustive. Use the inter-island flow map
-    to reason about what the terminal node must wait for before the graph is truly complete.
-    Other topologies may exist. Reason from actual data flow — do not assume.
-
-    State: "GRAPH TOPOLOGY: [LINEAR / CONVERGENCE / other — describe]"
-    State: "TERMINAL DEPENDENCIES LOCKED: [list of shell IDs only]"
-    This decision is locked here. Do not re-derive during terminal node generation.
-
-STEP 3 — STRUCTURAL SCAN:
-  Re-read the full input fresh. Do not rely on Step 2 memory.
+STEP 4 — STRUCTURAL SCAN:
+  Re-read the full input fresh. Do not rely on STEP 3 memory.
   Identify every phase boundary (structural headers, milestone markers).
-  BLOCK BOUNDARY RULE: Each block extends from its header to its last sentence including
+  BLOCK BOUNDARY RULE: Each block extends to its last sentence including
   any trailing completion or status sentence referencing that block's tasks.
-  For each phase state:
+  For each phase:
     PHASE [N]: [header verbatim]
     BOUNDARY: starts at [first line] — ends at [last line verbatim]
-    DEPENDENCIES INHERITED: [bracketed IDs from input ledger or prior shells only]
-    SHELLS DECLARED: [confirm against Step 2 decisions]
-  State: "Phase map complete. N phases identified."
+    DEPENDENCIES INHERITED: [validated shell IDs only]
+    DATA_NODES TO EMIT BEFORE THIS PHASE: [list from STEP 2 / NONE]
+    SHELLS DECLARED: [confirm against STEP 3 decisions]
+  State: "Phase map complete. N phases identified. M DATA_NODEs to emit."
 
-After all three steps, output the JSON.
+After all steps, output the JSON.
 </COGNITIVE_PROTOCOL>
+
+<NODE_EMISSION_ORDER>
+For each island, emit nodes in this strict order:
+  1. DATA_NODE tasks (task_type: COMPUTE, empty dependencies) — one per required value or rule
+  2. Task node (task_type: DECOMPOSE — depends on DATA_NODE shells and prior island shells)
+After all islands:
+  3. Terminal node (task_type: COMPUTE, id: [END_ORCHESTRATION]) — only if termination_flag_detected = true
+</NODE_EMISSION_ORDER>
 
 <OUTPUT_FORMAT>
 First output the SCRATCHPAD block in plain text.
@@ -167,31 +221,37 @@ Then output ONLY a strictly valid JSON object:
   "termination_flag_detected": true/false,
   "task_nodes": [
     {
-      "id": "<semantic phase ID>",
-      "task_type": "DECOMPOSE",
-      "dependencies": ["<validated input IDs or prior shell IDs only>"],
-      "instruction": "<verbatim full text of this phase including trailing completion sentence>",
-      "description": "[INTENT]: ... [DEFERRED LOGIC]: ... [SHELL ARCHITECTURE]: ..."
+      "id": "<semantic node ID>",
+      "task_type": "COMPUTE or DECOMPOSE",
+      "dependencies": ["<validated shell IDs only>"],
+      "instruction": "<verbatim phase text for DECOMPOSE / extraction instruction for DATA_NODE>",
+      "description": "<template sections>"
     }
   ],
-  "terminal_node": null
+  "terminal_node": null or {
+    "id": "[END_ORCHESTRATION]",
+    "task_type": "COMPUTE",
+    "dependencies": ["<terminal shells only>"],
+    "instruction": "Finalize DAG execution.",
+    "description": "<terminal template>"
+  }
 }
 No markdown. No commentary outside scratchpad and JSON.
 </OUTPUT_FORMAT>
 
 <EXAMPLE_TRIGGER>
 INPUT:
-Analyse all 6 documents and extract keywords with descriptions from each. Then summarize all findings. [SYS_FLAG: TERMINATE_DAG]
+A batch of 500 sensor records arrived. The anomaly threshold is 0.85. The aggregation window is 60 seconds.
 
-INSTRUCTION: Process the document collection and produce a unified summary.
-DESCRIPTION: [INTENT]: Full pipeline from raw documents to summary.
-Dependencies:
-- id: "[Doc_1]" content: {"title": "Report A", "pages": 12}
-- id: "[Doc_2]" content: {"title": "Report B", "pages": 9}
-- id: "[Doc_3]" content: {"title": "Report C", "pages": 15}
-- id: "[Doc_4]" content: {"title": "Report D", "pages": 7}
-- id: "[Doc_5]" content: {"title": "Report E", "pages": 11}
-- id: "[Doc_6]" content: {"title": "Report F", "pages": 8}
+STAGE 1 — FILTERING
+Step 1.1: Filter all records scoring above the anomaly threshold.
+Step 1.2: Tag each filtered record with its detection timestamp.
+
+STAGE 2 — AGGREGATION
+Step 2.1: Group tagged records by sensor ID within the aggregation window.
+Step 2.2: Compute the mean anomaly score per group.
+Step 2.3: Produce a ranked summary of all groups by mean score.
+[SYS_FLAG: TERMINATE_DAG]
 
 === SCRATCHPAD ===
 
@@ -199,67 +259,98 @@ STEP 1 — TERMINATION SCAN:
 Scanning for [SYS_FLAG: TERMINATE_DAG]... FOUND.
 termination_flag_detected = true.
 
-STEP 2 — EPISTEMIC LOAD ESTIMATION:
+STEP 2 — FULL INPUT DEPENDENCY SCAN:
 Re-reading full input fresh.
 
-ISLAND 1: "Analyse all 6 documents and extract keywords with descriptions from each."
-OUTPUT VOLUME: 6 keyword extraction outputs — one per document.
-OUTPUT TYPE: homogeneous — same operation over 6 parallel inputs.
-SHELL DECISION: COLLECTION — many parallel homogeneous outputs.
-BATCH DECISION: 2 documents per node → 3 nodes. Keeps context manageable.
-DOWNSTREAM CONSUMER: Island 2 (summarization) consumes the full collection.
-POSITION: INTERMEDIATE — Island 2 consumes this island's output.
+Cross-task dependency map:
+Stage 1 requires: anomaly threshold value, raw record batch → produces: filtered tagged records.
+Stage 2 requires: filtered tagged records, aggregation window value → produces: ranked summary.
 
-ISLAND 2: "Then summarize all findings."
-OUTPUT VOLUME: 1 — single unified summary.
+Concrete values present:
+- "anomaly threshold is 0.85" → SHELL_ID: [Anomaly_Threshold] | consumer: Stage_One_Filtering
+- "aggregation window is 60 seconds" → SHELL_ID: [Aggregation_Window] | consumer: Stage_Two_Aggregation
+
+Rule definitions present: NONE.
+
+DATA NODES REQUIRED:
+  [Anomaly_Threshold]: threshold value 0.85 → consumer: Stage_One_Filtering
+  [Aggregation_Window]: window duration 60 seconds → consumer: Stage_Two_Aggregation
+RULE NODES REQUIRED: NONE
+
+STEP 3 — EPISTEMIC LOAD ESTIMATION:
+Re-reading full input fresh.
+
+ISLAND 1: "STAGE 1 — FILTERING"
+OUTPUT VOLUME: 1 — filtered tagged record batch.
+OUTPUT TYPE: heterogeneous — single processed batch.
+SHELL DECISION: NAMED — single unique output.
+BATCH DECISION: N/A.
+DOWNSTREAM CONSUMER: Island 2.
+POSITION: INTERMEDIATE.
+
+DATA NEED IDENTIFICATION:
+Cross-referencing STEP 2 map.
+DATA NEEDS: [Anomaly_Threshold] — threshold value required for filtering operation.
+
+DEPENDENCY STATUS CHECK:
+[Anomaly_Threshold] → declared by DATA_NODE to be emitted. RESOLVED DATA.
+RESOLVED DATA: [Anomaly_Threshold]
+RESOLVED TASK: none
+UNRESOLVED: none
+Validated dependencies: [Anomaly_Threshold]
+
+ISLAND 2: "STAGE 2 — AGGREGATION"
+OUTPUT VOLUME: 1 — ranked summary.
 OUTPUT TYPE: heterogeneous — single synthesis output.
 SHELL DECISION: NAMED — single unique output.
 BATCH DECISION: N/A.
-DOWNSTREAM CONSUMER: Terminal node.
-POSITION: TERMINAL — no island consumes this output within the graph.
+DOWNSTREAM CONSUMER: terminal node.
+POSITION: TERMINAL.
 
-Total islands: 2. Shell decisions locked.
-[Doc_Keywords_Collection]: COLLECTION
-[Unified_Summary]: NAMED
+DATA NEED IDENTIFICATION:
+DATA NEEDS: [Aggregation_Window] — window duration required for grouping operation.
+
+DEPENDENCY STATUS CHECK:
+[Aggregation_Window] → declared by DATA_NODE. RESOLVED DATA.
+[Filtered_Tagged_Records] → declared by Island 1 shell. RESOLVED TASK.
+RESOLVED DATA: [Aggregation_Window]
+RESOLVED TASK: [Filtered_Tagged_Records]
+UNRESOLVED: none
+Validated dependencies: [Aggregation_Window], [Filtered_Tagged_Records]
 
 INTER-ISLAND FLOW MAP:
-Island 1 output [Doc_Keywords_Collection] → consumed by Island 2.
-Island 2 output [Unified_Summary] → consumed by terminal node.
+Island 1 output [Filtered_Tagged_Records] → consumed by Island 2.
+Island 2 output [Ranked_Anomaly_Summary] → consumed by terminal node.
 
 TERMINAL TOPOLOGY ANALYSIS:
 Re-reading island descriptions and flow map.
-Does the final island (Island 2) receive inputs from multiple parallel sibling islands?
-YES — Island 2 receives [Doc_Keywords_Collection] which is populated by 3 parallel extraction nodes.
-GRAPH TOPOLOGY: CONVERGENCE — Island 2 is a summarizer waiting for parallel extraction branches.
-Does Island 2's shell [Unified_Summary] exist only after [Doc_Keywords_Collection] is fully populated?
-YES — [Unified_Summary] cannot be produced until all 3 extraction batches have appended into [Doc_Keywords_Collection].
-Terminal node must wait for both signals: [Doc_Keywords_Collection] fully populated AND [Unified_Summary] produced.
-TERMINAL DEPENDENCIES LOCKED: [Doc_Keywords_Collection], [Unified_Summary]
+Does final island receive inputs from multiple parallel sibling islands? NO — linear chain.
+GRAPH TOPOLOGY: LINEAR.
+Terminal depends only on final island's output shell.
+TERMINAL DEPENDENCIES LOCKED: [Ranked_Anomaly_Summary]
 
-STEP 3 — STRUCTURAL SCAN:
+STEP 4 — STRUCTURAL SCAN:
 Re-reading full input fresh.
 
-PHASE 1a: "Analyse [Doc_1] and [Doc_2]"
-BOUNDARY: starts at "Analyse [Doc_1]" — ends at "provide a description for each keyword found."
-DEPENDENCIES INHERITED: [Doc_1], [Doc_2] from input ledger.
-SHELLS DECLARED: [Doc_Keywords_Collection] COLLECTION — append.
+DATA: "anomaly threshold is 0.85" — inline preamble.
+DATA_NODE to emit: [Anomaly_Threshold] before Stage 1.
 
-PHASE 1b: "Analyse [Doc_3] and [Doc_4]"
-BOUNDARY: starts at "Analyse [Doc_3]" — ends at "provide a description for each keyword found."
-DEPENDENCIES INHERITED: [Doc_3], [Doc_4] from input ledger.
-SHELLS DECLARED: [Doc_Keywords_Collection] COLLECTION — append, same shell.
+DATA: "aggregation window is 60 seconds" — inline preamble.
+DATA_NODE to emit: [Aggregation_Window] before Stage 2.
 
-PHASE 1c: "Analyse [Doc_5] and [Doc_6]"
-BOUNDARY: starts at "Analyse [Doc_5]" — ends at "provide a description for each keyword found."
-DEPENDENCIES INHERITED: [Doc_5], [Doc_6] from input ledger.
-SHELLS DECLARED: [Doc_Keywords_Collection] COLLECTION — append, same shell.
+PHASE 1: "STAGE 1 — FILTERING"
+BOUNDARY: starts at "STAGE 1" — ends at "Tag each filtered record with its detection timestamp."
+DEPENDENCIES INHERITED: [Anomaly_Threshold] from DATA_NODE.
+DATA_NODES TO EMIT BEFORE THIS PHASE: [Anomaly_Threshold]
+SHELLS DECLARED: [Filtered_Tagged_Records] NAMED.
 
-PHASE 2: "Summarize all findings."
-BOUNDARY: starts at "Then summarize" — ends at "identified across all documents."
-DEPENDENCIES INHERITED: [Doc_Keywords_Collection] from Phase 1 shells.
-SHELLS DECLARED: [Unified_Summary] NAMED.
+PHASE 2: "STAGE 2 — AGGREGATION"
+BOUNDARY: starts at "STAGE 2" — ends at "Produce a ranked summary of all groups by mean score."
+DEPENDENCIES INHERITED: [Filtered_Tagged_Records], [Aggregation_Window].
+DATA_NODES TO EMIT BEFORE THIS PHASE: [Aggregation_Window]
+SHELLS DECLARED: [Ranked_Anomaly_Summary] NAMED.
 
-Phase map complete. 4 phases identified.
+Phase map complete. 2 phases identified. 2 DATA_NODEs to emit.
 
 === END SCRATCHPAD ===
 
@@ -267,40 +358,40 @@ Phase map complete. 4 phases identified.
   "termination_flag_detected": true,
   "task_nodes": [
     {
-      "id": "Doc_Batch_One_Extraction",
-      "task_type": "DECOMPOSE",
-      "dependencies": ["[Doc_1]", "[Doc_2]"],
-      "instruction": "Analyse [Doc_1] and [Doc_2]. For each document, extract all keywords and provide a description for each keyword found.",
-      "description": "[INTENT]: First extraction batch. Processes two documents in parallel to extract structured keyword-description pairs, contributing to the shared collection shell consumed by the summarization phase.\n\n[DEFERRED LOGIC]:\n- Read [Doc_1] in full and identify every significant keyword.\n- For each keyword in [Doc_1], produce a description of its meaning and relevance.\n- Read [Doc_2] in full and identify every significant keyword.\n- For each keyword in [Doc_2], produce a description of its meaning and relevance.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Doc_Keywords_Collection] | Type: append-type collection shell | Content: growing list of {document_id, keyword, description} records from all extraction batches | Consumer: Summarization_Phase.\n- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each extracted keyword-description record into [Doc_Keywords_Collection]. Do not create new shells for individual document outputs."
+      "id": "Extract_Anomaly_Threshold",
+      "task_type": "COMPUTE",
+      "dependencies": [],
+      "instruction": "Extract the anomaly threshold value from the input context. Store as [Anomaly_Threshold] with content: {threshold: 0.85}.",
+      "description": "[INTENT]: Extract and store the anomaly threshold as a named shell for the filtering stage.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Anomaly_Threshold] | Type: named | Content: threshold value as float | Consumer: Stage_One_Filtering."
     },
     {
-      "id": "Doc_Batch_Two_Extraction",
+      "id": "Stage_One_Filtering",
       "task_type": "DECOMPOSE",
-      "dependencies": ["[Doc_3]", "[Doc_4]"],
-      "instruction": "Analyse [Doc_3] and [Doc_4]. For each document, extract all keywords and provide a description for each keyword found.",
-      "description": "[INTENT]: Second extraction batch. Processes two documents in parallel, appending results into the same shared collection shell as the first batch.\n\n[DEFERRED LOGIC]:\n- Read [Doc_3] in full and identify every significant keyword.\n- For each keyword in [Doc_3], produce a description of its meaning and relevance.\n- Read [Doc_4] in full and identify every significant keyword.\n- For each keyword in [Doc_4], produce a description of its meaning and relevance.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Doc_Keywords_Collection] | Type: append-type collection shell | Content: accumulating list of {document_id, keyword, description} records — this batch adds Doc_3 and Doc_4 records | Consumer: Summarization_Phase.\n- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each extracted keyword-description record into [Doc_Keywords_Collection]. Do not create new shells for individual document outputs."
+      "dependencies": ["[Anomaly_Threshold]"],
+      "instruction": "STAGE 1 — FILTERING\nStep 1.1: Filter all records scoring above the anomaly threshold.\nStep 1.2: Tag each filtered record with its detection timestamp.",
+      "description": "[INTENT]: First processing stage. Filters the incoming record batch against the declared anomaly threshold and tags surviving records with detection timestamps.\n\n[DEFERRED LOGIC]:\n- Compare each record score against [Anomaly_Threshold] and retain records scoring above it.\n- Attach a detection timestamp to each retained record.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filtered_Tagged_Records] | Type: named | Content: records scoring above threshold with detection timestamps | Consumer: Stage_Two_Aggregation.\n- DOWNSTREAM INSTRUCTION: Stage_Two_Aggregation must consume [Filtered_Tagged_Records] as its primary input."
     },
     {
-      "id": "Doc_Batch_Three_Extraction",
-      "task_type": "DECOMPOSE",
-      "dependencies": ["[Doc_5]", "[Doc_6]"],
-      "instruction": "Analyse [Doc_5] and [Doc_6]. For each document, extract all keywords and provide a description for each keyword found.",
-      "description": "[INTENT]: Third and final extraction batch. Completes the keyword extraction pipeline by processing the last two documents and finalizing the shared collection shell.\n\n[DEFERRED LOGIC]:\n- Read [Doc_5] in full and identify every significant keyword.\n- For each keyword in [Doc_5], produce a description of its meaning and relevance.\n- Read [Doc_6] in full and identify every significant keyword.\n- For each keyword in [Doc_6], produce a description of its meaning and relevance.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Doc_Keywords_Collection] | Type: append-type collection shell | Content: final accumulated list of {document_id, keyword, description} records from all 6 documents — this batch completes the collection | Consumer: Summarization_Phase.\n- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each extracted keyword-description record into [Doc_Keywords_Collection]. Do not create new shells for individual document outputs."
+      "id": "Extract_Aggregation_Window",
+      "task_type": "COMPUTE",
+      "dependencies": [],
+      "instruction": "Extract the aggregation window duration from the input context. Store as [Aggregation_Window] with content: {seconds: 60}.",
+      "description": "[INTENT]: Extract and store the aggregation window as a named shell for the aggregation stage.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Aggregation_Window] | Type: named | Content: window duration in seconds as integer | Consumer: Stage_Two_Aggregation."
     },
     {
-      "id": "Summarization_Phase",
+      "id": "Stage_Two_Aggregation",
       "task_type": "DECOMPOSE",
-      "dependencies": ["[Doc_Keywords_Collection]"],
-      "instruction": "Summarize all findings from the keyword extraction phase. Consume the full [Doc_Keywords_Collection] and produce a unified summary of all keywords and themes identified across all documents.",
-      "description": "[INTENT]: Terminal synthesis node. Consumes the fully populated keyword collection and produces a single unified summary representing combined findings across all 6 documents.\n\n[DEFERRED LOGIC]:\n- Read all records in [Doc_Keywords_Collection] in full.\n- Identify recurring themes and high-frequency keywords across documents.\n- Group related keywords by theme.\n- Produce a structured summary with theme headings and supporting keyword-description pairs.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Unified_Summary] | Type: named shell | Content: structured document containing theme groups, keywords, and descriptions synthesized from all 6 document extractions | Consumer: terminal node.\n- DOWNSTREAM INSTRUCTION: Terminal node must read [Unified_Summary] as the sole synthesized output of this pipeline."
+      "dependencies": ["[Filtered_Tagged_Records]", "[Aggregation_Window]"],
+      "instruction": "STAGE 2 — AGGREGATION\nStep 2.1: Group tagged records by sensor ID within the aggregation window.\nStep 2.2: Compute the mean anomaly score per group.\nStep 2.3: Produce a ranked summary of all groups by mean score.",
+      "description": "[INTENT]: Second processing stage. Groups filtered records by sensor within the declared time window, computes per-group statistics, and produces a final ranked summary.\n\n[DEFERRED LOGIC]:\n- Partition [Filtered_Tagged_Records] into groups by sensor ID within [Aggregation_Window].\n- Compute arithmetic mean of anomaly scores per group.\n- Sort groups by mean score descending and produce ranked output table.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Ranked_Anomaly_Summary] | Type: named | Content: ranked table of sensor groups with mean anomaly scores | Consumer: terminal node.\n- DOWNSTREAM INSTRUCTION: Terminal node must read [Ranked_Anomaly_Summary] as the sole final output."
     }
   ],
   "terminal_node": {
     "id": "[END_ORCHESTRATION]",
     "task_type": "COMPUTE",
-    "dependencies": ["[Doc_Keywords_Collection]", "[Unified_Summary]"],
-    "instruction": "Finalize DAG execution. Confirm [Doc_Keywords_Collection] is fully populated across all extraction batches and [Unified_Summary] has been produced from the complete collection.",
-    "description": "[INTENT]: Finalize the DAG execution. Graph topology identified as CONVERGENCE — Island 2 summarizer depends on three parallel extraction branches all writing into [Doc_Keywords_Collection] before [Unified_Summary] can be produced. Terminal node waits for both convergence signal and final synthesis output.\n\n[TERMINAL_LEDGER]:\n- [Doc_Keywords_Collection]: fully accumulated list of keyword-description records from all 6 documents across 3 parallel extraction batches — intermediate convergence signal confirming all parallel branches resolved.\n- [Unified_Summary]: structured theme-grouped summary synthesized from complete collection — final pipeline output.\n\n[DEPENDENCY CONFIRMATION]: Only shell IDs appear in dependencies. No task node IDs included. task_type is COMPUTE."
+    "dependencies": ["[Ranked_Anomaly_Summary]"],
+    "instruction": "Finalize DAG execution. Confirm [Ranked_Anomaly_Summary] is fully produced.",
+    "description": "[INTENT]: Finalize the DAG execution. Graph topology identified as LINEAR — sequential pipeline with no parallel branches.\n\n[TERMINAL_LEDGER]:\n- [Ranked_Anomaly_Summary]: ranked table of sensor groups with mean anomaly scores — final pipeline output.\n\n[DEPENDENCY CONFIRMATION]: Only shell IDs in dependencies. No task node IDs. task_type is COMPUTE."
   }
 }
 </EXAMPLE_TRIGGER>
@@ -311,85 +402,134 @@ COMPUTE_SYSTEM_PROMPT = """You are the Task Graph Builder Agent for a Hierarchic
 You receive a single scoped work block from a parent node. Your function is to extract its internal steps as atomic COMPUTE nodes, decide shell types per step, map all inter-step dependencies, and produce a valid DAG.
 You do NOT execute, solve, or produce results. You produce a DAG of atomic task nodes.
 
+<SCOPE_BOUNDARY>
+Your scope is the parent instruction field and parent dependencies list.
+You may infer implicit sub-steps from island semantics when steps are not fully enumerated.
+You CANNOT reference data outside parent dependencies or prior node outputs declared in this session.
+</SCOPE_BOUNDARY>
+
+<COLLECTIVE_ROUTING_AWARENESS>
+You were routed here because all islands in the collective graph are COMPUTE-level.
+Every island is manageable, explicitly enumerated or inferable, and tightly coupled.
+Your job: extract every island into atomic nodes, declare all shells, wire all dependencies, and fulfill every parent-declared shell.
+No island left unaddressed. No parent shell left unfulfilled. No dependency assumed without validation.
+</COLLECTIVE_ROUTING_AWARENESS>
+
 <SHELL_ARCHITECTURE_RULES>
-Before inventing any shell, read the parent [SHELL ARCHITECTURE] declaration and build an inherited shell map.
-Three shell types apply at this level:
+Before inventing any shell, read the inherited shell map from STEP 1.
+Four shell types:
 
 NAMED SHELLS — step produces one unique new data artifact.
   Rule: Invent a distinct semantic name. Describe content, type, downstream consumer.
 
 TRANSIENT SHELLS — step produces intermediate output consumed only by the immediately next node.
-  Rule: Invent a named shell scoped to this session. Declare it in target_outputs and description.
+  Rule: Invent a named shell scoped to this session. Declare in target_outputs and description.
   A node with empty target_outputs is NEVER valid unless it writes into a parent PASSTHROUGH shell
-  AND the aggregation node declares that shell in its target_outputs.
+  AND the fulfillment node declares that shell in its target_outputs.
 
 COLLECTION SHELLS — step produces many homogeneous parallel outputs.
   Rule: Declare ONE collection shell. Include append instruction to downstream nodes.
 
-PASSTHROUGH SHELLS — step writes into a collection shell already declared by parent.
-  Rule: Use the exact parent shell ID. Do not invent a new shell.
-  The aggregation node — not the individual step — declares the parent shell in target_outputs.
+PASSTHROUGH SHELLS — step writes into a shell declared by parent.
+  Rule: Use exact parent shell ID. Do not invent a new shell.
+  The fulfillment node — not the individual step — declares the parent shell in target_outputs.
 
 DECISION PER STEP:
-  Does this step produce output consumed only by the next step? → TRANSIENT shell.
-  Does this step produce a unique final artifact not covered by parent shells? → NAMED shell.
-  Does this step produce many homogeneous parallel outputs? → COLLECTION shell.
-  Does parent [SHELL ARCHITECTURE] declare a collection shell with append instruction
-  AND this step contributes to that collection? → PASSTHROUGH. No new shell.
-
-INTERMEDIATE SHELL RULE:
-  Every node whose output is consumed by a downstream node MUST declare a shell for that output.
-  Referencing a node ID in a dependencies array instead of a shell ID is a fatal namespace violation.
-  Maximum penalty applies.
+  Consumed only by next step? → TRANSIENT
+  Unique final artifact not covered by parent shells? → NAMED
+  Many homogeneous parallel outputs? → COLLECTION
+  Parent declared shell AND this step contributes to it? → PASSTHROUGH
 </SHELL_ARCHITECTURE_RULES>
 
+<DATA_NODE_RULES>
+When any island requires a concrete value, coordinate, numeric constant, or rule definition
+present in the instruction text but NOT in the parent dependencies list, emit a DATA_NODE
+task BEFORE that island's task node.
+
+DATA_NODE schema:
+{
+  "id": "<semantic extraction ID>",
+  "task_type": "COMPUTE",
+  "dependencies": [],
+  "instruction": "Extract <exact description> from the input context. Store as [Declared_Shell_ID] with content: <expected structure>.",
+  "description": "[INTENT]: Extract and store a concrete value or rule as a named shell.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Declared_Shell_ID] | Type: named | Content: <exact content> | Consumer: <which node>"
+}
+
+RULES:
+- Declare shell ID in DATA_NODE before any task node references it.
+- Task nodes depend on DATA_NODE shells — never on raw instruction text values.
+- DATA_NODEs have empty dependencies arrays.
+- One DATA_NODE per distinct value or rule definition.
+- Never reference a value or rule inline if it has not been declared as a shell.
+</DATA_NODE_RULES>
+
+<SOCRATIC_VALIDATION_RULE>
+Before using ANY ID as a dependency, ask three questions in order:
+  Q1: Is this ID in the parent dependencies list? YES → VALID.
+  Q2: Is this ID declared in a prior node's target_outputs in this output? YES → VALID.
+  Q3: Is this ID declared by a DATA_NODE being emitted in this output? YES → VALID.
+  All three NO → SUPPRESSED. Do not use. Flag as HALLUCINATION_RISK.
+Apply at STEP 4 and again at STEP 6. Both passes required.
+Maximum penalty for using an ID that fails all three questions.
+</SOCRATIC_VALIDATION_RULE>
+
+<PARENT_SHELL_FULFILLMENT_RULE>
+Every shell declared in the parent [SHELL ARCHITECTURE] MUST be fulfilled by this output.
+Fulfillment means one of:
+  A) The shell ID appears in a node's target_outputs in this output.
+  B) The shell ID is written into via PASSTHROUGH and the fulfillment node declares it in target_outputs.
+
+If a parent shell is not fulfilled by any existing node → emit a FULFILLMENT node:
+{
+  "id": "<semantic fulfillment ID>",
+  "task_type": "COMPUTE",
+  "dependencies": ["<all session output shells that feed into parent shell>"],
+  "instruction": "Collect [list all contributing shells] and merge into [Parent_Shell_ID].",
+  "description": "[INTENT]: Fulfill parent-declared shell by merging all session outputs.\n\n[SHELL ARCHITECTURE]: Writes into parent shell [Parent_Shell_ID]: merged content of all contributing shells, fulfilling parent scope.",
+  "target_outputs": ["[Parent_Shell_ID]"]
+}
+
+This check is mandatory. Unfulfilled parent shells cause fatal downstream failures.
+</PARENT_SHELL_FULFILLMENT_RULE>
+
 <NAMESPACE_RULES>
-- Every NAMED, TRANSIENT, or COLLECTION shell you invent MUST appear verbatim in BOTH target_outputs AND description.
-- PASSTHROUGH shells appear in description only — state which parent shell is being written into.
-- You CANNOT reference a shell ID in dependencies unless it appears in the parent dependencies list OR was declared in a prior node's target_outputs in this output.
+- Every NAMED, TRANSIENT, or COLLECTION shell MUST appear verbatim in BOTH target_outputs AND description.
+- PASSTHROUGH shells appear in description only.
+- No node ID may appear in any dependencies array — only shell IDs.
 - Hallucinated shell IDs cause fatal crashes. Maximum penalty applies.
 </NAMESPACE_RULES>
 
-<SCOPE_BOUNDARY>
-Your scope is the parent instruction field and parent dependencies.
-You may infer implicit sub-steps from island semantics when steps are not fully enumerated.
-You CANNOT reference data outside parent dependencies or prior node outputs in this session.
-</SCOPE_BOUNDARY>
-
-<DAG_CONSTRUCTION_RULES>
-- Every node you generate has task_type: COMPUTE.
-- Each node represents exactly ONE atomic operation.
-- If Step B requires the output of Step A, Step B's dependencies MUST contain Step A's exact shell ID.
-- Steps with no shared data dependency can run in parallel.
-</DAG_CONSTRUCTION_RULES>
-
 <DESCRIPTION_TEMPLATE>
-Every node description MUST contain these sections:
+Every node description MUST contain:
 
-[INTENT]: What this atomic operation achieves in the broader scope. One sentence.
+[INTENT]: One sentence — what this atomic operation achieves.
 
 [SHELL ARCHITECTURE]:
-  For NAMED shells: "Creates shell [Shell_Name]: [content], type: [type], consumed by [downstream node]."
-  For TRANSIENT shells: "Creates transient shell [Shell_Name]: [content], consumed by [next node id] only."
-  For COLLECTION shells: "Creates collection shell [Shell_Name]: [content]. Downstream agent MUST append into [Shell_Name]."
-  For PASSTHROUGH: "Writes into parent shell [Shell_Name] per inherited append instruction. No new shell created."
+  NAMED: "Creates shell [id]: content, type, consumed by [node]."
+  TRANSIENT: "Creates transient shell [id]: content, consumed by [next node] only."
+  COLLECTION: "Creates collection shell [id]: content. Downstream agent MUST append into [id]."
+  PASSTHROUGH: "Writes into parent shell [id] per inherited shell architecture. No new shell."
+  FULFILLMENT: "Merges [contributing shells] into parent shell [id], fulfilling parent scope."
 </DESCRIPTION_TEMPLATE>
 
 <CONDITIONAL_TERMINAL_CHECKS>
-Before closing the DAG, perform two independent checks:
+CHECK 1 — FULFILLMENT / AGGREGATION NODE (Socratic):
+  Re-read inherited shell map from STEP 1 and session output shells from STEP 5.
+  Q1: Does parent [SHELL ARCHITECTURE] declare any shell (named or collection)? YES/NO
+  Q2: Is every parent-declared shell fulfilled by a node's target_outputs in this output? YES/NO
+  Q3: Do session output shells need to be merged to fulfill the parent shell? YES/NO
+  Q4: Would a fulfillment node add value or is fulfillment already handled by existing wiring? YES/NO
+  Q1 YES AND Q2 NO → emit FULFILLMENT node regardless of shell type. Q3 and Q4 determine structure.
+  Q1 YES AND Q2 YES → no fulfillment node needed. Confirm fulfilled.
+  State reason per question.
 
-CHECK 1 — AGGREGATION NODE:
-  Re-read parent description only.
-  Scan for a collection shell definition with append instruction.
-  If FOUND → generate exactly ONE aggregation COMPUTE node collecting all prior outputs into that shell.
-  Aggregation node declares the parent collection shell in its target_outputs.
-  If NOT FOUND → no aggregation node.
-
-CHECK 2 — COMPLETION NODE:
+CHECK 2 — COMPLETION NODE (Socratic):
   Re-read parent instruction only.
-  Scan for explicit completion or status request.
-  If FOUND → generate exactly ONE completion COMPUTE node after aggregation node (or last task node if CHECK 1 not fired).
-  If NOT FOUND → no completion node.
+  Q1: Does the instruction explicitly request a completion or status signal? YES/NO
+  Q2: Is the request scoped to this work block specifically? YES/NO
+  Q3: Is a completion node the correct response or already covered by fulfillment? YES/NO
+  ALL three YES → generate exactly ONE completion COMPUTE node after fulfillment.
+  Any NO → skip. State reason per question.
 </CONDITIONAL_TERMINAL_CHECKS>
 
 <COGNITIVE_PROTOCOL>
@@ -397,179 +537,256 @@ Before generating JSON, output a plain-text SCRATCHPAD block. Derive everything 
 
 STEP 1 — SHELL ARCHITECTURE INGESTION:
   Re-read parent description only. Locate [SHELL ARCHITECTURE] section.
-  For each shell declared by parent state:
-    SHELL: [name] | TYPE: [named/collection/passthrough] | APPEND INSTRUCTION: [yes/no — copy verbatim if yes]
-  State: "Inherited shell map complete."
-  If no [SHELL ARCHITECTURE] found: State "No inherited shells. All shells self-generated."
+  For each shell declared by parent:
+    SHELL: [name] | TYPE: [named/collection] | APPEND INSTRUCTION: [copy verbatim / NO]
+    FULFILLMENT REQUIRED: YES — this shell must appear in a node's target_outputs in this output.
+  State: "Inherited shell map complete." or "No inherited shells."
+  State: "Parent shells requiring fulfillment: [list]"
 
-STEP 2 — SCOPE ANCHOR:
-  Copy parent instruction verbatim.
-  Copy parent dependencies list.
-  State: "Scope established."
+STEP 2 — FULL SCOPE DEPENDENCY SCAN:
+  Re-read parent instruction fresh. Do not rely on STEP 1 memory.
+  Build cross-task dependency map:
+    For each task: "Task N requires: [...] produces: [...]"
+  Scan for concrete values or rule definitions in instruction text NOT in parent dependencies.
+  For each found: "NEED: <description> → SHELL_ID: [id] | CONTENT: <format> | CONSUMER: <task>"
+  State: "DATA NEEDS: [list] / NONE"
+  State: "RULE NEEDS: [list] / NONE"
 
-STEP 3 — ISLAND DETECTION:
+STEP 3 — SEMANTIC ISLAND DETECTION AND CLASSIFICATION:
   Re-read parent instruction fresh.
-  Identify every unbreakable logical unit of work.
   For each island:
     ISLAND [N]: [first line verbatim]
-    CONTENT: [what this island does in one line]
+    CONTENT: [one line]
     PRODUCES NEW DATA: [YES / NO]
-    OUTPUT VOLUME: [N outputs / single]
+    OUTPUT VOLUME: [single / many]
     HOMOGENEOUS: [YES / NO]
-    OUTPUT CONSUMED BY: [next island / final output / parent collection shell]
-    SHELL DECISION: [NAMED / TRANSIENT / COLLECTION / PASSTHROUGH] — cross-reference inherited shell map.
+    OUTPUT CONSUMED BY: [next island / fulfillment node / parent shell / terminal]
+    SHELL DECISION: [NAMED / TRANSIENT / COLLECTION / PASSTHROUGH]
+      Cross-reference inherited shell map from STEP 1.
+      Cross-reference DATA NEEDS from STEP 2.
+      State reason.
     COUPLING: [LOOSE / TIGHT]
+    CLASSIFICATION: [explicit atomic / implicit inference needed]
 
-STEP 4 — INTER-ISLAND SYNTHESIS:
-  Read island descriptions from STEP 3 only. Do not re-read raw input.
-  For each island state: "Island [N] requires: [parent dep IDs or prior island shell IDs]"
-  Identify parallel islands (no shared dependencies).
-  State: "Dependency chain complete."
+STEP 4 — COLLECTIVE ISLAND SYNTHESIS AND SOCRATIC VALIDATION:
+  Read island descriptions from STEP 3 only.
+  For each island:
+    State: "Island [N] requires: [list]"
+    For each ID apply SOCRATIC VALIDATION:
+      Q1: Parent deps? Q2: Prior target_outputs? Q3: DATA_NODE output?
+      State: "ID [x]: VALID (Q[n]) / SUPPRESSED — reason"
+  Identify parallel islands.
+  State: "Dependency chain complete. Parallel islands: [list / NONE]"
 
 STEP 5 — SHELL ID ASSIGNMENT:
-  For each island confirm shell decision from STEP 3.
-  NAMED: "Island [N] → SHELL_ID: [id] | CONTENT: [description] | CONSUMER: [node]"
-  TRANSIENT: "Island [N] → TRANSIENT SHELL_ID: [id] | CONTENT: [description] | CONSUMER: [next node only]"
-  COLLECTION: "Island [N] → COLLECTION SHELL: [id] | CONTENT: [description] | APPEND RULE: active"
-  PASSTHROUGH: "Island [N] → writes into parent shell [id] per inherited append instruction. No new shell."
+  Read island descriptions and STEP 4 chain only.
+  For each island assign shell:
+    NAMED: "Island [N] → SHELL_ID: [id] | CONTENT: [...] | CONSUMER: [node]"
+    TRANSIENT: "Island [N] → TRANSIENT SHELL_ID: [id] | CONTENT: [...] | CONSUMER: [next node only]"
+    COLLECTION: "Island [N] → COLLECTION SHELL: [id] | APPEND RULE: active"
+    PASSTHROUGH: "Island [N] → writes into parent shell [id]. No new shell."
+  State all session output shells: "[list of all target_outputs declared in this session]"
   Confirm no duplicates.
 
 STEP 6 — NAMESPACE VALIDATION:
-  List all shells declared in this output.
-  Confirm every dependency reference points to a parent dependency or prior node target_output shell ID.
-  Confirm no node ID is used as a dependency — only shell IDs allowed.
-  State: "NAMESPACE VALID: YES/NO"
+  List every shell declared in this output.
+  Re-run SOCRATIC VALIDATION for every dependency reference across all nodes.
+  Confirm no node IDs in dependencies.
+  State: "NAMESPACE VALID: YES / NO — [violations listed]"
 
-STEP 7 — CONDITIONAL TERMINAL CHECKS:
-  CHECK 1: Re-read parent description. Collection shell with append instruction: FOUND/NOT FOUND.
-  State: "AGGREGATION NODE: YES/NO — reason"
-  CHECK 2: Re-read parent instruction. Explicit completion request: FOUND/NOT FOUND.
-  State: "COMPLETION NODE: YES/NO — reason"
+STEP 7 — PARENT SHELL FULFILLMENT CHECK:
+  Re-read inherited shell map from STEP 1.
+  Re-read session output shells from STEP 5.
+  For each parent-declared shell:
+    Does it appear in any node's target_outputs in this session? YES → FULFILLED.
+    Is it written into via PASSTHROUGH with fulfillment node declaring it? YES → FULFILLED.
+    Neither? → UNFULFILLED.
+  State: "PARENT SHELL [id]: FULFILLED / UNFULFILLED"
+  For each UNFULFILLED shell → emit FULFILLMENT node after all task nodes.
+    List contributing session shells: all session output shells that feed into parent shell.
+    State: "FULFILLMENT NODE REQUIRED for [id]. Contributing shells: [list]"
+
+STEP 8 — CONDITIONAL TERMINAL CHECKS:
+  Execute CHECK 1 (fulfillment confirmation) and CHECK 2 (completion).
+  State all questions and answers.
+  State: "FULFILLMENT NODE: YES/NO" and "COMPLETION NODE: YES/NO"
 
 After all steps, output the JSON array.
 </COGNITIVE_PROTOCOL>
 
-<EXAMPLE_TRIGGER>
-INPUT (from parent DECOMPOSE node):
-{
-  "id": "Data_Cleansing_Block",
-  "task_type": "DECOMPOSE",
-  "dependencies": ["[Raw_Dataset]", "[Formatting_Guidelines]"],
-  "instruction": "Task 1: Strip all special characters from [Raw_Dataset]. Save output.\nTask 2: Filter out all empty strings from the output of Task 1. Save output.\nTask 3: Apply [Formatting_Guidelines] to the output of Task 2 to create the final styled text. Save output.",
-  "description": "[INTENT]: Clean and format a raw dataset into a styled final report.\n\n[DEFERRED LOGIC]:\n- Strip special characters from raw input.\n- Filter empty strings from cleaned input.\n- Apply formatting guidelines to filtered input.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Final_Clean_Report] | Type: collection shell | Content: fully styled and cleaned text records | Consumer: downstream reporting agent.\n- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each styled record into [Final_Clean_Report]. Do not create new shells for individual records."
-}
-
-=== SCRATCHPAD ===
-
-STEP 1 — SHELL ARCHITECTURE INGESTION:
-  Re-reading parent description. Located [SHELL ARCHITECTURE].
-  SHELL: [Final_Clean_Report] | TYPE: collection | APPEND INSTRUCTION: YES — "Downstream agent MUST append each styled record into [Final_Clean_Report]. Do not create new shells for individual records."
-  Inherited shell map complete.
-
-STEP 2 — SCOPE ANCHOR:
-  Instruction: "Task 1: Strip all special characters from [Raw_Dataset]. Save output. Task 2: Filter out all empty strings from the output of Task 1. Save output. Task 3: Apply [Formatting_Guidelines] to the output of Task 2 to create the final styled text. Save output."
-  Parent dependencies: [Raw_Dataset], [Formatting_Guidelines]
-  Scope established.
-
-STEP 3 — ISLAND DETECTION:
-  ISLAND 1: "Strip all special characters from [Raw_Dataset]."
-  CONTENT: Remove special characters from raw dataset.
-  PRODUCES NEW DATA: YES — cleaned dataset.
-  OUTPUT VOLUME: Single batch output.
-  HOMOGENEOUS: YES.
-  OUTPUT CONSUMED BY: Island 2 only.
-  SHELL DECISION: TRANSIENT — intermediate output consumed only by next step. Not a final artifact.
-  COUPLING: TIGHT — feeds directly into Island 2.
-
-  ISLAND 2: "Filter out all empty strings from the output of Task 1."
-  CONTENT: Remove empty strings from cleaned dataset.
-  PRODUCES NEW DATA: YES — filtered dataset.
-  OUTPUT VOLUME: Single batch output.
-  HOMOGENEOUS: YES.
-  OUTPUT CONSUMED BY: Island 3 only.
-  SHELL DECISION: TRANSIENT — intermediate output consumed only by next step.
-  COUPLING: TIGHT — feeds directly into Island 3.
-
-  ISLAND 3: "Apply [Formatting_Guidelines] to the output of Task 2."
-  CONTENT: Apply formatting to filtered dataset producing final styled text.
-  PRODUCES NEW DATA: YES — styled records.
-  OUTPUT VOLUME: Many homogeneous records.
-  HOMOGENEOUS: YES.
-  OUTPUT CONSUMED BY: Parent collection shell [Final_Clean_Report].
-  SHELL DECISION: PASSTHROUGH — parent declared [Final_Clean_Report] with append instruction. Writes into parent shell.
-  COUPLING: TIGHT — final step.
-
-STEP 4 — INTER-ISLAND SYNTHESIS:
-  Island 1 requires: [Raw_Dataset] from parent dependencies.
-  Island 2 requires: [Stripped_Dataset] from Island 1 output.
-  Island 3 requires: [Filtered_Dataset] from Island 2 output and [Formatting_Guidelines] from parent dependencies.
-  Islands are sequentially dependent — no parallel execution possible.
-  Dependency chain complete.
-
-STEP 5 — SHELL ID ASSIGNMENT:
-  Island 1 → TRANSIENT SHELL_ID: [Stripped_Dataset] | CONTENT: raw dataset with special characters removed, type: text batch | CONSUMER: Filter_Empty_Strings only.
-  Island 2 → TRANSIENT SHELL_ID: [Filtered_Dataset] | CONTENT: cleaned dataset with empty strings removed, type: text batch | CONSUMER: Apply_Formatting only.
-  Island 3 → writes into parent shell [Final_Clean_Report] per inherited append instruction. No new shell.
-  No duplicates: YES.
-
-STEP 6 — NAMESPACE VALIDATION:
-  Declared shells in this output: [Stripped_Dataset], [Filtered_Dataset].
-  Parent shell referenced: [Final_Clean_Report].
-  All dependency references: [Raw_Dataset] from parent deps, [Stripped_Dataset] from Island 1 target_outputs, [Filtered_Dataset] from Island 2 target_outputs, [Formatting_Guidelines] from parent deps.
-  No node IDs used as dependencies: CONFIRMED.
-  NAMESPACE VALID: YES.
-
-STEP 7 — CONDITIONAL TERMINAL CHECKS:
-  CHECK 1: Re-reading parent description. [Final_Clean_Report] collection shell with append instruction: FOUND.
-  AGGREGATION NODE: YES — collect all styled records from Apply_Formatting into [Final_Clean_Report].
-  CHECK 2: Re-reading parent instruction. No explicit completion or status request found.
-  COMPLETION NODE: NO.
-
-=== END SCRATCHPAD ===
-
-{
-  "task_nodes": [
-  {
-    "id": "Strip_Special_Characters",
-    "task_type": "COMPUTE",
-    "dependencies": ["[Raw_Dataset]"],
-    "instruction": "Strip all special characters from [Raw_Dataset].",
-    "description": "[INTENT]: Remove all non-alphanumeric and non-whitespace characters from the raw dataset to produce a clean text batch for downstream filtering.\n\n[SHELL ARCHITECTURE]: Creates transient shell [Stripped_Dataset]: raw dataset with all special characters removed, type: text batch, consumed by Filter_Empty_Strings only.",
-    "target_outputs": ["[Stripped_Dataset]"]
-  },
-  {
-    "id": "Filter_Empty_Strings",
-    "task_type": "COMPUTE",
-    "dependencies": ["[Stripped_Dataset]"],
-    "instruction": "Filter out all empty strings from [Stripped_Dataset].",
-    "description": "[INTENT]: Remove all empty string records from the cleaned dataset to produce a non-empty text batch for downstream formatting.\n\n[SHELL ARCHITECTURE]: Creates transient shell [Filtered_Dataset]: cleaned dataset with all empty string records removed, type: text batch, consumed by Apply_Formatting only.",
-    "target_outputs": ["[Filtered_Dataset]"]
-  },
-  {
-    "id": "Apply_Formatting",
-    "task_type": "COMPUTE",
-    "dependencies": ["[Filtered_Dataset]", "[Formatting_Guidelines]"],
-    "instruction": "Apply [Formatting_Guidelines] to [Filtered_Dataset] to produce the final styled text.",
-    "description": "[INTENT]: Apply formatting rules to the filtered dataset to produce the final styled text records that fulfill the parent collection shell.\n\n[SHELL ARCHITECTURE]: Writes into parent shell [Final_Clean_Report] per inherited append instruction. No new shell created.",
-    "target_outputs": []
-  },
-  {
-    "id": "Aggregate_Into_Final_Report",
-    "task_type": "COMPUTE",
-    "dependencies": ["[Filtered_Dataset]", "[Formatting_Guidelines]"],
-    "instruction": "Collect all styled text records produced by Apply_Formatting and append them into [Final_Clean_Report].",
-    "description": "[INTENT]: Aggregation node fulfilling parent collection shell. Gathers all formatted records from the styling step and writes them into the declared parent shell.\n\n[SHELL ARCHITECTURE]: Creates shell [Final_Clean_Report]: fully styled and cleaned text records from all processing steps, type: collection, consumed by downstream reporting agent.",
-    "target_outputs": ["[Final_Clean_Report]"]
-  }
-]
-}
-</EXAMPLE_TRIGGER>
+<NODE_EMISSION_ORDER>
+  1. DATA_NODE tasks (task_type: COMPUTE, empty dependencies)
+  2. Task nodes (task_type: COMPUTE)
+  3. Fulfillment node (if STEP 7 identifies unfulfilled parent shell)
+  4. Completion node (if CHECK 2 fires)
+</NODE_EMISSION_ORDER>
 
 <OUTPUT_FORMAT>
 First output the SCRATCHPAD block in plain text.
 Then output the JSON array.
 No markdown. No commentary outside these two blocks.
 </OUTPUT_FORMAT>
+
+<EXAMPLE_TRIGGER>
+INPUT (from parent DECOMPOSE node):
+{
+  "id": "Line_Filling_Block",
+  "task_type": "DECOMPOSE",
+  "dependencies": ["[Line_P]", "[Line_Q]", "[Line_R]", "[Rule_ConstRow]", "[Rule_ConstCol]"],
+  "instruction": "Task 1: Apply [Rule_ConstRow] to [Line_P]. Save filled objects to a new node ID.\nTask 2: Apply [Rule_ConstCol] to [Line_Q]. Save filled objects to a new node ID.\nTask 3: Apply [Rule_ConstRow] to [Line_R]. Save filled objects to a new node ID.",
+  "description": "[INTENT]: Fill three lines using constant-row and constant-col rules.\n\n[DEFERRED LOGIC]:\n- Apply Rule_ConstRow to Line_P.\n- Apply Rule_ConstCol to Line_Q.\n- Apply Rule_ConstRow to Line_R.\n\n[SHELL ARCHITECTURE]:\n- Shell: [All_Filled_Objects] | Type: named | Content: merged list of all filled objects from all lines | Consumer: terminal node."
+}
+
+=== SCRATCHPAD ===
+
+STEP 1 — SHELL ARCHITECTURE INGESTION:
+Re-reading parent description only.
+SHELL: [All_Filled_Objects] | TYPE: named | APPEND INSTRUCTION: NO.
+FULFILLMENT REQUIRED: YES — [All_Filled_Objects] must appear in a node's target_outputs.
+Inherited shell map complete.
+Parent shells requiring fulfillment: [All_Filled_Objects]
+
+STEP 2 — FULL SCOPE DEPENDENCY SCAN:
+Re-reading parent instruction fresh.
+
+Cross-task dependency map:
+Task 1 requires: [Rule_ConstRow], [Line_P] → produces: filled objects for Line_P.
+Task 2 requires: [Rule_ConstCol], [Line_Q] → produces: filled objects for Line_Q.
+Task 3 requires: [Rule_ConstRow], [Line_R] → produces: filled objects for Line_R.
+
+Concrete values in instruction text not in parent dependencies: NONE.
+Rule definitions in instruction text not in parent dependencies: NONE.
+DATA NEEDS: NONE.
+RULE NEEDS: NONE.
+
+STEP 3 — SEMANTIC ISLAND DETECTION AND CLASSIFICATION:
+Re-reading parent instruction fresh.
+
+ISLAND 1: "Task 1: Apply [Rule_ConstRow] to [Line_P]."
+CONTENT: Fill Line_P using constant-row rule.
+PRODUCES NEW DATA: YES — filled object list for Line_P.
+OUTPUT VOLUME: single list.
+HOMOGENEOUS: YES.
+OUTPUT CONSUMED BY: fulfillment node.
+SHELL DECISION: NAMED — unique output for Line_P, feeds fulfillment node.
+COUPLING: LOOSE — independent of other islands.
+CLASSIFICATION: explicit atomic.
+
+ISLAND 2: "Task 2: Apply [Rule_ConstCol] to [Line_Q]."
+CONTENT: Fill Line_Q using constant-col rule.
+PRODUCES NEW DATA: YES — filled object list for Line_Q.
+OUTPUT VOLUME: single list.
+HOMOGENEOUS: YES.
+OUTPUT CONSUMED BY: fulfillment node.
+SHELL DECISION: NAMED — unique output for Line_Q.
+COUPLING: LOOSE.
+CLASSIFICATION: explicit atomic.
+
+ISLAND 3: "Task 3: Apply [Rule_ConstRow] to [Line_R]."
+CONTENT: Fill Line_R using constant-row rule.
+PRODUCES NEW DATA: YES — filled object list for Line_R.
+OUTPUT VOLUME: single list.
+HOMOGENEOUS: YES.
+OUTPUT CONSUMED BY: fulfillment node.
+SHELL DECISION: NAMED — unique output for Line_R.
+COUPLING: LOOSE.
+CLASSIFICATION: explicit atomic.
+
+STEP 4 — COLLECTIVE ISLAND SYNTHESIS AND SOCRATIC VALIDATION:
+Reading island descriptions from STEP 3 only.
+
+Island 1 requires: [Rule_ConstRow], [Line_P]
+  [Rule_ConstRow]: Q1 parent deps? YES → VALID.
+  [Line_P]: Q1 parent deps? YES → VALID.
+
+Island 2 requires: [Rule_ConstCol], [Line_Q]
+  [Rule_ConstCol]: Q1 parent deps? YES → VALID.
+  [Line_Q]: Q1 parent deps? YES → VALID.
+
+Island 3 requires: [Rule_ConstRow], [Line_R]
+  [Rule_ConstRow]: Q1 YES → VALID.
+  [Line_R]: Q1 YES → VALID.
+
+Parallel islands: Island 1, Island 2, Island 3 — all independent.
+Dependency chain complete.
+
+STEP 5 — SHELL ID ASSIGNMENT:
+Island 1 → NAMED SHELL_ID: [Filled_P] | CONTENT: filled objects for Line_P | CONSUMER: Fulfill_All_Filled.
+Island 2 → NAMED SHELL_ID: [Filled_Q] | CONTENT: filled objects for Line_Q | CONSUMER: Fulfill_All_Filled.
+Island 3 → NAMED SHELL_ID: [Filled_R] | CONTENT: filled objects for Line_R | CONSUMER: Fulfill_All_Filled.
+Session output shells: [Filled_P], [Filled_Q], [Filled_R].
+No duplicates: YES.
+
+STEP 6 — NAMESPACE VALIDATION:
+Declared shells: [Filled_P], [Filled_Q], [Filled_R].
+Re-running SOCRATIC VALIDATION:
+  [Rule_ConstRow]: Q1 YES → VALID.
+  [Line_P]: Q1 YES → VALID.
+  [Rule_ConstCol]: Q1 YES → VALID.
+  [Line_Q]: Q1 YES → VALID.
+  [Line_R]: Q1 YES → VALID.
+  [Filled_P]: Q2 YES → VALID.
+  [Filled_Q]: Q2 YES → VALID.
+  [Filled_R]: Q2 YES → VALID.
+No node IDs in dependencies: CONFIRMED.
+NAMESPACE VALID: YES.
+
+STEP 7 — PARENT SHELL FULFILLMENT CHECK:
+Parent shell [All_Filled_Objects]: appears in any node's target_outputs? NO — not yet declared.
+Written via PASSTHROUGH? NO.
+UNFULFILLED → FULFILLMENT NODE REQUIRED.
+Contributing session shells: [Filled_P], [Filled_Q], [Filled_R].
+FULFILLMENT NODE REQUIRED for [All_Filled_Objects]. Contributing shells: [Filled_P], [Filled_Q], [Filled_R].
+
+STEP 8 — CONDITIONAL TERMINAL CHECKS:
+CHECK 1:
+  Q1: Parent declares [All_Filled_Objects]? YES.
+  Q2: Fulfilled by existing nodes? NO.
+  Q3: Session shells need merging? YES.
+  Q4: Fulfillment node adds value? YES — merges three parallel outputs into declared parent shell.
+  FULFILLMENT NODE: YES.
+
+CHECK 2:
+  Q1: Parent instruction requests completion signal? NO.
+  COMPLETION NODE: NO.
+
+=== END SCRATCHPAD ===
+
+[
+  {
+    "id": "Fill_Line_P",
+    "task_type": "COMPUTE",
+    "dependencies": ["[Rule_ConstRow]", "[Line_P]"],
+    "instruction": "Apply [Rule_ConstRow] to [Line_P] and produce a list of filled objects.",
+    "description": "[INTENT]: Fill all points along Line_P using the constant-row rule.\n\n[SHELL ARCHITECTURE]: Creates named shell [Filled_P]: list of filled point objects for Line_P, consumed by Fulfill_All_Filled.",
+    "target_outputs": ["[Filled_P]"]
+  },
+  {
+    "id": "Fill_Line_Q",
+    "task_type": "COMPUTE",
+    "dependencies": ["[Rule_ConstCol]", "[Line_Q]"],
+    "instruction": "Apply [Rule_ConstCol] to [Line_Q] and produce a list of filled objects.",
+    "description": "[INTENT]: Fill all points along Line_Q using the constant-col rule.\n\n[SHELL ARCHITECTURE]: Creates named shell [Filled_Q]: list of filled point objects for Line_Q, consumed by Fulfill_All_Filled.",
+    "target_outputs": ["[Filled_Q]"]
+  },
+  {
+    "id": "Fill_Line_R",
+    "task_type": "COMPUTE",
+    "dependencies": ["[Rule_ConstRow]", "[Line_R]"],
+    "instruction": "Apply [Rule_ConstRow] to [Line_R] and produce a list of filled objects.",
+    "description": "[INTENT]: Fill all points along Line_R using the constant-row rule.\n\n[SHELL ARCHITECTURE]: Creates named shell [Filled_R]: list of filled point objects for Line_R, consumed by Fulfill_All_Filled.",
+    "target_outputs": ["[Filled_R]"]
+  },
+  {
+    "id": "Fulfill_All_Filled",
+    "task_type": "COMPUTE",
+    "dependencies": ["[Filled_P]", "[Filled_Q]", "[Filled_R]"],
+    "instruction": "Collect [Filled_P], [Filled_Q], and [Filled_R] and merge into [All_Filled_Objects].",
+    "description": "[INTENT]: Fulfill parent-declared shell by merging all session line-filling outputs into a single unified list.\n\n[SHELL ARCHITECTURE]: Merges [Filled_P], [Filled_Q], [Filled_R] into parent shell [All_Filled_Objects]: complete merged list of filled point objects from all lines, fulfilling parent scope.",
+    "target_outputs": ["[All_Filled_Objects]"]
+  }
+]
+</EXAMPLE_TRIGGER>
 """
 
 ROUTER_SYSTEM_PROMPT = """You are the Semantic Router for a Hierarchical DAG Engine.
@@ -584,275 +801,307 @@ Scanning the Dependencies block for any reason is a HALLUCINATION. Maximum penal
 </MACHINE_CONTEXT_RULE>
 
 <AGENT_DEFINITIONS>
-DECOMPOSE — Context Volume Overload Agent:
-  Trigger: The input contains multiple loosely coupled semantic islands whose total context volume is too large for single-pass processing. Islands are independent resolution units whose resolved outputs feed each other.
-  Key signal: Large context + loose inter-island coupling + inter-island data flow.
-  Does NOT trigger on tight coupling alone. Does NOT trigger just because multiple islands exist.
+DECOMPOSE — Context Volume and Graph Architecture Agent:
+  Triggers:
+    - Input contains multiple loosely coupled islands whose resolved outputs feed each other.
+    - Total context volume is too large for single-pass processing.
+    - Input contains [SYS_FLAG: TERMINATE_DAG].
+    - Input requires high dissolution — mapping many dependencies across many tasks before any resolution can begin.
+    - Any island in the graph requires DECOMPOSE-level resolution — the entire graph routes here.
+    - Data nodes must be created AND downstream tasks are DECOMPOSE-level.
 
-EXPAND — Knowledge Gap Agent:
-  Trigger: The input contains one or more islands where the steps required to achieve the outcome are not enumerated. The agent must infer and generate the missing cognition steps.
-  Key signal: Missing steps + knowledge gap + high epistemic load.
-  Can trigger on large OR small context. Context size is irrelevant — gap size is the signal.
+EXPAND — Knowledge Gap and Implicit Cognition Agent:
+  Triggers:
+    - One or more islands name an outcome but provide no enumerated steps.
+    - Resolution requires inner cognition or domain inference the input does not provide.
+    - No island requires DECOMPOSE — otherwise DECOMPOSE wins.
 
 COMPUTE-AGENT — Dense Explicit Wiring Agent:
-  Trigger: The input is a manageable-sized block of tightly coupled, explicitly enumerated steps with constraints and inter-dependencies ready to be extracted and wired.
-  Key signal: Manageable context + tight coupling + explicit steps + dense constraints.
-  High cognition required — this agent anticipates tight relationships, not just lists steps.
-  Does NOT trigger if context is too large for single-pass. Does NOT trigger if steps are missing.
+  Triggers:
+    - ALL islands are manageable, explicitly enumerated, tightly coupled atomic steps.
+    - No island requires DECOMPOSE or EXPAND level resolution.
+    - Data nodes may be needed but ALL downstream tasks are compute-level.
 </AGENT_DEFINITIONS>
 
-<ROUTING_DECISION_LOGIC>
-Primary routing signal is island characterization — not a sequential checklist.
+<COLLECTIVE_ROUTING_PHILOSOPHY>
+Evaluate ALL islands first. Route based on the collective graph — not individual islands in isolation.
 
-Ask these questions in order:
-  Q1: Is the total context volume too large for single-pass processing AND are islands loosely coupled with inter-island data flow? → DECOMPOSE.
-  Q2: Are steps missing or implicit — does achieving the outcome require inferring unstated cognition steps? → EXPAND.
-  Q3: Is the context manageable AND are steps explicitly enumerated AND is coupling tight with dense constraints? → COMPUTE-AGENT.
+HIERARCHY (apply in order — stop at first match):
+  LEVEL 1 — PRE-SCAN OVERRIDES (check before island analysis):
+    Override A: [SYS_FLAG: TERMINATE_DAG] present anywhere in input → DECOMPOSE. Stop.
+    Override B: Input requires high dissolution — many tasks with many cross-dependencies
+                that must be mapped before any resolution can begin → DECOMPOSE. Stop.
 
-Logical Cascade fires ONLY when two or more agents qualify simultaneously:
-  DECOMPOSE > EXPAND > COMPUTE-AGENT
-</ROUTING_DECISION_LOGIC>
+  LEVEL 2 — COLLECTIVE ISLAND CLASSIFICATION:
+    If ANY island is DECOMPOSE-level → entire graph routes to DECOMPOSE.
+    If NO island is DECOMPOSE-level but ANY island is EXPAND-level → route to EXPAND.
+    If ALL islands are COMPUTE-level → route to COMPUTE-AGENT.
+
+  LEVEL 3 — DATA NODE AGGREGATION CHECK:
+    Do any islands require data nodes to be created from input values?
+      YES — are ANY downstream tasks DECOMPOSE-level? → DECOMPOSE.
+      YES — are ALL downstream tasks COMPUTE-level? → COMPUTE-AGENT acceptable.
+      NO → proceed with LEVEL 2 result.
+</COLLECTIVE_ROUTING_PHILOSOPHY>
+
+<ISLAND_CLASSIFICATION_RULES>
+Classify each island independently before collective routing:
+
+DECOMPOSE-level island:
+  - Large context payload requiring further subdivision before resolution.
+  - Produces shells consumed by other islands — inter-island data flow with loose coupling.
+  - Contains multiple sub-phases or grouped tasks under a structural header.
+  - Resolution produces further DECOMPOSE or EXPAND tasks downstream.
+
+EXPAND-level island:
+  - Single outcome named but steps not enumerated.
+  - Resolution requires inner cognition or domain inference not present in input.
+  - Manageable context size but high epistemic load.
+  - Cannot be completed in a single atomic pass without step inference.
+
+COMPUTE-level island:
+  - Explicit atomic steps fully enumerated.
+  - Tight inter-step dependencies all resolvable from declared shells.
+  - Manageable context — resolution produces atomic leaf nodes only.
+  - No further subdivision required.
+</ISLAND_CLASSIFICATION_RULES>
 
 <HALLUCINATION_PENALTY>
 Null is always valid. Uncertainty is always preferable to invention.
-Inventing routing signals, data, or steps not present in the instruction or description fields carries maximum penalty.
+Maximum penalty for inventing routing signals not present in the input.
 </HALLUCINATION_PENALTY>
 
 <COGNITIVE_PROTOCOL>
 Execute every step fully before proceeding to the next.
 
-STEP 1 — DATA EXTRACTION SCAN (Fresh Read — executes before everything else):
-  Re-read the full input from the absolute beginning. Ignore Dependencies block entirely.
-  This scan has THREE targets. List every finding before moving to any other step.
-
-  TARGET A — Structured assignments:
-    Patterns: "[ID] = value", "[ID] is value", "Set [ID] to value"
-    List every instance found verbatim.
-
-  TARGET B — Natural language value declarations:
-    Look for any sentence containing a named concept immediately followed by or preceded
-    by a concrete numeric or coordinate value.
-    Examples: "row 0 col 0", "side length of 4", "origin at (0,0)", "length is 4",
-    "starting point at row N col N", "given a side of N".
-    For each found: note the concept name and its value.
-
-  TARGET C — Rule data nodes:
-    Look for any block containing "store this entire rule as a data node"
-    OR any named rule with INPUT/PROCESS/OUTPUT structure.
-    For each found: note the rule name and flag as data extraction target.
-
-  State all findings: "TARGET A: [...] / NONE"
-                      "TARGET B: [...] / NONE"
-                      "TARGET C: [...] / NONE"
-  requires_data_extraction: true if ANY finding across A, B, or C. Else false.
-  State: "requires_data_extraction = true/false. DATA SCAN CLOSED."
-
-STEP 2 — FIELD ISOLATION:
+STEP 1 — FIELD ISOLATION AND PRE-SCAN OVERRIDES:
   Locate and acknowledge the Dependencies block.
   State: "Dependencies block found and excluded." or "No Dependencies block."
-  Remaining analysis universe: instruction field + description field only.
 
-STEP 3 — SEMANTIC ISLAND DETECTION:
-  Re-read instruction and description fields only.
+  PRE-SCAN A — TERMINATION FLAG:
+    Scan the full input for [SYS_FLAG: TERMINATE_DAG].
+    State: "SYS_FLAG: FOUND → DECOMPOSE override active." or "SYS_FLAG: NOT FOUND."
+
+  PRE-SCAN B — DISSOLUTION CHECK:
+    Re-read instruction and description only.
+    Does the input contain many tasks with cross-cutting dependencies that must be
+    mapped and resolved before any execution can begin?
+    State: "HIGH DISSOLUTION: YES → DECOMPOSE override active." or "HIGH DISSOLUTION: NO."
+
+  If any override is active → State: "OVERRIDE ACTIVE. Final route: DECOMPOSE." Skip to STEP 5.
+
+STEP 2 — DEPENDENCY SCAN:
+  Re-read instruction and description only.
+  Briefly map what each task requires as input and what it produces as output.
+  Look for: cross-task dependencies, data values embedded in input, rule definitions present.
+  State: "DEPENDENCY MAP: [brief list of task → requires → produces]"
+  State: "DATA NODES REQUIRED: YES / NO"
+  State: "RULE DEFINITIONS PRESENT: YES / NO"
+
+STEP 3 — SEMANTIC ISLAND DETECTION AND CLASSIFICATION:
+  Re-read instruction and description only.
   Identify every unbreakable logical unit of work.
   For each island write:
     ISLAND [N]: [first line verbatim]
-    CONTENT: [what this island describes in one line]
-    CONTEXT SIZE: [LARGE / MANAGEABLE — reason]
-    STEPS ENUMERATED: [YES / NO — list them if YES]
-    COUPLING TYPE: [LOOSE / TIGHT — relative to other islands, with reason]
-    KNOWLEDGE GAP: [YES / NO — are steps missing or must be inferred?]
+    CONTENT: [one line]
+    CONTEXT SIZE: [LARGE / MANAGEABLE — reason including rule definitions and appended context]
+    STEPS ENUMERATED: [YES / NO]
+    COUPLING TYPE: [LOOSE / TIGHT — to other islands]
+    KNOWLEDGE GAP: [YES / NO]
+    INTER-ISLAND DEPENDENCIES: [what this island needs from other islands]
+    CLASSIFICATION: [DECOMPOSE / EXPAND / COMPUTE — reason]
 
-STEP 4 — INTER-ISLAND SYNTHESIS:
-  Re-read your island descriptions from STEP 3 only. Do not re-read the raw input.
-  Answer:
-    Q1: Total context volume — too large for single-pass? (YES/NO + reason)
-    Q2: Inter-island coupling — loose with data flow between resolved outputs? (YES/NO)
-    Q3: Knowledge gaps present — steps missing or implicit? (YES/NO)
-    Q4: Explicit enumerated steps with tight constraints in manageable context? (YES/NO)
-  State overall: "[N] islands. Volume: [LARGE/MANAGEABLE]. Coupling: [LOOSE/TIGHT]. Gaps: [YES/NO]. Explicit wiring ready: [YES/NO]."
+STEP 4 — COLLECTIVE GRAPH CLASSIFICATION:
+  Re-read island classifications from STEP 3 only.
+  State each island's classification: "Island [N]: [DECOMPOSE / EXPAND / COMPUTE]"
+  Apply hierarchy:
+    Any DECOMPOSE-level island? → "COLLECTIVE: DECOMPOSE"
+    No DECOMPOSE, any EXPAND? → "COLLECTIVE: EXPAND"
+    All COMPUTE? → "COLLECTIVE: COMPUTE-AGENT"
+  Apply data node check from STEP 2:
+    DATA NODES REQUIRED + any DECOMPOSE downstream? → confirm DECOMPOSE.
+    DATA NODES REQUIRED + all COMPUTE downstream? → COMPUTE-AGENT acceptable.
+  State: "COLLECTIVE CLASSIFICATION: [AGENT]"
 
-STEP 5 — PRIMARY ROUTING DECISION:
-  Apply Q1, Q2, Q3, Q4 from STEP 4 in order:
-    Q1 YES AND Q2 YES → primary candidate: DECOMPOSE.
-    Q3 YES → primary candidate: EXPAND.
-    Q4 YES → primary candidate: COMPUTE-AGENT.
-  State: "Primary candidate: [AGENT] because [one-line reason from STEP 4]."
-
-STEP 6 — CONFLICT CHECK (Logical Cascade):
-  Does more than one agent qualify?
-  If NO conflict: State "No conflict. Route confirmed: [AGENT]."
-  If conflict: State which agents qualify and why.
-  Apply cascade: DECOMPOSE > EXPAND > COMPUTE-AGENT.
-  State: "Cascade resolution: [AGENT] wins because [reason]."
+STEP 5 — FINAL ROUTE CONFIRMATION:
+  State the final agent and one-line reason.
+  If override was active: confirm override reason.
+  If collective classification: confirm from STEP 4.
+  State: "FINAL ROUTE: [AGENT] because [reason]."
 </COGNITIVE_PROTOCOL>
 
-<EXAMPLE_1 — NATURAL LANGUAGE DATA + MULTI-PHASE>
+<EXAMPLE_1 — SYSFLAG OVERRIDE + MULTI-PHASE>
 INPUT:
-instruction: "I have an origin point at row 0, col 0 and a side length of 4. Construct a square.
+instruction: "STAGE 1 — INGESTION
+Step 1.1: Load all records from the input source into a staging buffer.
+Step 1.2: Validate each record against the field schema.
+Step 1.3: Reject invalid records and log rejection reasons.
 
-PHASE 1 — POINT DERIVATION
-Task 1.1: Apply RULE_R1 to Point A using given side length. Save output to Point B.
-Task 1.2: Apply RULE_R2 to Point A using given side length. Save output to Point D.
-Task 1.3: Apply RULE_R3 to Point B and Point D. Save output to Point C.
+STAGE 2 — TRANSFORMATION
+Step 2.1: Normalize all valid records to the target schema.
+Step 2.2: Enrich each record with derived fields from the lookup table.
+Step 2.3: Produce a transformed record batch for output.
 
-PHASE 2 — LINE DERIVATION
-Task 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.
-Task 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.
-
-Rule R1: (ColExtension) store this entire rule as a data node.
-INPUT: A Point P, Integer L. OUTPUT: Q = (P.row, P.col + L)."
-description: "[INTENT]: Construct a square from origin and side length."
+Once both stages are complete, finalize the pipeline. [SYS_FLAG: TERMINATE_DAG]"
+description: "[INTENT]: Ingest, validate, and transform a record batch into a normalized output."
+Dependencies:
+- id: "[Source_Records]" content: {"count": 2000}
 
 === SCRATCHPAD ===
-STEP 1 — DATA EXTRACTION SCAN:
-Re-reading full input fresh. Ignoring Dependencies block.
-TARGET A: No structured assignments found. NONE.
-TARGET B: Found "origin point at row 0, col 0" — concept: origin point, value: {row:0, col:0}. Found "side length of 4" — concept: side length, value: 4.
-TARGET B: [origin_point: {row:0, col:0}], [side_length: 4]
-TARGET C: Found "Rule R1: (ColExtension) store this entire rule as a data node." — rule name: RULE_R1, has INPUT/OUTPUT structure.
-TARGET C: [RULE_R1]
-requires_data_extraction = true. DATA SCAN CLOSED.
+STEP 1 — FIELD ISOLATION AND PRE-SCAN OVERRIDES:
+Dependencies block found and excluded. Analysis universe: instruction + description only.
+PRE-SCAN A: Scanning for [SYS_FLAG: TERMINATE_DAG]... FOUND. DECOMPOSE override active.
+PRE-SCAN B: skipped — override already active.
+OVERRIDE ACTIVE. Final route: DECOMPOSE.
 
-STEP 2 — FIELD ISOLATION:
-No Dependencies block found. Analysis universe: instruction + description.
-
-STEP 3 — SEMANTIC ISLAND DETECTION:
-ISLAND 1: "PHASE 1 — POINT DERIVATION"
-CONTENT: Three sequential point derivation tasks using rules R1, R2, R3.
-CONTEXT SIZE: MANAGEABLE — three explicit tasks.
-STEPS ENUMERATED: YES — Task 1.1, 1.2, 1.3.
-COUPLING TYPE: LOOSE — outputs feed Phase 2 but Phase 1 resolves independently.
-KNOWLEDGE GAP: NO — tasks explicitly named.
-
-ISLAND 2: "PHASE 2 — LINE DERIVATION"
-CONTENT: Line construction tasks consuming Phase 1 outputs.
-CONTEXT SIZE: MANAGEABLE — two explicit tasks shown.
-STEPS ENUMERATED: YES — Task 2.1, 2.2.
-COUPLING TYPE: LOOSE — depends on Phase 1 outputs but resolves independently.
-KNOWLEDGE GAP: NO.
-
-STEP 4 — INTER-ISLAND SYNTHESIS:
-Q1: Total volume — YES, multi-phase workflow too large for single-pass with rule definitions appended.
-Q2: Inter-island coupling — YES, Island 2 consumes Island 1 outputs. Loose coupling with data flow.
-Q3: Knowledge gaps — NO.
-Q4: Explicit wiring in manageable context — NO, context too large across phases.
-Overall: 2 islands. Volume: LARGE. Coupling: LOOSE. Gaps: NO. Explicit wiring ready: NO.
-
-STEP 5: Q1 YES AND Q2 YES → primary candidate: DECOMPOSE.
-
-STEP 6: No conflict. Route confirmed: DECOMPOSE.
+STEP 5 — FINAL ROUTE CONFIRMATION:
+FINAL ROUTE: DECOMPOSE because [SYS_FLAG: TERMINATE_DAG] detected — terminal gate requires DECOMPOSE.
 === END SCRATCHPAD ===
 
 {
-  "requires_data_extraction": true,
   "route_to_decompose": true,
   "route_to_expand": false,
   "route_to_compute_agent": false
 }
 
-<EXAMPLE_2 — TIGHT COUPLING, EXPLICIT STEPS>
+<EXAMPLE_2 — COLLECTIVE DECOMPOSE FROM ISLAND SIZE>
 INPUT:
-instruction: "Task 1.1: Apply [RULE_R1] to [Origin_Point] using [Side_Length]. Save output to Point B. Task 1.2: Apply [RULE_R2] to [Origin_Point] using [Side_Length]. Save output to Point D. Task 1.3: Apply [RULE_R3] to Point B and Point D. Save output to Point C."
-description: "[INTENT]: Derive three points using three interdependent rule applications."
-Dependencies:
-- id: "[Origin_Point]" content: {"row": 0, "col": 0}
-- id: "[Side_Length]" content: {"length": 4}
+instruction: "I have a dataset of 10000 records and a set of 8 transformation rules. Each rule must be applied to every record sequentially. After all transformations, produce a quality report summarizing pass and fail counts per rule.
+
+TRANSFORMATION PIPELINE
+Phase A: Apply Rules 1 through 4 to all records. Collect intermediate outputs.
+Phase B: Apply Rules 5 through 8 to the outputs of Phase A. Collect final outputs.
+Phase C: Aggregate all pass/fail counts across all rules and produce the quality report.
+
+Rule 1: (FieldTypeCheck) store this entire rule as a data node.
+INPUT: A record R. OUTPUT: PASS if all fields match declared types, else FAIL with field list.
+
+Rule 2: (NullCheck) store this entire rule as a data node.
+INPUT: A record R. OUTPUT: PASS if no required fields are null, else FAIL with null field list."
+description: "[INTENT]: Apply 8 transformation rules to 10000 records and produce a quality report."
 
 === SCRATCHPAD ===
-STEP 1 — DATA EXTRACTION SCAN:
-Re-reading full input fresh. Ignoring Dependencies block.
-TARGET A: No structured assignments in instruction or description. NONE.
-TARGET B: No natural language value declarations in instruction or description. NONE.
-TARGET C: No rule data node declarations in instruction or description. NONE.
-requires_data_extraction = false. DATA SCAN CLOSED.
+STEP 1 — FIELD ISOLATION AND PRE-SCAN OVERRIDES:
+No Dependencies block. Analysis universe: instruction + description only.
+PRE-SCAN A: No [SYS_FLAG: TERMINATE_DAG]. NOT FOUND.
+PRE-SCAN B: 10000 records, 8 rules, 3 phases, aggregation — many cross-cutting dependencies requiring mapping before resolution. HIGH DISSOLUTION: YES → DECOMPOSE override active.
+OVERRIDE ACTIVE. Final route: DECOMPOSE.
 
-STEP 2 — FIELD ISOLATION:
-Dependencies block found and excluded. Analysis universe: instruction + description only.
-
-STEP 3 — SEMANTIC ISLAND DETECTION:
-ISLAND 1: "Task 1.1: Apply [RULE_R1] to [Origin_Point] using [Side_Length]."
-CONTENT: Single rule application producing Point B.
-CONTEXT SIZE: MANAGEABLE — one operation.
-STEPS ENUMERATED: YES — explicit.
-COUPLING TYPE: TIGHT — Point B consumed by Task 1.3 directly.
-KNOWLEDGE GAP: NO.
-
-ISLAND 2: "Task 1.2: Apply [RULE_R2] to [Origin_Point] using [Side_Length]."
-CONTENT: Single rule application producing Point D.
-CONTEXT SIZE: MANAGEABLE — one operation.
-STEPS ENUMERATED: YES — explicit.
-COUPLING TYPE: TIGHT — Point D consumed by Task 1.3 directly.
-KNOWLEDGE GAP: NO.
-
-ISLAND 3: "Task 1.3: Apply [RULE_R3] to Point B and Point D."
-CONTENT: Rule application consuming both prior outputs.
-CONTEXT SIZE: MANAGEABLE — one operation.
-STEPS ENUMERATED: YES — explicit.
-COUPLING TYPE: TIGHT — depends on both Island 1 and Island 2 outputs.
-KNOWLEDGE GAP: NO.
-
-STEP 4 — INTER-ISLAND SYNTHESIS:
-Q1: Total volume — NO. Three small explicit tasks, fully manageable.
-Q2: Inter-island coupling — TIGHT. Direct output-to-input dependencies. Not loose.
-Q3: Knowledge gaps — NO.
-Q4: Explicit wiring in manageable context — YES. Three tightly coupled explicit steps ready for wiring.
-Overall: 3 islands. Volume: MANAGEABLE. Coupling: TIGHT. Gaps: NO. Explicit wiring ready: YES.
-
-STEP 5: Q4 YES → primary candidate: COMPUTE-AGENT.
-
-STEP 6: No conflict. Route confirmed: COMPUTE-AGENT.
+STEP 5 — FINAL ROUTE CONFIRMATION:
+FINAL ROUTE: DECOMPOSE because high dissolution detected — 8 rules applied across 10000 records in 3 phases with aggregation requires dependency mapping before any resolution can begin.
 === END SCRATCHPAD ===
 
 {
-  "requires_data_extraction": false,
+  "route_to_decompose": true,
+  "route_to_expand": false,
+  "route_to_compute_agent": false
+}
+
+<EXAMPLE_3 — COLLECTIVE COMPUTE FROM ALL COMPUTE ISLANDS>
+INPUT:
+instruction: "Task 1: Parse [Input_Record] into component fields. Task 2: Apply [Validation_Rule] to the parsed fields from Task 1. Task 3: Combine the validation result from Task 2 with [Input_Record] to produce [Annotated_Record]."
+description: "[INTENT]: Annotate an input record with its validation result."
+Dependencies:
+- id: "[Input_Record]" content: {"field_a": "value", "field_b": 42}
+- id: "[Validation_Rule]" content: "If field_b < 0 return FAIL else PASS."
+
+=== SCRATCHPAD ===
+STEP 1 — FIELD ISOLATION AND PRE-SCAN OVERRIDES:
+Dependencies block found and excluded. Analysis universe: instruction + description only.
+PRE-SCAN A: No [SYS_FLAG]. NOT FOUND.
+PRE-SCAN B: 3 tasks, linear chain, no cross-cutting dependency mapping required. HIGH DISSOLUTION: NO.
+No override active. Proceeding to STEP 2.
+
+STEP 2 — DEPENDENCY SCAN:
+Task 1: requires [Input_Record] → produces parsed fields.
+Task 2: requires parsed fields from Task 1 + [Validation_Rule] → produces validation result.
+Task 3: requires validation result from Task 2 + [Input_Record] → produces [Annotated_Record].
+DEPENDENCY MAP: linear chain, all dependencies traceable.
+DATA NODES REQUIRED: NO — all data in Dependencies block.
+RULE DEFINITIONS PRESENT: NO — rule in Dependencies block.
+
+STEP 3 — SEMANTIC ISLAND DETECTION AND CLASSIFICATION:
+ISLAND 1: "Task 1: Parse [Input_Record] into component fields."
+CONTENT: Single parse operation.
+CONTEXT SIZE: MANAGEABLE — one operation, no appended rule definitions.
+STEPS ENUMERATED: YES.
+COUPLING TYPE: TIGHT — output directly consumed by Task 2.
+KNOWLEDGE GAP: NO.
+INTER-ISLAND DEPENDENCIES: none incoming.
+CLASSIFICATION: COMPUTE — explicit atomic step, manageable, no further subdivision.
+
+ISLAND 2: "Task 2: Apply [Validation_Rule] to the parsed fields from Task 1."
+CONTENT: Single rule application.
+CONTEXT SIZE: MANAGEABLE.
+STEPS ENUMERATED: YES.
+COUPLING TYPE: TIGHT — output consumed by Task 3.
+KNOWLEDGE GAP: NO.
+INTER-ISLAND DEPENDENCIES: parsed fields from Island 1.
+CLASSIFICATION: COMPUTE.
+
+ISLAND 3: "Task 3: Combine the validation result from Task 2 with [Input_Record]."
+CONTENT: Single combination operation.
+CONTEXT SIZE: MANAGEABLE.
+STEPS ENUMERATED: YES.
+COUPLING TYPE: TIGHT.
+KNOWLEDGE GAP: NO.
+INTER-ISLAND DEPENDENCIES: validation result from Island 2.
+CLASSIFICATION: COMPUTE.
+
+STEP 4 — COLLECTIVE GRAPH CLASSIFICATION:
+Island 1: COMPUTE. Island 2: COMPUTE. Island 3: COMPUTE.
+No DECOMPOSE-level islands. No EXPAND-level islands.
+DATA NODES REQUIRED: NO.
+COLLECTIVE CLASSIFICATION: COMPUTE-AGENT.
+
+STEP 5 — FINAL ROUTE CONFIRMATION:
+FINAL ROUTE: COMPUTE-AGENT because all islands are explicit atomic compute steps with tight linear dependencies and manageable context.
+=== END SCRATCHPAD ===
+
+{
   "route_to_decompose": false,
   "route_to_expand": false,
   "route_to_compute_agent": true
 }
 
-<EXAMPLE_3 — KNOWLEDGE GAP WITH EMBEDDED DATA>
+<EXAMPLE_4 — COLLECTIVE DECOMPOSE FROM LARGE ISLAND WITH RULES>
 INPUT:
-instruction: "Validate the payload against the schema and return all violations. The payload has 3 required fields."
-description: "[INTENT]: Produce a violation report. Let [Schema_Version] = 3."
-Dependencies:
-- id: "[Payload]" content: {"fields": ["name", "age"]}
+instruction: "Process the incoming batch and construct the output artifact.
+
+PHASE 1 — PREPARATION
+Task 1.1: Apply RULE_NORMALIZE to each record in the batch.
+Task 1.2: Apply RULE_FILTER to remove invalid records from normalized output.
+Task 1.3: Apply RULE_TAG to each valid record.
+
+PHASE 2 — CONSTRUCTION
+Task 2.1: Apply RULE_ASSEMBLE to tagged records from Phase 1.
+Task 2.2: Apply RULE_VALIDATE to assembled output.
+Task 2.3: Apply RULE_FORMAT to produce the final artifact.
+
+Rule NORMALIZE: (FieldNormalization) store this entire rule as a data node.
+INPUT: A record R with arbitrary fields. OUTPUT: R with all string fields lowercased and numeric fields rounded to 2 decimal places.
+
+Rule FILTER: (ValidationFilter) store this entire rule as a data node.
+INPUT: A record R. OUTPUT: R if all required fields are non-null, else null.
+
+Rule TAG: (TimestampTag) store this entire rule as a data node.
+INPUT: A record R. OUTPUT: R with an additional field processing_timestamp set to current UTC time."
+description: "[INTENT]: Normalize, filter, tag, assemble, validate, and format a record batch."
 
 === SCRATCHPAD ===
-STEP 1 — DATA EXTRACTION SCAN:
-Re-reading full input fresh. Ignoring Dependencies block.
-TARGET A: Found "Let [Schema_Version] = 3" in description. TARGET A: [[Schema_Version]: 3]
-TARGET B: Found "3 required fields" — concrete numeric attached to named concept. TARGET B: [required_fields_count: 3]
-TARGET C: No rule data node declarations. NONE.
-requires_data_extraction = true. DATA SCAN CLOSED.
+STEP 1 — FIELD ISOLATION AND PRE-SCAN OVERRIDES:
+No Dependencies block. Analysis universe: instruction + description only.
+PRE-SCAN A: No [SYS_FLAG]. NOT FOUND.
+PRE-SCAN B: 2 phases, 6 tasks, 3 rule definitions appended — cross-phase dependency mapping required before resolution. HIGH DISSOLUTION: YES → DECOMPOSE override active.
+OVERRIDE ACTIVE. Final route: DECOMPOSE.
 
-STEP 2 — FIELD ISOLATION:
-Dependencies block found and excluded. Analysis universe: instruction + description only.
-
-STEP 3 — SEMANTIC ISLAND DETECTION:
-ISLAND 1: "Validate the payload against the schema and return all violations."
-CONTENT: Schema validation producing violation report.
-CONTEXT SIZE: MANAGEABLE — single instruction.
-STEPS ENUMERATED: NO — outcome named, no sub-steps given.
-COUPLING TYPE: TIGHT — single self-contained unit.
-KNOWLEDGE GAP: YES — requires parse, type check, field check, constraint check, aggregation — none stated.
-
-STEP 4 — INTER-ISLAND SYNTHESIS:
-Q1: Volume — NO. Single manageable instruction.
-Q2: Loose inter-island flow — NO. Single island.
-Q3: Knowledge gaps — YES. Steps entirely missing.
-Q4: Explicit wiring — NO.
-Overall: 1 island. Volume: MANAGEABLE. Coupling: TIGHT. Gaps: YES. Explicit wiring ready: NO.
-
-STEP 5: Q3 YES → primary candidate: EXPAND.
-
-STEP 6: No conflict. Route confirmed: EXPAND.
+STEP 5 — FINAL ROUTE CONFIRMATION:
+FINAL ROUTE: DECOMPOSE because multi-phase workflow with appended rule definitions and cross-phase dependencies requires dissolution and mapping before any resolution can begin.
 === END SCRATCHPAD ===
 
 {
-  "requires_data_extraction": true,
-  "route_to_decompose": false,
-  "route_to_expand": true,
+  "route_to_decompose": true,
+  "route_to_expand": false,
   "route_to_compute_agent": false
 }
 
@@ -1315,54 +1564,53 @@ PROCESS:
 OUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}
 """
 
+TEST_CASE_SQUARE_TERMINAL = f"""{TEST_CASE_SQUARE}\n -------------
+[SYS_FLAG: TERMINATE_DAG]"""
+
 TEST_CASE_1 = """
-      "instruction": "Apply [RULE_R1] to [Origin_Point_A] using length [Side_Length_L]. Save the output to a point B. Apply [RULE_R2] to [Origin_Point_A] using length [Side_Length_L]. Save the output to a point D. Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to a point C.",
-      "description": "[INTENT]: Derive three new points (B, C, D) using the given rules and origin point.
+      "dependencies": ["[Origin_Point]", "[Side_Length]", "[Rule_R1]", "[Rule_R2]", "[Rule_R3]"],
+      "instruction": "PHASE 1 — POINT DERIVATION
+Task 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.
+Task 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.
+Task 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.",
+      "description": "[INTENT]: First processing phase. Derives points B, D, and C using the given rules and side length.      
 
 [DEFERRED LOGIC]:
-- Apply [RULE_R1] to [Origin_Point_A] with length [Side_Length_L] to get point B.
-- Apply [RULE_R2] to [Origin_Point_A] with length [Side_Length_L] to get point D.
-- Apply [RULE_R3] to points B and D to get point C.
+- Apply RULE_R1 to Point A to get Point B.
+- Apply RULE_R2 to Point A to get Point D.
+- Apply RULE_R3 to Point B and Point D to get Point C.
 
 [SHELL ARCHITECTURE]:
-- Shell: [Point_B] | Type: named shell | Content: point B coordinates | Consumer: PHASE 2 — LINE DERIVATION.
-- Shell: [Point_C] | Type: named shell | Content: point C coordinates | Consumer: PHASE 2 — LINE DERIVATION.
-- Shell: [Point_D] | Type: named shell | Content: point D coordinates | Consumer: PHASE 2 — LINE DERIVATION.
-
-[PRUNED DEPENDENCIES]:
-- [Origin_Point_A]: origin point coordinates — required as primary input for point derivation.
-- [Side_Length_L]: side length value — required as primary input for point derivation.
-- [RULE_R1]: rule for horizontal extension — required for point B derivation.
-- [RULE_R2]: rule for vertical extension — required for point D derivation.
-- [RULE_R3]: rule for corner completion — required for point C derivation."
-
+- Shell: [Point B] | Type: named | Content: point coordinates | Consumer: PHASE 2
+- Shell: [Point D] | Type: named | Content: point coordinates | Consumer: PHASE 2
+- Shell: [Point C] | Type: named | Content: point coordinates | Consumer: PHASE 2"
+  
   Dependencies:
-- id: "[Origin_Point_A]"
-  content: {"x": 0, "y": 0}
-- id: "[Side_Length_L]"
-  content: {"length": 10}
-- id: "[RULE_R1]"
-  content: Rule R1 (HorizontalExtension): store this entire rule as a data node.
-this is a rule that extends a horizontal line by a given length. which will be used my llm's upon calling. the 
-entire instruction is as follows:
-{{
-INPUT: A Point P, an Integer Length L.
-OUTPUT: A new Point Q = (P.row, P.col + L).}}
-- id: "[RULE_R2]"
-  content: "Rule R2 (VerticalExtension): store this entire rule as a data node.
-this is a rule that extends a vertical line by a given length. which will be used my llm's upon calling. the 
-entire instruction is as follows:
-{{
-INPUT: A Point P, an Integer Length L.
-OUTPUT: A new Point Q = (P.row + L, P.col).}}"
-- id: "[RULE_R3]"
-  content: "Rule R3 (CornerCompletion): store this entire rule as a data node.
-this is a rule that completes a corner of a square by connecting two lines. which will be used my llm's upon calling. the 
-entire instruction is as follows:
-{{
-INPUT: Point B = (r1, c1), Point D = (r2, c2).
-OUTPUT: A new Point C = (r2, c1).}}"
-
+  - id: "[Origin_Point_A]"
+    content: {"x": 0, "y": 0}
+  - id: "[Side_Length_L]"
+    content: {"length": 10}
+  - id: "[RULE_R1]"
+    content: Rule R1 (HorizontalExtension): store this entire rule as a data node.
+  this is a rule that extends a horizontal line by a given length. which will be used my llm's upon calling. the 
+  entire instruction is as follows:
+  {{
+  INPUT: A Point P, an Integer Length L.
+  OUTPUT: A new Point Q = (P.row, P.col + L).}}
+  - id: "[RULE_R2]"
+    content: "Rule R2 (VerticalExtension): store this entire rule as a data node.
+  this is a rule that extends a vertical line by a given length. which will be used my llm's upon calling. the 
+  entire instruction is as follows:
+  {{
+  INPUT: A Point P, an Integer Length L.
+  OUTPUT: A new Point Q = (P.row + L, P.col).}}"
+  - id: "[RULE_R3]"
+    content: "Rule R3 (CornerCompletion): store this entire rule as a data node.
+  this is a rule that completes a corner of a square by connecting two lines. which will be used my llm's upon calling. the 
+  entire instruction is as follows:
+  {{
+  INPUT: Point B = (r1, c1), Point D = (r2, c2).
+  OUTPUT: A new Point C = (r2, c1).}}"
 """
 test_case_2 = """
 
@@ -1523,8 +1771,8 @@ def run_diagnostic():
         response = client.chat.completions.create(
             model=MODEL_ID,
             messages=[
-                {"role": "system", "content": DECOMPOSE_SYSTEM_PROMPT},
-                {"role": "user", "content": TEST_CASE_SQUARE}
+                {"role": "system", "content": COMPUTE_SYSTEM_PROMPT},
+                {"role": "user", "content": TEST_CASE_1}
             ],
             temperature=0.0,  # CRITICAL: 0.0 for deterministic routing
             # OpenRouter supports HTTP headers for app rankings (optional)

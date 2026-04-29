@@ -76,9 +76,7 @@ class FinalPipelinePayload(BaseModel):
     task_nodes: List[TaskNode] = []
 
 class RouterDecision(BaseModel):
-    requires_data_extraction: bool = Field(
-        description="True if the payload contains explicit, root-level literal value assignments (e.g., 'Set [Timeout] to 30', '[Max_Retries] = 5') that exist outside of the Machine Context."
-    )
+
     route_to_decompose: bool = Field(
         description="True if the payload contains massive, multi-phase structures that will overload context if not chunked."
     )

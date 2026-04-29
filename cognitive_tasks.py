@@ -246,14 +246,14 @@ async def process_query(user_query: str, llm) -> FinalPipelinePayload:
     final_payload = FinalPipelinePayload()
 
     # 2. Queue the required agents WITH THEIR SPECIFIC SNIPPETS
-    if decision.requires_data_extraction:
-        print(f"  -> Passing to Data Extractor: '{user_query}'")
-#         framed_prompt = f"""--- GLOBAL CONTEXT (For reference only. DO NOT evaluate your rules against this) ---
-# {user_query}
+#     if decision.requires_data_extraction:
+#         print(f"  -> Passing to Data Extractor: '{user_query}'")
+# #         framed_prompt = f"""--- GLOBAL CONTEXT (For reference only. DO NOT evaluate your rules against this) ---
+# # {user_query}
 
-# --- YOUR EXPLICIT TARGET (You MUST apply your rules ONLY to this text) ---
-# {decision.decomposition_snippet}"""
-        pending_tasks.append(run_data_extractor(user_query, llm))
+# # --- YOUR EXPLICIT TARGET (You MUST apply your rules ONLY to this text) ---
+# # {decision.decomposition_snippet}"""
+#         pending_tasks.append(run_data_extractor(user_query, llm))
         
     if decision.route_to_decompose :
         # Build the Tunnel Vision Prompt
