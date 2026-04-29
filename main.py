@@ -25,6 +25,8 @@ task_list : List[TaskNode] = []
 
 # Wake-up signal for the concurrent engine (no polling thrash).
 graph_updated_event = asyncio.Event()
+_engine_state_lock = asyncio.Lock()
+_busy_workers = 0
 
 
 def _normalize_id(x: str) -> str:
@@ -251,13 +253,22 @@ async def execution_worker(worker_id: int, db: Neo4jOrchestrator, llm) -> None:
 
             task = await db.async_claim_next_task(worker_id)
             if not task:
+                # Avoid missed wakeups:
+                # 1) Clear event
+                # 2) Re-check DB once more (covers "set happened just before clear")
+                # 3) Only then wait
                 graph_updated_event.clear()
-                await graph_updated_event.wait()
-                continue
+                task = await db.async_claim_next_task(worker_id)
+                if not task:
+                    await graph_updated_event.wait()
+                    continue
 
             task_id = task["task_id"]
             task_type = task["task_type"]
             print(f"[WORKER {worker_id}] claimed {task_id} ({task_type})")
+            global _busy_workers
+            async with _engine_state_lock:
+                _busy_workers += 1
 
             if task_type == "DECOMPOSE":
                 deps = await db.async_fetch_resolved_dependencies_for_task(task_id)
@@ -303,6 +314,10 @@ async def execution_worker(worker_id: int, db: Neo4jOrchestrator, llm) -> None:
                 except Exception:
                     pass
             graph_updated_event.set()
+        finally:
+            if task_id:
+                async with _engine_state_lock:
+                    _busy_workers = max(0, _busy_workers - 1)
 
 
 async def run_execution_engine(
@@ -321,6 +336,18 @@ async def run_execution_engine(
             if await db.async_check_terminal_state(terminal_node):
                 print(f"\n[ENGINE] HALTING: terminal state {terminal_node} resolved.")
                 break
+
+            async with _engine_state_lock:
+                busy = _busy_workers
+
+            if busy == 0:
+                has_claimable = await db.async_has_claimable_tasks()
+                if not has_claimable:
+                    print(
+                        "\n[ENGINE] DEADLOCK: no workers busy and no claimable tasks. "
+                        "Terminal state not resolved."
+                    )
+                    break
             await asyncio.sleep(0.5)
     finally:
         for w in workers:
@@ -386,47 +413,47 @@ if __name__ == "__main__":
     _clear_pydantic_log(PYDANTIC_LOG_PATH)
 
 
-    db._clear_db()
-    # query = """construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively"""
-    # datanodes = asyncio.run(process_query(query, my_llm))
-    # datanodes = process_datanodes_output(datanodes)
-    # insert_datanodes_into_graph(datanodes, db)
-    init_square_inputs(db)
+#     db._clear_db()
+#     # query = """construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively"""
+#     # datanodes = asyncio.run(process_query(query, my_llm))
+#     # datanodes = process_datanodes_output(datanodes)
+#     # insert_datanodes_into_graph(datanodes, db)
+#     init_square_inputs(db)
     
         
-    # ========================================================================
-    # 2. RAG RETRIEVAL & PRIMITIVE INJECTION
-    # ========================================================================
-    print("\n=== STAGE 2: FETCHING EXPERIENTIAL MEMORY ===")
+#     # ========================================================================
+#     # 2. RAG RETRIEVAL & PRIMITIVE INJECTION
+#     # ========================================================================
+#     print("\n=== STAGE 2: FETCHING EXPERIENTIAL MEMORY ===")
     
 
-    mock_RAG(db)
-    template_text = mock_RAG(db)
-#     template_text = f"""{PROMPTS["SQUARE_CONSTRUCTION"]}\n dependencies: {deps}\n -------------
-# [SYS_FLAG: TERMINATE_DAG]"""
-    # ========================================================================
-    # 3. TEMPLATE CHUNKING & HIERARCHY CONJUNCTION
-    # ========================================================================
-    print("\n=== STAGE 3: DECOMPOSING TEMPLATE & BUILDING HIERARCHY ===")
-    # Process the returned template, passing the root_task_id so the function 
-    # natively draws the [:CREATES] edges from the root to these new sub-tasks.
-    root_task = fetch_first_decompose_task(db)
-    print(root_task)
-    # if root_task is None:
-    #     raise RuntimeError("No DECOMPOSE TaskNode found in graph; cannot set root_task.")
-    root_task_id = root_task.id
-    print(f"root_task_id: {root_task_id}")
-    plan_payload = asyncio.run(process_and_upsert_query(template_text, my_llm, db, parent_task_id=root_task_id))
+#     mock_RAG(db)
+#     template_text = mock_RAG(db)
+# #     template_text = f"""{PROMPTS["SQUARE_CONSTRUCTION"]}\n dependencies: {deps}\n -------------
+# # [SYS_FLAG: TERMINATE_DAG]"""
+#     # ========================================================================
+#     # 3. TEMPLATE CHUNKING & HIERARCHY CONJUNCTION
+#     # ========================================================================
+#     print("\n=== STAGE 3: DECOMPOSING TEMPLATE & BUILDING HIERARCHY ===")
+#     # Process the returned template, passing the root_task_id so the function 
+#     # natively draws the [:CREATES] edges from the root to these new sub-tasks.
+#     root_task = fetch_first_decompose_task(db)
+#     print(root_task)
+#     # if root_task is None:
+#     #     raise RuntimeError("No DECOMPOSE TaskNode found in graph; cannot set root_task.")
+#     root_task_id = root_task.id
+#     print(f"root_task_id: {root_task_id}")
+#     plan_payload = asyncio.run(process_and_upsert_query(template_text, my_llm, db, parent_task_id=root_task_id))
     
-    # ========================================================================
-    # 4. ADVANCE STATE
-    # ========================================================================
-    with db.driver.session() as session:
-        session.run("""
-            MATCH (t:TaskNode {id: $id}) 
-            SET t.status = 'COMPLETE'
-        """, id=db._normalize_id(root_task_id))
-        print(f"\n🟢 ROOT TASK '{root_task_id}' COMPLETED (Successfully decomposed).")
+#     # ========================================================================
+#     # 4. ADVANCE STATE
+#     # ========================================================================
+#     with db.driver.session() as session:
+#         session.run("""
+#             MATCH (t:TaskNode {id: $id}) 
+#             SET t.status = 'COMPLETE'
+#         """, id=db._normalize_id(root_task_id))
+#         print(f"\n🟢 ROOT TASK '{root_task_id}' COMPLETED (Successfully decomposed).")
 
-    print("\n✅ Setup Complete. Open Neo4j Browser and run: MATCH (n) RETURN n")
-    #asyncio.run(run_execution_engine(db, my_llm))
+#     print("\n✅ Setup Complete. Open Neo4j Browser and run: MATCH (n) RETURN n")
+    asyncio.run(run_execution_engine(db, my_llm))

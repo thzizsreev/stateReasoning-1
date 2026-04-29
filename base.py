@@ -316,6 +316,20 @@ class Neo4jOrchestrator:
             row = await res.single()
             return bool(row and row["is_done"])
 
+    async def async_has_claimable_tasks(self) -> bool:
+        """
+        True if there exists at least one runnable task for workers to claim.
+        """
+        query = """
+        MATCH (t:TaskNode)
+        WHERE t.status = 'PENDING' AND coalesce(t.unresolved_deps, 0) = 0
+        RETURN count(t) > 0 AS has_any
+        """
+        async with self.async_driver.session() as session:
+            res = await session.run(query)
+            row = await res.single()
+            return bool(row and row["has_any"])
+
     async def async_recover_stuck_processing(self, *, timeout_ms: int = 10 * 60 * 1000) -> int:
         """
         Revert tasks stuck in PROCESSING back to PENDING if claimed_at is too old.

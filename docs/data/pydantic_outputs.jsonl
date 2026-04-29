@@ -1,21 +1,382 @@
 {
-  "ts": "2026-04-29T11:28:37.635912+00:00",
+  "ts": "2026-04-29T11:50:02.858014+00:00",
+  "label": "RouterDecision",
+  "type": "RouterDecision",
+  "data": {
+    "requires_data_extraction": false,
+    "route_to_decompose": true,
+    "route_to_expand": false,
+    "route_to_compute_agent": false
+  }
+}
+
+{
+  "ts": "2026-04-29T11:50:51.883719+00:00",
+  "label": "TaskNodesList.decomposer",
+  "type": "TaskNodesList",
+  "data": {
+    "task_nodes": [
+      {
+        "id": "Task_1_1",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R1]"
+        ],
+        "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to Point B.",
+        "description": "[INTENT]: Derive Point B by applying Rule R1 to Data_A with length Data_L.\n\n[DEFERRED LOGIC]:\n- Read [Data_A] and [Data_L].\n- Apply Rule R1 to [Data_A] with length [Data_L] to get Point B.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named shell | Content: point object with row and col fields | Consumer: Task 1.3.\n- DOWNSTREAM INSTRUCTION: Downstream agent must read [Point_B] as input for Task 1.3.",
+        "target_output": null,
+        "task_type": "DECOMPOSE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Task_1_2",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R2]"
+        ],
+        "instruction": "Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to Point D.",
+        "description": "[INTENT]: Derive Point D by applying Rule R2 to Data_A with length Data_L.\n\n[DEFERRED LOGIC]:\n- Read [Data_A] and [Data_L].\n- Apply Rule R2 to [Data_A] with length [Data_L] to get Point D.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_D] | Type: named shell | Content: point object with row and col fields | Consumer: Task 1.3.\n- DOWNSTREAM INSTRUCTION: Downstream agent must read [Point_D] as input for Task 1.3.",
+        "target_output": null,
+        "task_type": "DECOMPOSE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Task_1_3",
+        "dependencies": [
+          "[Point_B]",
+          "[Point_D]",
+          "[RULE_R3]"
+        ],
+        "instruction": "Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to Point C.",
+        "description": "[INTENT]: Derive Point C by applying Rule R3 to Points B and D.\n\n[DEFERRED LOGIC]:\n- Read Points B and D.\n- Apply Rule R3 to Points B and D to get Point C.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_C] | Type: named shell | Content: point object with row and col fields | Consumer: None.\n- DOWNSTREAM INSTRUCTION: No further processing required.",
+        "target_output": null,
+        "task_type": "DECOMPOSE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-29T11:50:51.886548+00:00",
+  "label": "FinalPipelinePayload",
+  "type": "FinalPipelinePayload",
+  "data": {
+    "data_nodes": [],
+    "task_nodes": [
+      {
+        "id": "Task_1_1",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R1]"
+        ],
+        "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to Point B.",
+        "description": "[INTENT]: Derive Point B by applying Rule R1 to Data_A with length Data_L.\n\n[DEFERRED LOGIC]:\n- Read [Data_A] and [Data_L].\n- Apply Rule R1 to [Data_A] with length [Data_L] to get Point B.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named shell | Content: point object with row and col fields | Consumer: Task 1.3.\n- DOWNSTREAM INSTRUCTION: Downstream agent must read [Point_B] as input for Task 1.3.",
+        "target_output": null,
+        "task_type": "DECOMPOSE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Task_1_2",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R2]"
+        ],
+        "instruction": "Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to Point D.",
+        "description": "[INTENT]: Derive Point D by applying Rule R2 to Data_A with length Data_L.\n\n[DEFERRED LOGIC]:\n- Read [Data_A] and [Data_L].\n- Apply Rule R2 to [Data_A] with length [Data_L] to get Point D.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_D] | Type: named shell | Content: point object with row and col fields | Consumer: Task 1.3.\n- DOWNSTREAM INSTRUCTION: Downstream agent must read [Point_D] as input for Task 1.3.",
+        "target_output": null,
+        "task_type": "DECOMPOSE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Task_1_3",
+        "dependencies": [
+          "[Point_B]",
+          "[Point_D]",
+          "[RULE_R3]"
+        ],
+        "instruction": "Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to Point C.",
+        "description": "[INTENT]: Derive Point C by applying Rule R3 to Points B and D.\n\n[DEFERRED LOGIC]:\n- Read Points B and D.\n- Apply Rule R3 to Points B and D to get Point C.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_C] | Type: named shell | Content: point object with row and col fields | Consumer: None.\n- DOWNSTREAM INSTRUCTION: No further processing required.",
+        "target_output": null,
+        "task_type": "DECOMPOSE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-29T11:51:35.046817+00:00",
+  "label": "RouterDecision",
+  "type": "RouterDecision",
+  "data": {
+    "requires_data_extraction": false,
+    "route_to_decompose": false,
+    "route_to_expand": false,
+    "route_to_compute_agent": true
+  }
+}
+
+{
+  "ts": "2026-04-29T11:52:01.537929+00:00",
+  "label": "TaskNodesList.compute",
+  "type": "TaskNodesList",
+  "data": {
+    "task_nodes": [
+      {
+        "id": "Read_Input_Data",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R1]"
+        ],
+        "instruction": "Read [Data_A] and [Data_L] and [RULE_R1].",
+        "description": "[INTENT]: Load input data, length, and rule for downstream application.\n\n[SHELL ARCHITECTURE]: No new shell created as this is a read operation.",
+        "target_output": null,
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Apply_Rule_R1",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R1]"
+        ],
+        "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L].",
+        "description": "[INTENT]: Derive Point B by applying Rule R1 to Data_A with length Data_L.\n\n[SHELL ARCHITECTURE]: Creates named shell [Point_B]: point object with row and col fields, type: point, consumed by Task 1.3.",
+        "target_output": "[Point_B]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-29T11:52:01.539210+00:00",
+  "label": "FinalPipelinePayload",
+  "type": "FinalPipelinePayload",
+  "data": {
+    "data_nodes": [],
+    "task_nodes": [
+      {
+        "id": "Read_Input_Data",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R1]"
+        ],
+        "instruction": "Read [Data_A] and [Data_L] and [RULE_R1].",
+        "description": "[INTENT]: Load input data, length, and rule for downstream application.\n\n[SHELL ARCHITECTURE]: No new shell created as this is a read operation.",
+        "target_output": null,
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Apply_Rule_R1",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R1]"
+        ],
+        "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L].",
+        "description": "[INTENT]: Derive Point B by applying Rule R1 to Data_A with length Data_L.\n\n[SHELL ARCHITECTURE]: Creates named shell [Point_B]: point object with row and col fields, type: point, consumed by Task 1.3.",
+        "target_output": "[Point_B]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-29T11:52:08.020182+00:00",
   "label": "DataNode",
   "type": "DataNode",
   "data": {
-    "id": "[OUT1]",
-    "content": 123,
+    "id": "[Point_B]",
+    "content": {
+      "row": 0,
+      "col": 4
+    },
     "status": "READY"
   }
 }
 
 {
-  "ts": "2026-04-29T11:28:39.237428+00:00",
+  "ts": "2026-04-29T11:52:14.839830+00:00",
+  "label": "RouterDecision",
+  "type": "RouterDecision",
+  "data": {
+    "requires_data_extraction": false,
+    "route_to_decompose": false,
+    "route_to_expand": true,
+    "route_to_compute_agent": false
+  }
+}
+
+{
+  "ts": "2026-04-29T11:52:27.428242+00:00",
+  "label": "TaskNodesList.decomposer",
+  "type": "TaskNodesList",
+  "data": {
+    "task_nodes": [
+      {
+        "id": "Apply_Rule_R2",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R2]"
+        ],
+        "instruction": "Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to Point D.",
+        "description": "[INTENT]: Derive Point D by applying Rule R2 to Data_A with length Data_L.\n\n[DEFERRED LOGIC]:\n- Read [Data_A] and [Data_L].\n- Apply Rule R2 to [Data_A] with length [Data_L] to get Point D.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_D] | Type: named shell | Content: point object with row and col fields | Consumer: Task 1.3.\n- DOWNSTREAM INSTRUCTION: Downstream agent must read [Point_D] as input for Task 1.3.",
+        "target_output": null,
+        "task_type": "DECOMPOSE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-29T11:52:27.430457+00:00",
+  "label": "FinalPipelinePayload",
+  "type": "FinalPipelinePayload",
+  "data": {
+    "data_nodes": [],
+    "task_nodes": [
+      {
+        "id": "Apply_Rule_R2",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R2]"
+        ],
+        "instruction": "Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to Point D.",
+        "description": "[INTENT]: Derive Point D by applying Rule R2 to Data_A with length Data_L.\n\n[DEFERRED LOGIC]:\n- Read [Data_A] and [Data_L].\n- Apply Rule R2 to [Data_A] with length [Data_L] to get Point D.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_D] | Type: named shell | Content: point object with row and col fields | Consumer: Task 1.3.\n- DOWNSTREAM INSTRUCTION: Downstream agent must read [Point_D] as input for Task 1.3.",
+        "target_output": null,
+        "task_type": "DECOMPOSE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-29T11:52:44.398673+00:00",
+  "label": "RouterDecision",
+  "type": "RouterDecision",
+  "data": {
+    "requires_data_extraction": false,
+    "route_to_decompose": false,
+    "route_to_expand": false,
+    "route_to_compute_agent": true
+  }
+}
+
+{
+  "ts": "2026-04-29T11:53:13.424541+00:00",
+  "label": "TaskNodesList.compute",
+  "type": "TaskNodesList",
+  "data": {
+    "task_nodes": [
+      {
+        "id": "Load_Input_Data",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R2]"
+        ],
+        "instruction": "Read [Data_A] and [Data_L].",
+        "description": "[INTENT]: Load input data and length for rule application.\n\n[SHELL ARCHITECTURE]: Creates transient shell [Loaded_Data]: input data and length made available, type: data batch, consumed by Apply_Rule_R2 only.",
+        "target_output": "[Loaded_Data]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Apply_Rule_R2",
+        "dependencies": [
+          "[Loaded_Data]"
+        ],
+        "instruction": "Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to Point D.",
+        "description": "[INTENT]: Apply Rule R2 to input data with given length to produce point object.\n\n[SHELL ARCHITECTURE]: Creates shell [Point_D]: point object with row and col fields, type: point object, consumed by Task 1.3.",
+        "target_output": "[Point_D]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-29T11:53:13.427239+00:00",
+  "label": "FinalPipelinePayload",
+  "type": "FinalPipelinePayload",
+  "data": {
+    "data_nodes": [],
+    "task_nodes": [
+      {
+        "id": "Load_Input_Data",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R2]"
+        ],
+        "instruction": "Read [Data_A] and [Data_L].",
+        "description": "[INTENT]: Load input data and length for rule application.\n\n[SHELL ARCHITECTURE]: Creates transient shell [Loaded_Data]: input data and length made available, type: data batch, consumed by Apply_Rule_R2 only.",
+        "target_output": "[Loaded_Data]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Apply_Rule_R2",
+        "dependencies": [
+          "[Loaded_Data]"
+        ],
+        "instruction": "Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to Point D.",
+        "description": "[INTENT]: Apply Rule R2 to input data with given length to produce point object.\n\n[SHELL ARCHITECTURE]: Creates shell [Point_D]: point object with row and col fields, type: point object, consumed by Task 1.3.",
+        "target_output": "[Point_D]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-29T11:53:29.578087+00:00",
   "label": "DataNode",
   "type": "DataNode",
   "data": {
-    "id": "[END_ORCHESTRATION]",
-    "content": 123,
+    "id": "[Loaded_Data]",
+    "content": {
+      "input": {
+        "x": 0,
+        "y": 0
+      },
+      "length": 4
+    },
     "status": "READY"
   }
 }
