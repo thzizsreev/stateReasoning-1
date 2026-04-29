@@ -118,29 +118,28 @@ Scanning the Dependencies block for any reason is a HALLUCINATION. Maximum penal
 
 <AGENT_DEFINITIONS>
 DECOMPOSE — Context Volume Overload Agent:
-  Trigger: The input contains multiple loosely coupled semantic islands whose total context volume is too large for single-pass processing. Islands are independent resolution units whose resolved outputs feed each other.
-  Key signal: Large context + loose inter-island coupling + inter-island data flow.
-  Does NOT trigger on tight coupling alone. Does NOT trigger just because multiple islands exist.
+  Trigger: The input contains multiple broad abstract workflows or distinct phases (e.g., "Phase 1: X, Phase 2: Y") whose total context volume is too large for single-pass processing.
+  Key signal: Large context + multiple distinct phases + loose inter-phase coupling.
+  CRITICAL: Does NOT trigger on a single phase consisting of tightly coupled, enumerated micro-tasks (e.g., "Task 1.1, Task 1.2").
 
 EXPAND — Knowledge Gap Agent:
-  Trigger: The input contains one or more islands where the steps required to achieve the outcome are not enumerated. The agent must infer and generate the missing cognition steps.
+  Trigger: The input contains an outcome where the explicit sub-steps required to achieve it are not enumerated. The agent must infer and generate the missing cognition.
   Key signal: Missing steps + knowledge gap + high epistemic load.
   Can trigger on large OR small context. Context size is irrelevant — gap size is the signal.
 
 COMPUTE-AGENT — Dense Explicit Wiring Agent:
-  Trigger: The input is a manageable-sized block of tightly coupled, explicitly enumerated steps with constraints and inter-dependencies ready to be extracted and wired.
-  Key signal: Manageable context + tight coupling + explicit steps + dense constraints.
-  High cognition required — this agent anticipates tight relationships, not just lists steps.
-  Does NOT trigger if context is too large for single-pass. Does NOT trigger if steps are missing.
+  Trigger: The input is a single cohesive phase or manageable block of explicitly enumerated atomic micro-tasks (e.g., "Task 1: Do X, Task 2: Do Y"). They share the same local scope and are ready to be extracted and wired into a DAG.
+  Key signal: Manageable context + tight coupling + explicitly enumerated steps + dense constraints.
+  Does NOT trigger if there are multiple massive phases. Does NOT trigger if steps are missing.
 </AGENT_DEFINITIONS>
 
 <ROUTING_DECISION_LOGIC>
 Primary routing signal is island characterization — not a sequential checklist.
 
 Ask these questions in order:
-  Q1: Is the total context volume too large for single-pass processing AND are islands loosely coupled with inter-island data flow? → DECOMPOSE.
+  Q1: Is the total context volume too large for single-pass processing AND does it contain multiple distinct phases/workflows? → DECOMPOSE.
   Q2: Are steps missing or implicit — does achieving the outcome require inferring unstated cognition steps? → EXPAND.
-  Q3: Is the context manageable AND are steps explicitly enumerated AND is coupling tight with dense constraints? → COMPUTE-AGENT.
+  Q3: Is the context manageable AND are micro-tasks explicitly enumerated AND is coupling tight with shared local scope? → COMPUTE-AGENT.
 
 Logical Cascade fires ONLY when two or more agents qualify simultaneously:
   DECOMPOSE > EXPAND > COMPUTE-AGENT
@@ -159,24 +158,25 @@ STEP 1 — FIELD ISOLATION:
   If no Dependencies block: State: "No Dependencies block."
   Remaining analysis universe: instruction field + description field only.
 
-STEP 2 — SEMANTIC ISLAND DETECTION:
+STEP 2 — SEMANTIC ISLAND DETECTION (MACRO-ISLAND RULE):
   Re-read instruction and description fields only.
-  Identify every unbreakable logical unit of work.
+  Identify every unbreakable logical unit of work. 
+  CRITICAL ISLAND RULE: An island is a broad phase or workflow stage. A single explicit micro-task (e.g., 'Task 1.1') is NOT an island on its own; it is a step *within* an island. Group tightly coupled enumerated micro-tasks into a SINGLE island.
   For each island write:
-    ISLAND [N]: [first line verbatim]
+    ISLAND [N]: [Name of Phase or Group of Tasks]
     CONTENT: [what this island describes in one line]
     CONTEXT SIZE: [LARGE / MANAGEABLE — reason]
-    STEPS ENUMERATED: [YES / NO — list them if YES]
-    COUPLING TYPE: [LOOSE / TIGHT — relative to other islands, with reason]
+    MICRO-TASKS ENUMERATED: [YES / NO — list them if YES (e.g., Task 1.1, 1.2)]
+    COUPLING TYPE: [LOOSE / TIGHT — relative to other islands or within its own scope, with reason]
     KNOWLEDGE GAP: [YES / NO — are steps missing or must be inferred?]
 
 STEP 3 — INTER-ISLAND SYNTHESIS:
   Re-read your island descriptions from Step 2 only. Do not re-read the raw input.
   Answer:
     Q1: Total context volume — is it too large for single-pass? (YES/NO + reason)
-    Q2: Inter-island coupling — loose with data flow between resolved outputs? (YES/NO)
+    Q2: Inter-island coupling — loose with data flow between distinct phases? (YES/NO)
     Q3: Knowledge gaps present — steps missing or implicit? (YES/NO)
-    Q4: Explicit enumerated steps with tight constraints in manageable context? (YES/NO)
+    Q4: Explicit enumerated steps with tight constraints in a single manageable context? (YES/NO)
   State overall characterization: "[N] islands. Volume: [LARGE/MANAGEABLE]. Coupling: [LOOSE/TIGHT]. Gaps: [YES/NO]. Explicit wiring ready: [YES/NO]."
 
 STEP 4 — DATA SCAN:
@@ -209,39 +209,37 @@ instruction: "PHASE 1 — SANITIZE: Remove null entries from [Record_Set] using 
 description: "[INTENT]: Clean and summarize a large record set."
 Dependencies:
 - id: "[Record_Set]" content: {"rows": 5000}
-- id: "[Null_Filter_Rule]" content: "Remove any record where a required field is null."
-- id: "[Schema_A]" content: {"required": ["id", "category", "value"]}
 
 === SCRATCHPAD ===
 STEP 1: Dependencies block found and excluded. Analysis universe: instruction + description only.
 
 STEP 2:
-ISLAND 1: "PHASE 1 — SANITIZE: Remove null entries from [Record_Set]..."
+ISLAND 1: "PHASE 1 — SANITIZE"
 CONTENT: Multi-step sanitization and validation pipeline over a large record set.
-CONTEXT SIZE: LARGE — four distinct operations over 5000 records.
-STEPS ENUMERATED: YES — null removal, schema validation, rejection logging.
-COUPLING TYPE: LOOSE — its output feeds Island 2 but resolves independently.
-KNOWLEDGE GAP: NO — operations are named explicitly.
+CONTEXT SIZE: LARGE — distinct workflow stage with complex operations.
+MICRO-TASKS ENUMERATED: YES — null removal, schema validation, rejection logging.
+COUPLING TYPE: LOOSE — its output feeds Phase 2 but resolves as an independent workflow.
+KNOWLEDGE GAP: NO.
 
-ISLAND 2: "PHASE 2 — AGGREGATION: Group the sanitized records by category field..."
+ISLAND 2: "PHASE 2 — AGGREGATION"
 CONTENT: Multi-step aggregation, ranking, and summary production.
-CONTEXT SIZE: LARGE — five distinct operations over sanitized output.
-STEPS ENUMERATED: YES — grouping, frequency count, average, ranking, summary.
-COUPLING TYPE: LOOSE — depends on Island 1 output but resolves independently.
-KNOWLEDGE GAP: NO — operations are named explicitly.
+CONTEXT SIZE: LARGE — distinct workflow stage.
+MICRO-TASKS ENUMERATED: YES — grouping, frequency count, ranking.
+COUPLING TYPE: LOOSE — depends on Phase 1 output but resolves independently.
+KNOWLEDGE GAP: NO.
 
 STEP 3:
-Q1: Total context volume — YES, too large for single-pass. Two phases each with multiple operations over large data.
-Q2: Inter-island coupling — YES. Island 2 consumes the resolved sanitized output of Island 1.
-Q3: Knowledge gaps — NO. All steps named.
-Q4: Explicit wiring in manageable context — NO. Context is too large.
+Q1: Total context volume — YES, too large for single-pass. Two distinct abstract phases.
+Q2: Inter-island coupling — YES. Loose data flow between distinct phases.
+Q3: Knowledge gaps — NO.
+Q4: Explicit wiring in manageable context — NO. Context is multiple phases.
 Overall: 2 islands. Volume: LARGE. Coupling: LOOSE. Gaps: NO. Explicit wiring ready: NO.
 
 STEP 4: Re-reading instruction and description only. No literal value assignments found. requires_data_extraction = false.
 
 STEP 5: Q1 YES AND Q2 YES → primary candidate: DECOMPOSE.
 
-STEP 6: COMPUTE-AGENT does not qualify — context too large. EXPAND does not qualify — no knowledge gaps. No conflict. Route confirmed: DECOMPOSE.
+STEP 6: No conflict. Route confirmed: DECOMPOSE.
 === END SCRATCHPAD ===
 
 {
@@ -257,45 +255,30 @@ instruction: "Task 1.1: Apply [RULE_R1] to [Origin_Point_A] using [Side_Length_L
 description: "[INTENT]: Derive three new points using three interdependent rule applications."
 Dependencies:
 - id: "[Origin_Point_A]" content: {"row": 0, "col": 0}
-- id: "[Side_Length_L]" content: {"length": 4}
 
 === SCRATCHPAD ===
 STEP 1: Dependencies block found and excluded. Analysis universe: instruction + description only.
 
 STEP 2:
-ISLAND 1: "Task 1.1: Apply [RULE_R1] to [Origin_Point_A] using [Side_Length_L]."
-CONTENT: Single rule application producing Point B.
-CONTEXT SIZE: MANAGEABLE — one operation.
-STEPS ENUMERATED: YES — explicit.
-COUPLING TYPE: TIGHT — Point B is consumed by Task 1.3 directly.
-KNOWLEDGE GAP: NO.
-
-ISLAND 2: "Task 1.2: Apply [RULE_R2] to [Origin_Point_A] using [Side_Length_L]."
-CONTENT: Single rule application producing Point D.
-CONTEXT SIZE: MANAGEABLE — one operation.
-STEPS ENUMERATED: YES — explicit.
-COUPLING TYPE: TIGHT — Point D is consumed by Task 1.3 directly.
-KNOWLEDGE GAP: NO.
-
-ISLAND 3: "Task 1.3: Apply [RULE_R3] to Point B and Point D."
-CONTENT: Rule application consuming outputs of both prior tasks.
-CONTEXT SIZE: MANAGEABLE — one operation.
-STEPS ENUMERATED: YES — explicit.
-COUPLING TYPE: TIGHT — depends on both Island 1 and Island 2 outputs.
+ISLAND 1: Tasks 1.1, 1.2, and 1.3.
+CONTENT: A single cohesive phase deriving three points using interdependent rules.
+CONTEXT SIZE: MANAGEABLE — one logical phase of tightly grouped steps.
+MICRO-TASKS ENUMERATED: YES — Task 1.1, Task 1.2, Task 1.3.
+COUPLING TYPE: TIGHT — The micro-tasks share immediate local scope and feed each other directly.
 KNOWLEDGE GAP: NO.
 
 STEP 3:
-Q1: Total context volume — NO. Three small explicit tasks, fully manageable in single pass.
-Q2: Inter-island coupling — TIGHT. Islands share direct output-to-input dependencies. Not loose.
+Q1: Total context volume — NO. Single manageable block of logic, not multiple broad phases.
+Q2: Inter-island coupling — NO. Single island of tightly coupled steps.
 Q3: Knowledge gaps — NO. All steps explicit.
-Q4: Explicit wiring in manageable context — YES. Three tightly coupled explicit steps ready for dependency extraction and wiring.
-Overall: 3 islands. Volume: MANAGEABLE. Coupling: TIGHT. Gaps: NO. Explicit wiring ready: YES.
+Q4: Explicit wiring in manageable context — YES. Explicitly enumerated steps ready for dependency wiring.
+Overall: 1 island. Volume: MANAGEABLE. Coupling: TIGHT. Gaps: NO. Explicit wiring ready: YES.
 
 STEP 4: Re-reading instruction and description only. No literal assignments found. requires_data_extraction = false.
 
 STEP 5: Q4 YES → primary candidate: COMPUTE-AGENT.
 
-STEP 6: DECOMPOSE does not qualify — context manageable, coupling tight not loose. EXPAND does not qualify — no knowledge gaps. No conflict. Route confirmed: COMPUTE-AGENT.
+STEP 6: No conflict. Route confirmed: COMPUTE-AGENT.
 === END SCRATCHPAD ===
 
 {
@@ -310,8 +293,7 @@ INPUT:
 instruction: "Validate [Payload] against [Schema] and return all violations."
 description: "[INTENT]: Produce a violation report. Let [Schema_Version] = 3."
 Dependencies:
-- id: "[Payload]" content: {"fields": ["name", "age", "email"]}
-- id: "[Schema]" content: {"required": ["name", "email"]}
+- id: "[Payload]" content: {"fields": ["name", "age"]}
 
 === SCRATCHPAD ===
 STEP 1: Dependencies block found and excluded. Analysis universe: instruction + description only.
@@ -320,9 +302,9 @@ STEP 2:
 ISLAND 1: "Validate [Payload] against [Schema] and return all violations."
 CONTENT: Schema validation producing a violation report.
 CONTEXT SIZE: MANAGEABLE — single instruction.
-STEPS ENUMERATED: NO — outcome named but no sub-steps given.
+MICRO-TASKS ENUMERATED: NO — outcome named but no sub-steps given.
 COUPLING TYPE: TIGHT — single self-contained unit.
-KNOWLEDGE GAP: YES — validation requires parse, type check, required field check, constraint check, aggregation — none stated.
+KNOWLEDGE GAP: YES — validation requires parse, type check, required field check — none stated.
 
 STEP 3:
 Q1: Context volume — NO. Single manageable instruction.
@@ -331,11 +313,11 @@ Q3: Knowledge gaps — YES. Steps entirely missing, must be inferred.
 Q4: Explicit wiring — NO. Steps not enumerated.
 Overall: 1 island. Volume: MANAGEABLE. Coupling: TIGHT. Gaps: YES. Explicit wiring ready: NO.
 
-STEP 4: Re-reading instruction and description only. Found: "Let [Schema_Version] = 3" in description. requires_data_extraction = true.
+STEP 4: Re-reading instruction and description only. Found: "Let [Schema_Version] = 3". requires_data_extraction = true.
 
 STEP 5: Q3 YES → primary candidate: EXPAND.
 
-STEP 6: COMPUTE-AGENT does not qualify — steps not enumerated. DECOMPOSE does not qualify — single manageable island. No conflict. Route confirmed: EXPAND.
+STEP 6: No conflict. Route confirmed: EXPAND.
 === END SCRATCHPAD ===
 
 {
@@ -345,8 +327,8 @@ STEP 6: COMPUTE-AGENT does not qualify — steps not enumerated. DECOMPOSE does 
   "route_to_compute_agent": false
 }
 
-Output ONLY the scratchpad block followed by the JSON object. No markdown. No commentary.
-"""
+Output ONLY the scratchpad block followed by the JSON object. No markdown. No commentary."""
+
 PROMPTS["DECOMPOSER_PROMPT"] = """You are the Macro-Router Agent for a Hierarchical DAG Engine.
 Your singular objective is to perform Low-Cognition, High-Fidelity text chunking. You translate complex workflows into loosely coupled, aggregated blocks. You do NOT execute, solve, or reason about content. You architect the graph.
 
@@ -475,7 +457,10 @@ STEP 3 — STRUCTURAL SCAN:
   For each phase state:
     PHASE [N]: [header verbatim]
     BOUNDARY: starts at [first line] — ends at [last line verbatim]
-    DEPENDENCIES INHERITED: [bracketed IDs from input ledger or prior shells only]
+    DEPENDENCIES INHERITED: Extract EVERY bracketed [ID] that appears 
+    anywhere in this phase's text without exception — data inputs, rules, 
+    references, all of them. Validate each against the input ledger or 
+    prior shells. Exclude only IDs that fail validation.
     SHELLS DECLARED: [confirm against Step 2 decisions]
   State: "Phase map complete. N phases identified."
 
@@ -623,7 +608,6 @@ Phase map complete. 4 phases identified.
     "dependencies": ["[Doc_Keywords_Collection]", "[Unified_Summary]"],
     "instruction": "Finalize DAG execution. Confirm [Doc_Keywords_Collection] is fully populated across all extraction batches and [Unified_Summary] has been produced from the complete collection.",
     "description": "[INTENT]: Finalize the DAG execution. Graph topology identified as CONVERGENCE — Island 2 summarizer depends on three parallel extraction branches all writing into [Doc_Keywords_Collection] before [Unified_Summary] can be produced. Terminal node waits for both convergence signal and final synthesis output.\n\n[TERMINAL_LEDGER]:\n- [Doc_Keywords_Collection]: fully accumulated list of keyword-description records from all 6 documents across 3 parallel extraction batches — intermediate convergence signal confirming all parallel branches resolved.\n- [Unified_Summary]: structured theme-grouped summary synthesized from complete collection — final pipeline output.\n\n[DEPENDENCY CONFIRMATION]: Only shell IDs appear in dependencies. No task node IDs included. task_type is COMPUTE."
-    "target_outputs": ["[END_ORCHESTRATION]"]
   }
 }
 </EXAMPLE_TRIGGER>

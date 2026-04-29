@@ -1,0 +1,903 @@
+{
+  "meta": {
+    "created_at": "2026-04-29T14:20:53.352266+00:00",
+    "format": "stateReasoning-1.neo4j_snapshot.v1"
+  },
+  "nodes": [
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Filled_Objects_Collection]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "Semaphore"
+      ],
+      "props": {
+        "pending_count": 8,
+        "id": "GLOBAL"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_A]",
+        "content": "{\"x\": 0, \"y\": 0}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_L]",
+        "content": "4",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Construct a square using [Data_A] and [Data_L].",
+        "unresolved_deps": 0,
+        "name": "[Square_Construction_Decomp]",
+        "description": "Root task for square construction. Decompose into phases and atomic compute steps.",
+        "id": "[Square_Construction_Decomp]",
+        "task_type": "DECOMPOSE",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[DEF_PRIMITIVES]",
+        "content": "PRIMITIVE OBJECTS:\nPoint(name, row, col)\nLine(name, orientation, start_point, end_point)\nFilled(row, col)",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R1]",
+        "content": "Rule R1 (ColExtension): store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R2]",
+        "content": "Rule R2 (RowExtension): store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R3]",
+        "content": "Rule R3 (CornerCompletion): store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R4_HORIZONTAL]",
+        "content": "Rule R4A (Strict Successor-Based Line Filling - Constant Row): store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_R4_VERTICAL]",
+        "content": "Rule R4B (Strict Successor-Based Line Filling - Constant Col): store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[RULE_CREATE_LINE]",
+        "content": "Rule CreateLine: store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to Point B. Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to Point D. Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to Point C.",
+        "unresolved_deps": 0,
+        "name": "[Point_Derivation]",
+        "description": "[INTENT]: Derive points B, C, and D based on input data and rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R1] to [Data_A] with [Data_L].\n- Apply [RULE_R2] to [Data_A] with [Data_L].\n- Apply [RULE_R3] to outputs from Task 1.1 and Task 1.2.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named shell | Content: derived point B coordinates | Consumer: PHASE 2.\n- Shell: [Point_C] | Type: named shell | Content: derived point C coordinates | Consumer: PHASE 2.\n- Shell: [Point_D] | Type: named shell | Content: derived point D coordinates | Consumer: PHASE 2.\n- DOWNSTREAM INSTRUCTION: Downstream agent must consume [Point_B], [Point_C], and [Point_D] for line derivation.",
+        "id": "[Point_Derivation]",
+        "task_type": "DECOMPOSE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Apply [RULE_CREATE_LINE] to [Data_A] and Point B. Save output to Line AB. Apply [RULE_CREATE_LINE] to Point B and Point C. Save output to Line BC. Apply [RULE_CREATE_LINE] to Point D and Point C. Save output to Line DC. Apply [RULE_CREATE_LINE] to Point D and [Data_A]. Save output to Line DA.",
+        "unresolved_deps": 3,
+        "name": "[Line_Derivation]",
+        "description": "[INTENT]: Derive lines AB, BC, DC, and DA based on points and input data.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_CREATE_LINE] to [Data_A] and [Point_B].\n- Apply [RULE_CREATE_LINE] to [Point_B] and [Point_C].\n- Apply [RULE_CREATE_LINE] to [Point_D] and [Point_C].\n- Apply [RULE_CREATE_LINE] to [Point_D] and [Data_A].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named shell | Content: derived line AB coordinates | Consumer: PHASE 3.\n- Shell: [Line_BC] | Type: named shell | Content: derived line BC coordinates | Consumer: PHASE 3.\n- Shell: [Line_DC] | Type: named shell | Content: derived line DC coordinates | Consumer: PHASE 3.\n- Shell: [Line_DA] | Type: named shell | Content: derived line DA coordinates | Consumer: PHASE 3.\n- DOWNSTREAM INSTRUCTION: Downstream agent must consume [Line_AB], [Line_BC], [Line_DC], and [Line_DA] for line filling.",
+        "id": "[Line_Derivation]",
+        "task_type": "DECOMPOSE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Point_B]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Point_C]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Point_D]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Apply [RULE_R4_HORIZONTAL] to Line AB. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line BC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_HORIZONTAL] to Line DC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line DA. Save the List of Filled objects to a new node ID.",
+        "unresolved_deps": 4,
+        "name": "[Line_Filling]",
+        "description": "[INTENT]: Fill lines AB, BC, DC, and DA based on rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R4_HORIZONTAL] to [Line_AB].\n- Apply [RULE_R4_VERTICAL] to [Line_BC].\n- Apply [RULE_R4_HORIZONTAL] to [Line_DC].\n- Apply [RULE_R4_VERTICAL] to [Line_DA].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_Collection] | Type: collection shell | Content: accumulated list of filled objects from all lines | Consumer: terminal node.\n- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each filled object list into [Filled_Objects_Collection]. Do not create new shells for individual line outputs.",
+        "id": "[Line_Filling]",
+        "task_type": "DECOMPOSE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Line_AB]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Line_BC]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Line_DC]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Line_DA]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Confirm [Filled_Objects_Collection] is fully populated across all line filling tasks.",
+        "unresolved_deps": 1,
+        "name": "[END_ORCHESTRATION]",
+        "description": "[INTENT]: Finalize the DAG execution. Graph topology identified as LINEAR — terminal node depends only on the final island's output shell.\n\n[TERMINAL_LEDGER]:\n- [Filled_Objects_Collection]: fully accumulated list of filled objects from all lines — final pipeline output.\n\n[DEPENDENCY CONFIRMATION]: Only shell IDs appear in dependencies. No task node IDs included. task_type is COMPUTE.",
+        "id": "[END_ORCHESTRATION]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Filled_Objects_Collection]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Confirm [Filled_Objects_Collection] is fully populated across all line filling tasks.",
+          "unresolved_deps": 1,
+          "name": "[END_ORCHESTRATION]",
+          "description": "[INTENT]: Finalize the DAG execution. Graph topology identified as LINEAR — terminal node depends only on the final island's output shell.\n\n[TERMINAL_LEDGER]:\n- [Filled_Objects_Collection]: fully accumulated list of filled objects from all lines — final pipeline output.\n\n[DEPENDENCY CONFIRMATION]: Only shell IDs appear in dependencies. No task node IDs included. task_type is COMPUTE.",
+          "id": "[END_ORCHESTRATION]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_A]",
+          "content": "{\"x\": 0, \"y\": 0}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Construct a square using [Data_A] and [Data_L].",
+          "unresolved_deps": 0,
+          "name": "[Square_Construction_Decomp]",
+          "description": "Root task for square construction. Decompose into phases and atomic compute steps.",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_A]",
+          "content": "{\"x\": 0, \"y\": 0}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to Point B. Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to Point D. Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to Point C.",
+          "unresolved_deps": 0,
+          "name": "[Point_Derivation]",
+          "description": "[INTENT]: Derive points B, C, and D based on input data and rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R1] to [Data_A] with [Data_L].\n- Apply [RULE_R2] to [Data_A] with [Data_L].\n- Apply [RULE_R3] to outputs from Task 1.1 and Task 1.2.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named shell | Content: derived point B coordinates | Consumer: PHASE 2.\n- Shell: [Point_C] | Type: named shell | Content: derived point C coordinates | Consumer: PHASE 2.\n- Shell: [Point_D] | Type: named shell | Content: derived point D coordinates | Consumer: PHASE 2.\n- DOWNSTREAM INSTRUCTION: Downstream agent must consume [Point_B], [Point_C], and [Point_D] for line derivation.",
+          "id": "[Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_A]",
+          "content": "{\"x\": 0, \"y\": 0}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_CREATE_LINE] to [Data_A] and Point B. Save output to Line AB. Apply [RULE_CREATE_LINE] to Point B and Point C. Save output to Line BC. Apply [RULE_CREATE_LINE] to Point D and Point C. Save output to Line DC. Apply [RULE_CREATE_LINE] to Point D and [Data_A]. Save output to Line DA.",
+          "unresolved_deps": 3,
+          "name": "[Line_Derivation]",
+          "description": "[INTENT]: Derive lines AB, BC, DC, and DA based on points and input data.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_CREATE_LINE] to [Data_A] and [Point_B].\n- Apply [RULE_CREATE_LINE] to [Point_B] and [Point_C].\n- Apply [RULE_CREATE_LINE] to [Point_D] and [Point_C].\n- Apply [RULE_CREATE_LINE] to [Point_D] and [Data_A].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named shell | Content: derived line AB coordinates | Consumer: PHASE 3.\n- Shell: [Line_BC] | Type: named shell | Content: derived line BC coordinates | Consumer: PHASE 3.\n- Shell: [Line_DC] | Type: named shell | Content: derived line DC coordinates | Consumer: PHASE 3.\n- Shell: [Line_DA] | Type: named shell | Content: derived line DA coordinates | Consumer: PHASE 3.\n- DOWNSTREAM INSTRUCTION: Downstream agent must consume [Line_AB], [Line_BC], [Line_DC], and [Line_DA] for line filling.",
+          "id": "[Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_L]",
+          "content": "4",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Construct a square using [Data_A] and [Data_L].",
+          "unresolved_deps": 0,
+          "name": "[Square_Construction_Decomp]",
+          "description": "Root task for square construction. Decompose into phases and atomic compute steps.",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_L]",
+          "content": "4",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to Point B. Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to Point D. Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to Point C.",
+          "unresolved_deps": 0,
+          "name": "[Point_Derivation]",
+          "description": "[INTENT]: Derive points B, C, and D based on input data and rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R1] to [Data_A] with [Data_L].\n- Apply [RULE_R2] to [Data_A] with [Data_L].\n- Apply [RULE_R3] to outputs from Task 1.1 and Task 1.2.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named shell | Content: derived point B coordinates | Consumer: PHASE 2.\n- Shell: [Point_C] | Type: named shell | Content: derived point C coordinates | Consumer: PHASE 2.\n- Shell: [Point_D] | Type: named shell | Content: derived point D coordinates | Consumer: PHASE 2.\n- DOWNSTREAM INSTRUCTION: Downstream agent must consume [Point_B], [Point_C], and [Point_D] for line derivation.",
+          "id": "[Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Construct a square using [Data_A] and [Data_L].",
+          "unresolved_deps": 0,
+          "name": "[Square_Construction_Decomp]",
+          "description": "Root task for square construction. Decompose into phases and atomic compute steps.",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to Point B. Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to Point D. Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to Point C.",
+          "unresolved_deps": 0,
+          "name": "[Point_Derivation]",
+          "description": "[INTENT]: Derive points B, C, and D based on input data and rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R1] to [Data_A] with [Data_L].\n- Apply [RULE_R2] to [Data_A] with [Data_L].\n- Apply [RULE_R3] to outputs from Task 1.1 and Task 1.2.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named shell | Content: derived point B coordinates | Consumer: PHASE 2.\n- Shell: [Point_C] | Type: named shell | Content: derived point C coordinates | Consumer: PHASE 2.\n- Shell: [Point_D] | Type: named shell | Content: derived point D coordinates | Consumer: PHASE 2.\n- DOWNSTREAM INSTRUCTION: Downstream agent must consume [Point_B], [Point_C], and [Point_D] for line derivation.",
+          "id": "[Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Construct a square using [Data_A] and [Data_L].",
+          "unresolved_deps": 0,
+          "name": "[Square_Construction_Decomp]",
+          "description": "Root task for square construction. Decompose into phases and atomic compute steps.",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_CREATE_LINE] to [Data_A] and Point B. Save output to Line AB. Apply [RULE_CREATE_LINE] to Point B and Point C. Save output to Line BC. Apply [RULE_CREATE_LINE] to Point D and Point C. Save output to Line DC. Apply [RULE_CREATE_LINE] to Point D and [Data_A]. Save output to Line DA.",
+          "unresolved_deps": 3,
+          "name": "[Line_Derivation]",
+          "description": "[INTENT]: Derive lines AB, BC, DC, and DA based on points and input data.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_CREATE_LINE] to [Data_A] and [Point_B].\n- Apply [RULE_CREATE_LINE] to [Point_B] and [Point_C].\n- Apply [RULE_CREATE_LINE] to [Point_D] and [Point_C].\n- Apply [RULE_CREATE_LINE] to [Point_D] and [Data_A].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named shell | Content: derived line AB coordinates | Consumer: PHASE 3.\n- Shell: [Line_BC] | Type: named shell | Content: derived line BC coordinates | Consumer: PHASE 3.\n- Shell: [Line_DC] | Type: named shell | Content: derived line DC coordinates | Consumer: PHASE 3.\n- Shell: [Line_DA] | Type: named shell | Content: derived line DA coordinates | Consumer: PHASE 3.\n- DOWNSTREAM INSTRUCTION: Downstream agent must consume [Line_AB], [Line_BC], [Line_DC], and [Line_DA] for line filling.",
+          "id": "[Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Construct a square using [Data_A] and [Data_L].",
+          "unresolved_deps": 0,
+          "name": "[Square_Construction_Decomp]",
+          "description": "Root task for square construction. Decompose into phases and atomic compute steps.",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_R4_HORIZONTAL] to Line AB. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line BC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_HORIZONTAL] to Line DC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 4,
+          "name": "[Line_Filling]",
+          "description": "[INTENT]: Fill lines AB, BC, DC, and DA based on rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R4_HORIZONTAL] to [Line_AB].\n- Apply [RULE_R4_VERTICAL] to [Line_BC].\n- Apply [RULE_R4_HORIZONTAL] to [Line_DC].\n- Apply [RULE_R4_VERTICAL] to [Line_DA].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_Collection] | Type: collection shell | Content: accumulated list of filled objects from all lines | Consumer: terminal node.\n- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each filled object list into [Filled_Objects_Collection]. Do not create new shells for individual line outputs.",
+          "id": "[Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Construct a square using [Data_A] and [Data_L].",
+          "unresolved_deps": 0,
+          "name": "[Square_Construction_Decomp]",
+          "description": "Root task for square construction. Decompose into phases and atomic compute steps.",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Confirm [Filled_Objects_Collection] is fully populated across all line filling tasks.",
+          "unresolved_deps": 1,
+          "name": "[END_ORCHESTRATION]",
+          "description": "[INTENT]: Finalize the DAG execution. Graph topology identified as LINEAR — terminal node depends only on the final island's output shell.\n\n[TERMINAL_LEDGER]:\n- [Filled_Objects_Collection]: fully accumulated list of filled objects from all lines — final pipeline output.\n\n[DEPENDENCY CONFIRMATION]: Only shell IDs appear in dependencies. No task node IDs included. task_type is COMPUTE.",
+          "id": "[END_ORCHESTRATION]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R1]",
+          "content": "Rule R1 (ColExtension): store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to Point B. Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to Point D. Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to Point C.",
+          "unresolved_deps": 0,
+          "name": "[Point_Derivation]",
+          "description": "[INTENT]: Derive points B, C, and D based on input data and rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R1] to [Data_A] with [Data_L].\n- Apply [RULE_R2] to [Data_A] with [Data_L].\n- Apply [RULE_R3] to outputs from Task 1.1 and Task 1.2.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named shell | Content: derived point B coordinates | Consumer: PHASE 2.\n- Shell: [Point_C] | Type: named shell | Content: derived point C coordinates | Consumer: PHASE 2.\n- Shell: [Point_D] | Type: named shell | Content: derived point D coordinates | Consumer: PHASE 2.\n- DOWNSTREAM INSTRUCTION: Downstream agent must consume [Point_B], [Point_C], and [Point_D] for line derivation.",
+          "id": "[Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R2]",
+          "content": "Rule R2 (RowExtension): store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to Point B. Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to Point D. Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to Point C.",
+          "unresolved_deps": 0,
+          "name": "[Point_Derivation]",
+          "description": "[INTENT]: Derive points B, C, and D based on input data and rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R1] to [Data_A] with [Data_L].\n- Apply [RULE_R2] to [Data_A] with [Data_L].\n- Apply [RULE_R3] to outputs from Task 1.1 and Task 1.2.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named shell | Content: derived point B coordinates | Consumer: PHASE 2.\n- Shell: [Point_C] | Type: named shell | Content: derived point C coordinates | Consumer: PHASE 2.\n- Shell: [Point_D] | Type: named shell | Content: derived point D coordinates | Consumer: PHASE 2.\n- DOWNSTREAM INSTRUCTION: Downstream agent must consume [Point_B], [Point_C], and [Point_D] for line derivation.",
+          "id": "[Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R3]",
+          "content": "Rule R3 (CornerCompletion): store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to Point B. Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to Point D. Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to Point C.",
+          "unresolved_deps": 0,
+          "name": "[Point_Derivation]",
+          "description": "[INTENT]: Derive points B, C, and D based on input data and rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R1] to [Data_A] with [Data_L].\n- Apply [RULE_R2] to [Data_A] with [Data_L].\n- Apply [RULE_R3] to outputs from Task 1.1 and Task 1.2.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named shell | Content: derived point B coordinates | Consumer: PHASE 2.\n- Shell: [Point_C] | Type: named shell | Content: derived point C coordinates | Consumer: PHASE 2.\n- Shell: [Point_D] | Type: named shell | Content: derived point D coordinates | Consumer: PHASE 2.\n- DOWNSTREAM INSTRUCTION: Downstream agent must consume [Point_B], [Point_C], and [Point_D] for line derivation.",
+          "id": "[Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R4_HORIZONTAL]",
+          "content": "Rule R4A (Strict Successor-Based Line Filling - Constant Row): store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_R4_HORIZONTAL] to Line AB. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line BC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_HORIZONTAL] to Line DC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 4,
+          "name": "[Line_Filling]",
+          "description": "[INTENT]: Fill lines AB, BC, DC, and DA based on rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R4_HORIZONTAL] to [Line_AB].\n- Apply [RULE_R4_VERTICAL] to [Line_BC].\n- Apply [RULE_R4_HORIZONTAL] to [Line_DC].\n- Apply [RULE_R4_VERTICAL] to [Line_DA].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_Collection] | Type: collection shell | Content: accumulated list of filled objects from all lines | Consumer: terminal node.\n- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each filled object list into [Filled_Objects_Collection]. Do not create new shells for individual line outputs.",
+          "id": "[Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_R4_VERTICAL]",
+          "content": "Rule R4B (Strict Successor-Based Line Filling - Constant Col): store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_R4_HORIZONTAL] to Line AB. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line BC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_HORIZONTAL] to Line DC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 4,
+          "name": "[Line_Filling]",
+          "description": "[INTENT]: Fill lines AB, BC, DC, and DA based on rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R4_HORIZONTAL] to [Line_AB].\n- Apply [RULE_R4_VERTICAL] to [Line_BC].\n- Apply [RULE_R4_HORIZONTAL] to [Line_DC].\n- Apply [RULE_R4_VERTICAL] to [Line_DA].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_Collection] | Type: collection shell | Content: accumulated list of filled objects from all lines | Consumer: terminal node.\n- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each filled object list into [Filled_Objects_Collection]. Do not create new shells for individual line outputs.",
+          "id": "[Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[RULE_CREATE_LINE]",
+          "content": "Rule CreateLine: store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_CREATE_LINE] to [Data_A] and Point B. Save output to Line AB. Apply [RULE_CREATE_LINE] to Point B and Point C. Save output to Line BC. Apply [RULE_CREATE_LINE] to Point D and Point C. Save output to Line DC. Apply [RULE_CREATE_LINE] to Point D and [Data_A]. Save output to Line DA.",
+          "unresolved_deps": 3,
+          "name": "[Line_Derivation]",
+          "description": "[INTENT]: Derive lines AB, BC, DC, and DA based on points and input data.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_CREATE_LINE] to [Data_A] and [Point_B].\n- Apply [RULE_CREATE_LINE] to [Point_B] and [Point_C].\n- Apply [RULE_CREATE_LINE] to [Point_D] and [Point_C].\n- Apply [RULE_CREATE_LINE] to [Point_D] and [Data_A].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named shell | Content: derived line AB coordinates | Consumer: PHASE 3.\n- Shell: [Line_BC] | Type: named shell | Content: derived line BC coordinates | Consumer: PHASE 3.\n- Shell: [Line_DC] | Type: named shell | Content: derived line DC coordinates | Consumer: PHASE 3.\n- Shell: [Line_DA] | Type: named shell | Content: derived line DA coordinates | Consumer: PHASE 3.\n- DOWNSTREAM INSTRUCTION: Downstream agent must consume [Line_AB], [Line_BC], [Line_DC], and [Line_DA] for line filling.",
+          "id": "[Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Point_B]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_CREATE_LINE] to [Data_A] and Point B. Save output to Line AB. Apply [RULE_CREATE_LINE] to Point B and Point C. Save output to Line BC. Apply [RULE_CREATE_LINE] to Point D and Point C. Save output to Line DC. Apply [RULE_CREATE_LINE] to Point D and [Data_A]. Save output to Line DA.",
+          "unresolved_deps": 3,
+          "name": "[Line_Derivation]",
+          "description": "[INTENT]: Derive lines AB, BC, DC, and DA based on points and input data.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_CREATE_LINE] to [Data_A] and [Point_B].\n- Apply [RULE_CREATE_LINE] to [Point_B] and [Point_C].\n- Apply [RULE_CREATE_LINE] to [Point_D] and [Point_C].\n- Apply [RULE_CREATE_LINE] to [Point_D] and [Data_A].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named shell | Content: derived line AB coordinates | Consumer: PHASE 3.\n- Shell: [Line_BC] | Type: named shell | Content: derived line BC coordinates | Consumer: PHASE 3.\n- Shell: [Line_DC] | Type: named shell | Content: derived line DC coordinates | Consumer: PHASE 3.\n- Shell: [Line_DA] | Type: named shell | Content: derived line DA coordinates | Consumer: PHASE 3.\n- DOWNSTREAM INSTRUCTION: Downstream agent must consume [Line_AB], [Line_BC], [Line_DC], and [Line_DA] for line filling.",
+          "id": "[Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Point_C]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_CREATE_LINE] to [Data_A] and Point B. Save output to Line AB. Apply [RULE_CREATE_LINE] to Point B and Point C. Save output to Line BC. Apply [RULE_CREATE_LINE] to Point D and Point C. Save output to Line DC. Apply [RULE_CREATE_LINE] to Point D and [Data_A]. Save output to Line DA.",
+          "unresolved_deps": 3,
+          "name": "[Line_Derivation]",
+          "description": "[INTENT]: Derive lines AB, BC, DC, and DA based on points and input data.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_CREATE_LINE] to [Data_A] and [Point_B].\n- Apply [RULE_CREATE_LINE] to [Point_B] and [Point_C].\n- Apply [RULE_CREATE_LINE] to [Point_D] and [Point_C].\n- Apply [RULE_CREATE_LINE] to [Point_D] and [Data_A].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named shell | Content: derived line AB coordinates | Consumer: PHASE 3.\n- Shell: [Line_BC] | Type: named shell | Content: derived line BC coordinates | Consumer: PHASE 3.\n- Shell: [Line_DC] | Type: named shell | Content: derived line DC coordinates | Consumer: PHASE 3.\n- Shell: [Line_DA] | Type: named shell | Content: derived line DA coordinates | Consumer: PHASE 3.\n- DOWNSTREAM INSTRUCTION: Downstream agent must consume [Line_AB], [Line_BC], [Line_DC], and [Line_DA] for line filling.",
+          "id": "[Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Point_D]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_CREATE_LINE] to [Data_A] and Point B. Save output to Line AB. Apply [RULE_CREATE_LINE] to Point B and Point C. Save output to Line BC. Apply [RULE_CREATE_LINE] to Point D and Point C. Save output to Line DC. Apply [RULE_CREATE_LINE] to Point D and [Data_A]. Save output to Line DA.",
+          "unresolved_deps": 3,
+          "name": "[Line_Derivation]",
+          "description": "[INTENT]: Derive lines AB, BC, DC, and DA based on points and input data.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_CREATE_LINE] to [Data_A] and [Point_B].\n- Apply [RULE_CREATE_LINE] to [Point_B] and [Point_C].\n- Apply [RULE_CREATE_LINE] to [Point_D] and [Point_C].\n- Apply [RULE_CREATE_LINE] to [Point_D] and [Data_A].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named shell | Content: derived line AB coordinates | Consumer: PHASE 3.\n- Shell: [Line_BC] | Type: named shell | Content: derived line BC coordinates | Consumer: PHASE 3.\n- Shell: [Line_DC] | Type: named shell | Content: derived line DC coordinates | Consumer: PHASE 3.\n- Shell: [Line_DA] | Type: named shell | Content: derived line DA coordinates | Consumer: PHASE 3.\n- DOWNSTREAM INSTRUCTION: Downstream agent must consume [Line_AB], [Line_BC], [Line_DC], and [Line_DA] for line filling.",
+          "id": "[Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_AB]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_R4_HORIZONTAL] to Line AB. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line BC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_HORIZONTAL] to Line DC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 4,
+          "name": "[Line_Filling]",
+          "description": "[INTENT]: Fill lines AB, BC, DC, and DA based on rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R4_HORIZONTAL] to [Line_AB].\n- Apply [RULE_R4_VERTICAL] to [Line_BC].\n- Apply [RULE_R4_HORIZONTAL] to [Line_DC].\n- Apply [RULE_R4_VERTICAL] to [Line_DA].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_Collection] | Type: collection shell | Content: accumulated list of filled objects from all lines | Consumer: terminal node.\n- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each filled object list into [Filled_Objects_Collection]. Do not create new shells for individual line outputs.",
+          "id": "[Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_BC]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_R4_HORIZONTAL] to Line AB. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line BC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_HORIZONTAL] to Line DC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 4,
+          "name": "[Line_Filling]",
+          "description": "[INTENT]: Fill lines AB, BC, DC, and DA based on rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R4_HORIZONTAL] to [Line_AB].\n- Apply [RULE_R4_VERTICAL] to [Line_BC].\n- Apply [RULE_R4_HORIZONTAL] to [Line_DC].\n- Apply [RULE_R4_VERTICAL] to [Line_DA].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_Collection] | Type: collection shell | Content: accumulated list of filled objects from all lines | Consumer: terminal node.\n- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each filled object list into [Filled_Objects_Collection]. Do not create new shells for individual line outputs.",
+          "id": "[Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_DC]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_R4_HORIZONTAL] to Line AB. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line BC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_HORIZONTAL] to Line DC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 4,
+          "name": "[Line_Filling]",
+          "description": "[INTENT]: Fill lines AB, BC, DC, and DA based on rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R4_HORIZONTAL] to [Line_AB].\n- Apply [RULE_R4_VERTICAL] to [Line_BC].\n- Apply [RULE_R4_HORIZONTAL] to [Line_DC].\n- Apply [RULE_R4_VERTICAL] to [Line_DA].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_Collection] | Type: collection shell | Content: accumulated list of filled objects from all lines | Consumer: terminal node.\n- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each filled object list into [Filled_Objects_Collection]. Do not create new shells for individual line outputs.",
+          "id": "[Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_DA]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Apply [RULE_R4_HORIZONTAL] to Line AB. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line BC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_HORIZONTAL] to Line DC. Save the List of Filled objects to a new node ID. Apply [RULE_R4_VERTICAL] to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 4,
+          "name": "[Line_Filling]",
+          "description": "[INTENT]: Fill lines AB, BC, DC, and DA based on rules.\n\n[DEFERRED LOGIC]:\n- Apply [RULE_R4_HORIZONTAL] to [Line_AB].\n- Apply [RULE_R4_VERTICAL] to [Line_BC].\n- Apply [RULE_R4_HORIZONTAL] to [Line_DC].\n- Apply [RULE_R4_VERTICAL] to [Line_DA].\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_Collection] | Type: collection shell | Content: accumulated list of filled objects from all lines | Consumer: terminal node.\n- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each filled object list into [Filled_Objects_Collection]. Do not create new shells for individual line outputs.",
+          "id": "[Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    }
+  ]
+}

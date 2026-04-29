@@ -1,0 +1,641 @@
+{
+  "ts": "2026-04-29T15:41:29.592077+00:00",
+  "label": "RouterDecision",
+  "type": "RouterDecision",
+  "data": {
+    "requires_data_extraction": false,
+    "route_to_decompose": false,
+    "route_to_expand": false,
+    "route_to_compute_agent": true
+  }
+}
+
+{
+  "ts": "2026-04-29T15:42:01.824061+00:00",
+  "label": "TaskNodesList.compute",
+  "type": "TaskNodesList",
+  "data": {
+    "task_nodes": [
+      {
+        "id": "Apply_Rule_R1",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R1]"
+        ],
+        "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L].",
+        "description": "[INTENT]: Derive point B by applying rule R1 to Data_A with length Data_L.\n\n[SHELL ARCHITECTURE]: Creates named shell [Point_B]: derived point B coordinates, type: point, consumed by PHASE 2 and Island 3.",
+        "target_output": "[Point_B]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Apply_Rule_R2",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R2]"
+        ],
+        "instruction": "Apply [RULE_R2] to [Data_A] using length [Data_L].",
+        "description": "[INTENT]: Derive point D by applying rule R2 to Data_A with length Data_L.\n\n[SHELL ARCHITECTURE]: Creates named shell [Point_D]: derived point D coordinates, type: point, consumed by PHASE 2 and Island 3.",
+        "target_output": "[Point_D]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Apply_Rule_R3",
+        "dependencies": [
+          "[Point_B]",
+          "[Point_D]",
+          "[RULE_R3]"
+        ],
+        "instruction": "Apply [RULE_R3] to outputs from Task 1.1 and Task 1.2.",
+        "description": "[INTENT]: Derive point C by applying rule R3 to points B and D.\n\n[SHELL ARCHITECTURE]: Creates named shell [Point_C]: derived point C coordinates, type: point, consumed by PHASE 2.",
+        "target_output": "[Point_C]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-29T15:42:01.825005+00:00",
+  "label": "FinalPipelinePayload",
+  "type": "FinalPipelinePayload",
+  "data": {
+    "data_nodes": [],
+    "task_nodes": [
+      {
+        "id": "Apply_Rule_R1",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R1]"
+        ],
+        "instruction": "Apply [RULE_R1] to [Data_A] using length [Data_L].",
+        "description": "[INTENT]: Derive point B by applying rule R1 to Data_A with length Data_L.\n\n[SHELL ARCHITECTURE]: Creates named shell [Point_B]: derived point B coordinates, type: point, consumed by PHASE 2 and Island 3.",
+        "target_output": "[Point_B]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Apply_Rule_R2",
+        "dependencies": [
+          "[Data_A]",
+          "[Data_L]",
+          "[RULE_R2]"
+        ],
+        "instruction": "Apply [RULE_R2] to [Data_A] using length [Data_L].",
+        "description": "[INTENT]: Derive point D by applying rule R2 to Data_A with length Data_L.\n\n[SHELL ARCHITECTURE]: Creates named shell [Point_D]: derived point D coordinates, type: point, consumed by PHASE 2 and Island 3.",
+        "target_output": "[Point_D]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Apply_Rule_R3",
+        "dependencies": [
+          "[Point_B]",
+          "[Point_D]",
+          "[RULE_R3]"
+        ],
+        "instruction": "Apply [RULE_R3] to outputs from Task 1.1 and Task 1.2.",
+        "description": "[INTENT]: Derive point C by applying rule R3 to points B and D.\n\n[SHELL ARCHITECTURE]: Creates named shell [Point_C]: derived point C coordinates, type: point, consumed by PHASE 2.",
+        "target_output": "[Point_C]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-29T15:42:12.222264+00:00",
+  "label": "DataNode",
+  "type": "DataNode",
+  "data": {
+    "id": "[Point_B]",
+    "content": {
+      "row": 0,
+      "col": 4
+    },
+    "status": "READY"
+  }
+}
+
+{
+  "ts": "2026-04-29T15:42:20.732904+00:00",
+  "label": "DataNode",
+  "type": "DataNode",
+  "data": {
+    "id": "[Point_D]",
+    "content": {
+      "row": 4,
+      "col": 0
+    },
+    "status": "READY"
+  }
+}
+
+{
+  "ts": "2026-04-29T15:42:30.888185+00:00",
+  "label": "DataNode",
+  "type": "DataNode",
+  "data": {
+    "id": "[Point_C]",
+    "content": {
+      "row": 4,
+      "col": 4
+    },
+    "status": "READY"
+  }
+}
+
+{
+  "ts": "2026-04-29T15:42:46.597305+00:00",
+  "label": "RouterDecision",
+  "type": "RouterDecision",
+  "data": {
+    "requires_data_extraction": false,
+    "route_to_decompose": false,
+    "route_to_expand": false,
+    "route_to_compute_agent": true
+  }
+}
+
+{
+  "ts": "2026-04-29T15:43:22.808908+00:00",
+  "label": "TaskNodesList.compute",
+  "type": "TaskNodesList",
+  "data": {
+    "task_nodes": [
+      {
+        "id": "Derive_Line_AB",
+        "dependencies": [
+          "[Data_A]",
+          "[Point_B]",
+          "[RULE_CREATE_LINE]"
+        ],
+        "instruction": "Apply [RULE_CREATE_LINE] to [Data_A] and Point B.",
+        "description": "[INTENT]: Derive line AB using [Data_A] and Point B.\n\n[SHELL ARCHITECTURE]: Creates named shell [Line_AB]: derived line AB coordinates, type: line object, consumed by PHASE 3.",
+        "target_output": "[Line_AB]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Derive_Line_BC",
+        "dependencies": [
+          "[Point_B]",
+          "[Point_C]",
+          "[RULE_CREATE_LINE]"
+        ],
+        "instruction": "Apply [RULE_CREATE_LINE] to Point B and Point C.",
+        "description": "[INTENT]: Derive line BC using Point B and Point C.\n\n[SHELL ARCHITECTURE]: Creates named shell [Line_BC]: derived line BC coordinates, type: line object, consumed by PHASE 3.",
+        "target_output": "[Line_BC]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Derive_Line_DC",
+        "dependencies": [
+          "[Point_D]",
+          "[Point_C]",
+          "[RULE_CREATE_LINE]"
+        ],
+        "instruction": "Apply [RULE_CREATE_LINE] to Point D and Point C.",
+        "description": "[INTENT]: Derive line DC using Point D and Point C.\n\n[SHELL ARCHITECTURE]: Creates named shell [Line_DC]: derived line DC coordinates, type: line object, consumed by PHASE 3.",
+        "target_output": "[Line_DC]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Derive_Line_DA",
+        "dependencies": [
+          "[Point_D]",
+          "[Data_A]",
+          "[RULE_CREATE_LINE]"
+        ],
+        "instruction": "Apply [RULE_CREATE_LINE] to Point D and [Data_A].",
+        "description": "[INTENT]: Derive line DA using Point D and [Data_A].\n\n[SHELL ARCHITECTURE]: Creates named shell [Line_DA]: derived line DA coordinates, type: line object, consumed by PHASE 3.",
+        "target_output": "[Line_DA]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-29T15:43:22.809919+00:00",
+  "label": "FinalPipelinePayload",
+  "type": "FinalPipelinePayload",
+  "data": {
+    "data_nodes": [],
+    "task_nodes": [
+      {
+        "id": "Derive_Line_AB",
+        "dependencies": [
+          "[Data_A]",
+          "[Point_B]",
+          "[RULE_CREATE_LINE]"
+        ],
+        "instruction": "Apply [RULE_CREATE_LINE] to [Data_A] and Point B.",
+        "description": "[INTENT]: Derive line AB using [Data_A] and Point B.\n\n[SHELL ARCHITECTURE]: Creates named shell [Line_AB]: derived line AB coordinates, type: line object, consumed by PHASE 3.",
+        "target_output": "[Line_AB]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Derive_Line_BC",
+        "dependencies": [
+          "[Point_B]",
+          "[Point_C]",
+          "[RULE_CREATE_LINE]"
+        ],
+        "instruction": "Apply [RULE_CREATE_LINE] to Point B and Point C.",
+        "description": "[INTENT]: Derive line BC using Point B and Point C.\n\n[SHELL ARCHITECTURE]: Creates named shell [Line_BC]: derived line BC coordinates, type: line object, consumed by PHASE 3.",
+        "target_output": "[Line_BC]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Derive_Line_DC",
+        "dependencies": [
+          "[Point_D]",
+          "[Point_C]",
+          "[RULE_CREATE_LINE]"
+        ],
+        "instruction": "Apply [RULE_CREATE_LINE] to Point D and Point C.",
+        "description": "[INTENT]: Derive line DC using Point D and Point C.\n\n[SHELL ARCHITECTURE]: Creates named shell [Line_DC]: derived line DC coordinates, type: line object, consumed by PHASE 3.",
+        "target_output": "[Line_DC]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Derive_Line_DA",
+        "dependencies": [
+          "[Point_D]",
+          "[Data_A]",
+          "[RULE_CREATE_LINE]"
+        ],
+        "instruction": "Apply [RULE_CREATE_LINE] to Point D and [Data_A].",
+        "description": "[INTENT]: Derive line DA using Point D and [Data_A].\n\n[SHELL ARCHITECTURE]: Creates named shell [Line_DA]: derived line DA coordinates, type: line object, consumed by PHASE 3.",
+        "target_output": "[Line_DA]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-29T15:44:19.336313+00:00",
+  "label": "DataNode",
+  "type": "DataNode",
+  "data": {
+    "id": "[Line_AB]",
+    "content": {
+      "start_point": {
+        "row": 0,
+        "col": 0
+      },
+      "end_point": {
+        "row": 0,
+        "col": 4
+      }
+    },
+    "status": "READY"
+  }
+}
+
+{
+  "ts": "2026-04-29T15:45:07.208312+00:00",
+  "label": "DataNode",
+  "type": "DataNode",
+  "data": {
+    "id": "[Line_BC]",
+    "content": {
+      "start_point": {
+        "row": 0,
+        "col": 4
+      },
+      "end_point": {
+        "row": 4,
+        "col": 4
+      }
+    },
+    "status": "READY"
+  }
+}
+
+{
+  "ts": "2026-04-29T15:45:20.123306+00:00",
+  "label": "DataNode",
+  "type": "DataNode",
+  "data": {
+    "id": "[Line_DC]",
+    "content": {
+      "start_point": {
+        "row": 4,
+        "col": 0
+      },
+      "end_point": {
+        "row": 4,
+        "col": 4
+      }
+    },
+    "status": "READY"
+  }
+}
+
+{
+  "ts": "2026-04-29T15:46:14.496213+00:00",
+  "label": "DataNode",
+  "type": "DataNode",
+  "data": {
+    "id": "[Line_DA]",
+    "content": {
+      "start_point": {
+        "row": 0,
+        "col": 0
+      },
+      "end_point": {
+        "row": 4,
+        "col": 0
+      }
+    },
+    "status": "READY"
+  }
+}
+
+{
+  "ts": "2026-04-29T15:46:24.151167+00:00",
+  "label": "RouterDecision",
+  "type": "RouterDecision",
+  "data": {
+    "requires_data_extraction": false,
+    "route_to_decompose": false,
+    "route_to_expand": false,
+    "route_to_compute_agent": true
+  }
+}
+
+{
+  "ts": "2026-04-29T15:47:25.952321+00:00",
+  "label": "TaskNodesList.compute",
+  "type": "TaskNodesList",
+  "data": {
+    "task_nodes": [
+      {
+        "id": "Fill_Line_AB",
+        "dependencies": [
+          "[Line_AB]",
+          "[RULE_R4_HORIZONTAL]"
+        ],
+        "instruction": "Apply [RULE_R4_HORIZONTAL] to Line AB.",
+        "description": "[INTENT]: Fill Line AB based on RULE_R4_HORIZONTAL to produce filled objects.\n\n[SHELL ARCHITECTURE]: Writes into parent shell [Filled_Objects_Collection] per inherited append instruction. No new shell created.",
+        "target_output": null,
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Fill_Line_BC",
+        "dependencies": [
+          "[Line_BC]",
+          "[RULE_R4_VERTICAL]"
+        ],
+        "instruction": "Apply [RULE_R4_VERTICAL] to Line BC.",
+        "description": "[INTENT]: Fill Line BC based on RULE_R4_VERTICAL to produce filled objects.\n\n[SHELL ARCHITECTURE]: Writes into parent shell [Filled_Objects_Collection] per inherited append instruction. No new shell created.",
+        "target_output": null,
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Fill_Line_DC",
+        "dependencies": [
+          "[Line_DC]",
+          "[RULE_R4_HORIZONTAL]"
+        ],
+        "instruction": "Apply [RULE_R4_HORIZONTAL] to Line DC.",
+        "description": "[INTENT]: Fill Line DC based on RULE_R4_HORIZONTAL to produce filled objects.\n\n[SHELL ARCHITECTURE]: Writes into parent shell [Filled_Objects_Collection] per inherited append instruction. No new shell created.",
+        "target_output": null,
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Fill_Line_DA",
+        "dependencies": [
+          "[Line_DA]",
+          "[RULE_R4_VERTICAL]"
+        ],
+        "instruction": "Apply [RULE_R4_VERTICAL] to Line DA.",
+        "description": "[INTENT]: Fill Line DA based on RULE_R4_VERTICAL to produce filled objects.\n\n[SHELL ARCHITECTURE]: Writes into parent shell [Filled_Objects_Collection] per inherited append instruction. No new shell created.",
+        "target_output": null,
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Aggregate_Filled_Objects",
+        "dependencies": [
+          "[Line_AB]",
+          "[Line_BC]",
+          "[Line_DA]",
+          "[Line_DC]",
+          "[RULE_R4_HORIZONTAL]",
+          "[RULE_R4_VERTICAL]"
+        ],
+        "instruction": "Collect all filled objects from Fill_Line_AB, Fill_Line_BC, Fill_Line_DC, Fill_Line_DA and append them into [Filled_Objects_Collection].",
+        "description": "[INTENT]: Aggregation node fulfilling parent collection shell. Gathers all filled objects from the filling steps and writes them into the declared parent shell.\n\n[SHELL ARCHITECTURE]: Creates shell [Filled_Objects_Collection]: accumulated list of filled objects from all lines, type: collection, consumed by terminal node.",
+        "target_output": "[Filled_Objects_Collection]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-29T15:47:25.953364+00:00",
+  "label": "FinalPipelinePayload",
+  "type": "FinalPipelinePayload",
+  "data": {
+    "data_nodes": [],
+    "task_nodes": [
+      {
+        "id": "Fill_Line_AB",
+        "dependencies": [
+          "[Line_AB]",
+          "[RULE_R4_HORIZONTAL]"
+        ],
+        "instruction": "Apply [RULE_R4_HORIZONTAL] to Line AB.",
+        "description": "[INTENT]: Fill Line AB based on RULE_R4_HORIZONTAL to produce filled objects.\n\n[SHELL ARCHITECTURE]: Writes into parent shell [Filled_Objects_Collection] per inherited append instruction. No new shell created.",
+        "target_output": null,
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Fill_Line_BC",
+        "dependencies": [
+          "[Line_BC]",
+          "[RULE_R4_VERTICAL]"
+        ],
+        "instruction": "Apply [RULE_R4_VERTICAL] to Line BC.",
+        "description": "[INTENT]: Fill Line BC based on RULE_R4_VERTICAL to produce filled objects.\n\n[SHELL ARCHITECTURE]: Writes into parent shell [Filled_Objects_Collection] per inherited append instruction. No new shell created.",
+        "target_output": null,
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Fill_Line_DC",
+        "dependencies": [
+          "[Line_DC]",
+          "[RULE_R4_HORIZONTAL]"
+        ],
+        "instruction": "Apply [RULE_R4_HORIZONTAL] to Line DC.",
+        "description": "[INTENT]: Fill Line DC based on RULE_R4_HORIZONTAL to produce filled objects.\n\n[SHELL ARCHITECTURE]: Writes into parent shell [Filled_Objects_Collection] per inherited append instruction. No new shell created.",
+        "target_output": null,
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Fill_Line_DA",
+        "dependencies": [
+          "[Line_DA]",
+          "[RULE_R4_VERTICAL]"
+        ],
+        "instruction": "Apply [RULE_R4_VERTICAL] to Line DA.",
+        "description": "[INTENT]: Fill Line DA based on RULE_R4_VERTICAL to produce filled objects.\n\n[SHELL ARCHITECTURE]: Writes into parent shell [Filled_Objects_Collection] per inherited append instruction. No new shell created.",
+        "target_output": null,
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      },
+      {
+        "id": "Aggregate_Filled_Objects",
+        "dependencies": [
+          "[Line_AB]",
+          "[Line_BC]",
+          "[Line_DA]",
+          "[Line_DC]",
+          "[RULE_R4_HORIZONTAL]",
+          "[RULE_R4_VERTICAL]"
+        ],
+        "instruction": "Collect all filled objects from Fill_Line_AB, Fill_Line_BC, Fill_Line_DC, Fill_Line_DA and append them into [Filled_Objects_Collection].",
+        "description": "[INTENT]: Aggregation node fulfilling parent collection shell. Gathers all filled objects from the filling steps and writes them into the declared parent shell.\n\n[SHELL ARCHITECTURE]: Creates shell [Filled_Objects_Collection]: accumulated list of filled objects from all lines, type: collection, consumed by terminal node.",
+        "target_output": "[Filled_Objects_Collection]",
+        "task_type": "COMPUTE",
+        "status": "PENDING",
+        "parent_task": null
+      }
+    ]
+  }
+}
+
+{
+  "ts": "2026-04-29T15:47:35.797831+00:00",
+  "label": "DataNode",
+  "type": "DataNode",
+  "data": {
+    "id": "[Filled_Objects_Collection]",
+    "content": {
+      "filled_objects": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        }
+      ]
+    },
+    "status": "READY"
+  }
+}
+
