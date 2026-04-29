@@ -295,41 +295,41 @@ if __name__ == "__main__":
         #print(f"\n[Experiential RAG] Searching memory for: '{instruction[:50]}...'")
         
         # 1. Fetch & Load Dependencies (Primitives & Rules)
-        print("  -> Match found. Loading required dependencies into memory...")
-        predef_datanodes = {
-            "data_nodes": [
-                {
-            "id": "[DEF_PRIMITIVES]",
-            "content": PROMPTS["DEF_PRIMITIVES"]
-        }, {
-            "id": "[RULE_R1]",
-            "content": PROMPTS["RULE_R1"]
-        }, {
-            "id": "[RULE_R2]",
-            "content": PROMPTS["RULE_R2"]
-        }, {
-            "id": "[RULE_R3]",
-            "content": PROMPTS["RULE_R3"]
-        }, {
-            "id": "[RULE_R4_HORIZONTAL]",
-            "content": PROMPTS["RULE_R4_HORIZONTAL"]
-        }, {
-            "id": "[RULE_R4_VERTICAL]",
-            "content": PROMPTS["RULE_R4_VERTICAL"]
-        },
-        {
-            "id": "[RULE_CREATE_LINE]",
-            "content": PROMPTS["RULE_CREATE_LINE"]
-        }
-        ],
-        "task_nodes": []
-        }
-        temp = process_datanodes_output(predef_datanodes)
-        insert_datanodes_into_graph(temp, db)
+        # print("  -> Match found. Loading required dependencies into memory...")
+        # predef_datanodes = {
+        #     "data_nodes": [
+        #         {
+        #     "id": "[DEF_PRIMITIVES]",
+        #     "content": PROMPTS["DEF_PRIMITIVES"]
+        # }, {
+        #     "id": "[RULE_R1]",
+        #     "content": PROMPTS["RULE_R1"]
+        # }, {
+        #     "id": "[RULE_R2]",
+        #     "content": PROMPTS["RULE_R2"]
+        # }, {
+        #     "id": "[RULE_R3]",
+        #     "content": PROMPTS["RULE_R3"]
+        # }, {
+        #     "id": "[RULE_R4_HORIZONTAL]",
+        #     "content": PROMPTS["RULE_R4_HORIZONTAL"]
+        # }, {
+        #     "id": "[RULE_R4_VERTICAL]",
+        #     "content": PROMPTS["RULE_R4_VERTICAL"]
+        # },
+        # {
+        #     "id": "[RULE_CREATE_LINE]",
+        #     "content": PROMPTS["RULE_CREATE_LINE"]
+        # }
+        # ],
+        # "task_nodes": []
+        # }
+        # temp = process_datanodes_output(predef_datanodes)
+        # insert_datanodes_into_graph(temp, db)
         
-        # 2. Fetch & Return the Template
-        print("  -> Dependencies loaded. Returning execution template.")
-        phase_text = f"""{PROMPTS["SQUARE_CONSTRUCTION"]}\n dependencies: \n{json.dumps(predef_datanodes, indent=4)}\n -------------
+        # # 2. Fetch & Return the Template
+        # print("  -> Dependencies loaded. Returning execution template.")
+        phase_text = f"""{PROMPTS["SQUARE_CONSTRUCTION"]}\n -------------
 [SYS_FLAG: TERMINATE_DAG]"""
         print(f"phase_text: {phase_text}")
         return phase_text  
@@ -346,29 +346,29 @@ if __name__ == "__main__":
     # datanodes = asyncio.run(process_query(query, my_llm))
     # datanodes = process_datanodes_output(datanodes)
     # insert_datanodes_into_graph(datanodes, db)
-    init_square_inputs(db)
+    #init_square_inputs(db)
     
         
     # ========================================================================
     # 2. RAG RETRIEVAL & PRIMITIVE INJECTION
     # ========================================================================
-    print("\n=== STAGE 2: FETCHING EXPERIENTIAL MEMORY ===")
-    
-
-    mock_RAG(db)
+    print("\n=== STAGE 2: FETCHING EXPERIENTIAL MEMORY ===")   
     template_text = mock_RAG(db)
-#     template_text = f"""{PROMPTS["SQUARE_CONSTRUCTION"]}\n dependencies: {deps}\n -------------
-# [SYS_FLAG: TERMINATE_DAG]"""
-    # ========================================================================
-    # 3. TEMPLATE CHUNKING & HIERARCHY CONJUNCTION
-    # ========================================================================
+
     print("\n=== STAGE 3: DECOMPOSING TEMPLATE & BUILDING HIERARCHY ===")
-    # Process the returned template, passing the root_task_id so the function 
-    # natively draws the [:CREATES] edges from the root to these new sub-tasks.
-    root_task = fetch_first_decompose_task(db)
-    print(root_task)
-    # if root_task is None:
-    #     raise RuntimeError("No DECOMPOSE TaskNode found in graph; cannot set root_task.")
+   
+    # Create + upsert an explicit root DECOMPOSE node for this stage.
+    root_task = TaskNode(
+        id=_normalize_id("[Square_Construction_Decomp]"),
+        task_type="DECOMPOSE",
+        dependencies=[_normalize_id("[Data_A]"), _normalize_id("[Data_L]")],
+        instruction="Decompose the square construction template into atomic tasks.",
+        description=template_text,
+        target_output=None,
+        status="PENDING",
+        parent_task=None,
+    )
+    insert_datanodes_into_graph(FinalPipelinePayload(data_nodes=[], task_nodes=[root_task]), db)
     root_task_id = root_task.id
     print(f"root_task_id: {root_task_id}")
     plan_payload = asyncio.run(process_and_upsert_query(template_text, my_llm, db, parent_task_id=root_task_id))

@@ -85,23 +85,83 @@ OUTPUT: A record with exactly two fields: start_point: {row: integer, col: integ
 # EXECUTION PHASES
 # ==========================================
 PROMPTS["SQUARE_CONSTRUCTION"] = """
+I have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.
+
 PHASE 1 — POINT DERIVATION (MANDATORY)
-Task 1.1: Apply [RULE_R1] to [Data_A] using length [Data_L]. Save the output to Point B.
-Task 1.2: Apply [RULE_R2] to [Data_A] using length [Data_L]. Save the output to Point D.
-Task 1.3: Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to Point C.
+Task 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.
+Task 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.
+Task 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.
 
 PHASE 2 — LINE DERIVATION (MANDATORY)
-Task 2.1: Apply [RULE_CREATE_LINE] to [Data_A] and Point B. Save output to Line AB.
-Task 2.2: Apply [RULE_CREATE_LINE] to Point B and Point C. Save output to Line BC.
-Task 2.3: Apply [RULE_CREATE_LINE] to Point D and Point C. Save output to Line DC.
-Task 2.4: Apply [RULE_CREATE_LINE] to Point D and [Data_A]. Save output to Line DA.
+Task 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.
+Task 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.
+Task 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.
+Task 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.
 
 PHASE 3 — LINE FILLING (STRICT)
-Task 3.1: Apply [RULE_R4_HORIZONTAL] to Line AB. Save the List of Filled objects to a new node ID.
-Task 3.2: Apply [RULE_R4_VERTICAL] to Line BC. Save the List of Filled objects to a new node ID.
-Task 3.3: Apply [RULE_R4_HORIZONTAL] to Line DC. Save the List of Filled objects to a new node ID.
-Task 3.4: Apply [RULE_R4_VERTICAL] to Line DA. Save the List of Filled objects to a new node ID.
-Once the square is successfully constructed, output a final status node indicating the square construction is complete.
+Task 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.
+Task 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.
+Task 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.
+Task 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.
+Once the square is successfully constructed, output a final status node.
+
+Rule R1 : (ColExtension) store this entire rule as a data node.
+This rule derives a new point by extending the col coordinate of a given point by a given length.
+{
+INPUT: A Point P with fields row and col. An Integer Length L.
+OUTPUT: A new Point Q = (row: P.row, col: P.col + L).}
+
+Rule R2 : (RowExtension) store this entire rule as a data node.
+This rule derives a new point by extending the row coordinate of a given point by a given length.
+{
+INPUT: A Point P with fields row and col. An Integer Length L.
+OUTPUT: A new Point Q = (row: P.row + L, col: P.col).}
+
+Rule R3 : (CornerCompletion) store this entire rule as a data node.
+This rule derives a third corner point given two existing points.
+{
+INPUT: Point B = (r1, c1), Point D = (r2, c2).
+OUTPUT: A new Point C = (row: r2, col: c1).}
+
+Rule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.
+This rule fills all points along a line where the row coordinate is constant.
+{
+INPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.
+PROCESS:
+1. Derive Filled(r, c_start)
+2. If c_start < c_end: Let step = +1 Else: Let step = -1
+3. Let current_c = c_start
+4. While current_c ≠ c_end:
+      a. current_c = current_c + step
+      b. Derive Filled(r, current_c)
+5. Stop ONLY after Filled(r, c_end) is derived.
+OUTPUT: A JSON List of all derived Filled() objects.}
+
+Rule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.
+This rule fills all points along a line where the col coordinate is constant.
+{
+INPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.
+PROCESS:
+1. Derive Filled(r_start, c)
+2. If r_start < r_end: Let step = +1 Else: Let step = -1
+3. Let current_r = r_start
+4. While current_r ≠ r_end:
+      a. current_r = current_r + step
+      b. Derive Filled(current_r, c)
+5. Stop ONLY after Filled(r_end, c) is derived.
+OUTPUT: A JSON List of all derived Filled() objects.}
+
+Rule CreateLine : (CreateLine) store this entire rule as a data node.
+This rule constructs a line object from two points, enforcing a canonical ordering.
+{
+INPUT: Two points START and END. Each point has fields: row (integer) and col (integer).
+PROCESS:
+1. Read both points exactly as provided. Do not rename or reinterpret fields.
+2. CANONICAL ORDERING:
+   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.
+   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.
+3. Construct the line object using the canonically ordered start_point and end_point only.
+OUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}
 """
 
 

@@ -3,6 +3,8 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 
+from cognitive_tasks import DATA_EXTRACTOR_PROMPT
+
 load_dotenv()
 
 # ============================================================================
@@ -619,12 +621,38 @@ Inventing routing signals, data, or steps not present in the instruction or desc
 <COGNITIVE_PROTOCOL>
 Execute every step fully before proceeding to the next.
 
-STEP 1 — FIELD ISOLATION:
-  Locate and acknowledge the Dependencies block. State: "Dependencies block found and excluded."
-  If no Dependencies block: State: "No Dependencies block."
+STEP 1 — DATA EXTRACTION SCAN (Fresh Read — executes before everything else):
+  Re-read the full input from the absolute beginning. Ignore Dependencies block entirely.
+  This scan has THREE targets. List every finding before moving to any other step.
+
+  TARGET A — Structured assignments:
+    Patterns: "[ID] = value", "[ID] is value", "Set [ID] to value"
+    List every instance found verbatim.
+
+  TARGET B — Natural language value declarations:
+    Look for any sentence containing a named concept immediately followed by or preceded
+    by a concrete numeric or coordinate value.
+    Examples: "row 0 col 0", "side length of 4", "origin at (0,0)", "length is 4",
+    "starting point at row N col N", "given a side of N".
+    For each found: note the concept name and its value.
+
+  TARGET C — Rule data nodes:
+    Look for any block containing "store this entire rule as a data node"
+    OR any named rule with INPUT/PROCESS/OUTPUT structure.
+    For each found: note the rule name and flag as data extraction target.
+
+  State all findings: "TARGET A: [...] / NONE"
+                      "TARGET B: [...] / NONE"
+                      "TARGET C: [...] / NONE"
+  requires_data_extraction: true if ANY finding across A, B, or C. Else false.
+  State: "requires_data_extraction = true/false. DATA SCAN CLOSED."
+
+STEP 2 — FIELD ISOLATION:
+  Locate and acknowledge the Dependencies block.
+  State: "Dependencies block found and excluded." or "No Dependencies block."
   Remaining analysis universe: instruction field + description field only.
 
-STEP 2 — SEMANTIC ISLAND DETECTION:
+STEP 3 — SEMANTIC ISLAND DETECTION:
   Re-read instruction and description fields only.
   Identify every unbreakable logical unit of work.
   For each island write:
@@ -635,30 +663,21 @@ STEP 2 — SEMANTIC ISLAND DETECTION:
     COUPLING TYPE: [LOOSE / TIGHT — relative to other islands, with reason]
     KNOWLEDGE GAP: [YES / NO — are steps missing or must be inferred?]
 
-STEP 3 — INTER-ISLAND SYNTHESIS:
-  Re-read your island descriptions from Step 2 only. Do not re-read the raw input.
+STEP 4 — INTER-ISLAND SYNTHESIS:
+  Re-read your island descriptions from STEP 3 only. Do not re-read the raw input.
   Answer:
-    Q1: Total context volume — is it too large for single-pass? (YES/NO + reason)
+    Q1: Total context volume — too large for single-pass? (YES/NO + reason)
     Q2: Inter-island coupling — loose with data flow between resolved outputs? (YES/NO)
     Q3: Knowledge gaps present — steps missing or implicit? (YES/NO)
     Q4: Explicit enumerated steps with tight constraints in manageable context? (YES/NO)
-  State overall characterization: "[N] islands. Volume: [LARGE/MANAGEABLE]. Coupling: [LOOSE/TIGHT]. Gaps: [YES/NO]. Explicit wiring ready: [YES/NO]."
-
-STEP 4 — DATA SCAN:
-  Re-read instruction and description fields only. Do not touch Dependencies block.
-  Look exclusively for literal value assignments written by the user:
-    - "[ID] = value"
-    - "[ID] is value"
-    - "Set [ID] to value"
-  If found: requires_data_extraction = true. List findings.
-  If not found: requires_data_extraction = false. State: "No literal assignments found."
+  State overall: "[N] islands. Volume: [LARGE/MANAGEABLE]. Coupling: [LOOSE/TIGHT]. Gaps: [YES/NO]. Explicit wiring ready: [YES/NO]."
 
 STEP 5 — PRIMARY ROUTING DECISION:
-  Apply Q1, Q2, Q3, Q4 from Step 3 in order:
+  Apply Q1, Q2, Q3, Q4 from STEP 4 in order:
     Q1 YES AND Q2 YES → primary candidate: DECOMPOSE.
     Q3 YES → primary candidate: EXPAND.
     Q4 YES → primary candidate: COMPUTE-AGENT.
-  State: "Primary candidate: [AGENT] because [one-line reason from Step 3]."
+  State: "Primary candidate: [AGENT] because [one-line reason from STEP 4]."
 
 STEP 6 — CONFLICT CHECK (Logical Cascade):
   Does more than one agent qualify?
@@ -668,99 +687,121 @@ STEP 6 — CONFLICT CHECK (Logical Cascade):
   State: "Cascade resolution: [AGENT] wins because [reason]."
 </COGNITIVE_PROTOCOL>
 
-<EXAMPLE_1 — LOOSE COUPLING, LARGE CONTEXT>
+<EXAMPLE_1 — NATURAL LANGUAGE DATA + MULTI-PHASE>
 INPUT:
-instruction: "PHASE 1 — SANITIZE: Remove null entries from [Record_Set] using [Null_Filter_Rule]. Validate each remaining record against [Schema_A]. Log all rejected records to a report. PHASE 2 — AGGREGATION: Group the sanitized records by category field. Compute frequency counts per category. Compute average value per category. Rank categories by frequency. Produce a final ranked summary table."
-description: "[INTENT]: Clean and summarize a large record set."
-Dependencies:
-- id: "[Record_Set]" content: {"rows": 5000}
-- id: "[Null_Filter_Rule]" content: "Remove any record where a required field is null."
-- id: "[Schema_A]" content: {"required": ["id", "category", "value"]}
+instruction: "I have an origin point at row 0, col 0 and a side length of 4. Construct a square.
+
+PHASE 1 — POINT DERIVATION
+Task 1.1: Apply RULE_R1 to Point A using given side length. Save output to Point B.
+Task 1.2: Apply RULE_R2 to Point A using given side length. Save output to Point D.
+Task 1.3: Apply RULE_R3 to Point B and Point D. Save output to Point C.
+
+PHASE 2 — LINE DERIVATION
+Task 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.
+Task 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.
+
+Rule R1: (ColExtension) store this entire rule as a data node.
+INPUT: A Point P, Integer L. OUTPUT: Q = (P.row, P.col + L)."
+description: "[INTENT]: Construct a square from origin and side length."
 
 === SCRATCHPAD ===
-STEP 1: Dependencies block found and excluded. Analysis universe: instruction + description only.
+STEP 1 — DATA EXTRACTION SCAN:
+Re-reading full input fresh. Ignoring Dependencies block.
+TARGET A: No structured assignments found. NONE.
+TARGET B: Found "origin point at row 0, col 0" — concept: origin point, value: {row:0, col:0}. Found "side length of 4" — concept: side length, value: 4.
+TARGET B: [origin_point: {row:0, col:0}], [side_length: 4]
+TARGET C: Found "Rule R1: (ColExtension) store this entire rule as a data node." — rule name: RULE_R1, has INPUT/OUTPUT structure.
+TARGET C: [RULE_R1]
+requires_data_extraction = true. DATA SCAN CLOSED.
 
-STEP 2:
-ISLAND 1: "PHASE 1 — SANITIZE: Remove null entries from [Record_Set]..."
-CONTENT: Multi-step sanitization and validation pipeline over a large record set.
-CONTEXT SIZE: LARGE — four distinct operations over 5000 records.
-STEPS ENUMERATED: YES — null removal, schema validation, rejection logging.
-COUPLING TYPE: LOOSE — its output feeds Island 2 but resolves independently.
-KNOWLEDGE GAP: NO — operations are named explicitly.
+STEP 2 — FIELD ISOLATION:
+No Dependencies block found. Analysis universe: instruction + description.
 
-ISLAND 2: "PHASE 2 — AGGREGATION: Group the sanitized records by category field..."
-CONTENT: Multi-step aggregation, ranking, and summary production.
-CONTEXT SIZE: LARGE — five distinct operations over sanitized output.
-STEPS ENUMERATED: YES — grouping, frequency count, average, ranking, summary.
-COUPLING TYPE: LOOSE — depends on Island 1 output but resolves independently.
-KNOWLEDGE GAP: NO — operations are named explicitly.
+STEP 3 — SEMANTIC ISLAND DETECTION:
+ISLAND 1: "PHASE 1 — POINT DERIVATION"
+CONTENT: Three sequential point derivation tasks using rules R1, R2, R3.
+CONTEXT SIZE: MANAGEABLE — three explicit tasks.
+STEPS ENUMERATED: YES — Task 1.1, 1.2, 1.3.
+COUPLING TYPE: LOOSE — outputs feed Phase 2 but Phase 1 resolves independently.
+KNOWLEDGE GAP: NO — tasks explicitly named.
 
-STEP 3:
-Q1: Total context volume — YES, too large for single-pass. Two phases each with multiple operations over large data.
-Q2: Inter-island coupling — YES. Island 2 consumes the resolved sanitized output of Island 1.
-Q3: Knowledge gaps — NO. All steps named.
-Q4: Explicit wiring in manageable context — NO. Context is too large.
+ISLAND 2: "PHASE 2 — LINE DERIVATION"
+CONTENT: Line construction tasks consuming Phase 1 outputs.
+CONTEXT SIZE: MANAGEABLE — two explicit tasks shown.
+STEPS ENUMERATED: YES — Task 2.1, 2.2.
+COUPLING TYPE: LOOSE — depends on Phase 1 outputs but resolves independently.
+KNOWLEDGE GAP: NO.
+
+STEP 4 — INTER-ISLAND SYNTHESIS:
+Q1: Total volume — YES, multi-phase workflow too large for single-pass with rule definitions appended.
+Q2: Inter-island coupling — YES, Island 2 consumes Island 1 outputs. Loose coupling with data flow.
+Q3: Knowledge gaps — NO.
+Q4: Explicit wiring in manageable context — NO, context too large across phases.
 Overall: 2 islands. Volume: LARGE. Coupling: LOOSE. Gaps: NO. Explicit wiring ready: NO.
-
-STEP 4: Re-reading instruction and description only. No literal value assignments found. requires_data_extraction = false.
 
 STEP 5: Q1 YES AND Q2 YES → primary candidate: DECOMPOSE.
 
-STEP 6: COMPUTE-AGENT does not qualify — context too large. EXPAND does not qualify — no knowledge gaps. No conflict. Route confirmed: DECOMPOSE.
+STEP 6: No conflict. Route confirmed: DECOMPOSE.
 === END SCRATCHPAD ===
 
 {
-  "requires_data_extraction": false,
+  "requires_data_extraction": true,
   "route_to_decompose": true,
   "route_to_expand": false,
   "route_to_compute_agent": false
 }
 
-<EXAMPLE_2 — TIGHT COUPLING, MANAGEABLE, EXPLICIT STEPS>
+<EXAMPLE_2 — TIGHT COUPLING, EXPLICIT STEPS>
 INPUT:
-instruction: "Task 1.1: Apply [RULE_R1] to [Origin_Point_A] using [Side_Length_L]. Save output to Point B. Task 1.2: Apply [RULE_R2] to [Origin_Point_A] using [Side_Length_L]. Save output to Point D. Task 1.3: Apply [RULE_R3] to Point B and Point D. Save output to Point C."
-description: "[INTENT]: Derive three new points using three interdependent rule applications."
+instruction: "Task 1.1: Apply [RULE_R1] to [Origin_Point] using [Side_Length]. Save output to Point B. Task 1.2: Apply [RULE_R2] to [Origin_Point] using [Side_Length]. Save output to Point D. Task 1.3: Apply [RULE_R3] to Point B and Point D. Save output to Point C."
+description: "[INTENT]: Derive three points using three interdependent rule applications."
 Dependencies:
-- id: "[Origin_Point_A]" content: {"row": 0, "col": 0}
-- id: "[Side_Length_L]" content: {"length": 4}
+- id: "[Origin_Point]" content: {"row": 0, "col": 0}
+- id: "[Side_Length]" content: {"length": 4}
 
 === SCRATCHPAD ===
-STEP 1: Dependencies block found and excluded. Analysis universe: instruction + description only.
+STEP 1 — DATA EXTRACTION SCAN:
+Re-reading full input fresh. Ignoring Dependencies block.
+TARGET A: No structured assignments in instruction or description. NONE.
+TARGET B: No natural language value declarations in instruction or description. NONE.
+TARGET C: No rule data node declarations in instruction or description. NONE.
+requires_data_extraction = false. DATA SCAN CLOSED.
 
-STEP 2:
-ISLAND 1: "Task 1.1: Apply [RULE_R1] to [Origin_Point_A] using [Side_Length_L]."
+STEP 2 — FIELD ISOLATION:
+Dependencies block found and excluded. Analysis universe: instruction + description only.
+
+STEP 3 — SEMANTIC ISLAND DETECTION:
+ISLAND 1: "Task 1.1: Apply [RULE_R1] to [Origin_Point] using [Side_Length]."
 CONTENT: Single rule application producing Point B.
 CONTEXT SIZE: MANAGEABLE — one operation.
 STEPS ENUMERATED: YES — explicit.
-COUPLING TYPE: TIGHT — Point B is consumed by Task 1.3 directly.
+COUPLING TYPE: TIGHT — Point B consumed by Task 1.3 directly.
 KNOWLEDGE GAP: NO.
 
-ISLAND 2: "Task 1.2: Apply [RULE_R2] to [Origin_Point_A] using [Side_Length_L]."
+ISLAND 2: "Task 1.2: Apply [RULE_R2] to [Origin_Point] using [Side_Length]."
 CONTENT: Single rule application producing Point D.
 CONTEXT SIZE: MANAGEABLE — one operation.
 STEPS ENUMERATED: YES — explicit.
-COUPLING TYPE: TIGHT — Point D is consumed by Task 1.3 directly.
+COUPLING TYPE: TIGHT — Point D consumed by Task 1.3 directly.
 KNOWLEDGE GAP: NO.
 
 ISLAND 3: "Task 1.3: Apply [RULE_R3] to Point B and Point D."
-CONTENT: Rule application consuming outputs of both prior tasks.
+CONTENT: Rule application consuming both prior outputs.
 CONTEXT SIZE: MANAGEABLE — one operation.
 STEPS ENUMERATED: YES — explicit.
 COUPLING TYPE: TIGHT — depends on both Island 1 and Island 2 outputs.
 KNOWLEDGE GAP: NO.
 
-STEP 3:
-Q1: Total context volume — NO. Three small explicit tasks, fully manageable in single pass.
-Q2: Inter-island coupling — TIGHT. Islands share direct output-to-input dependencies. Not loose.
-Q3: Knowledge gaps — NO. All steps explicit.
-Q4: Explicit wiring in manageable context — YES. Three tightly coupled explicit steps ready for dependency extraction and wiring.
+STEP 4 — INTER-ISLAND SYNTHESIS:
+Q1: Total volume — NO. Three small explicit tasks, fully manageable.
+Q2: Inter-island coupling — TIGHT. Direct output-to-input dependencies. Not loose.
+Q3: Knowledge gaps — NO.
+Q4: Explicit wiring in manageable context — YES. Three tightly coupled explicit steps ready for wiring.
 Overall: 3 islands. Volume: MANAGEABLE. Coupling: TIGHT. Gaps: NO. Explicit wiring ready: YES.
-
-STEP 4: Re-reading instruction and description only. No literal assignments found. requires_data_extraction = false.
 
 STEP 5: Q4 YES → primary candidate: COMPUTE-AGENT.
 
-STEP 6: DECOMPOSE does not qualify — context manageable, coupling tight not loose. EXPAND does not qualify — no knowledge gaps. No conflict. Route confirmed: COMPUTE-AGENT.
+STEP 6: No conflict. Route confirmed: COMPUTE-AGENT.
 === END SCRATCHPAD ===
 
 {
@@ -770,37 +811,42 @@ STEP 6: DECOMPOSE does not qualify — context manageable, coupling tight not lo
   "route_to_compute_agent": true
 }
 
-<EXAMPLE_3 — KNOWLEDGE GAP>
+<EXAMPLE_3 — KNOWLEDGE GAP WITH EMBEDDED DATA>
 INPUT:
-instruction: "Validate [Payload] against [Schema] and return all violations."
+instruction: "Validate the payload against the schema and return all violations. The payload has 3 required fields."
 description: "[INTENT]: Produce a violation report. Let [Schema_Version] = 3."
 Dependencies:
-- id: "[Payload]" content: {"fields": ["name", "age", "email"]}
-- id: "[Schema]" content: {"required": ["name", "email"]}
+- id: "[Payload]" content: {"fields": ["name", "age"]}
 
 === SCRATCHPAD ===
-STEP 1: Dependencies block found and excluded. Analysis universe: instruction + description only.
+STEP 1 — DATA EXTRACTION SCAN:
+Re-reading full input fresh. Ignoring Dependencies block.
+TARGET A: Found "Let [Schema_Version] = 3" in description. TARGET A: [[Schema_Version]: 3]
+TARGET B: Found "3 required fields" — concrete numeric attached to named concept. TARGET B: [required_fields_count: 3]
+TARGET C: No rule data node declarations. NONE.
+requires_data_extraction = true. DATA SCAN CLOSED.
 
-STEP 2:
-ISLAND 1: "Validate [Payload] against [Schema] and return all violations."
-CONTENT: Schema validation producing a violation report.
+STEP 2 — FIELD ISOLATION:
+Dependencies block found and excluded. Analysis universe: instruction + description only.
+
+STEP 3 — SEMANTIC ISLAND DETECTION:
+ISLAND 1: "Validate the payload against the schema and return all violations."
+CONTENT: Schema validation producing violation report.
 CONTEXT SIZE: MANAGEABLE — single instruction.
-STEPS ENUMERATED: NO — outcome named but no sub-steps given.
+STEPS ENUMERATED: NO — outcome named, no sub-steps given.
 COUPLING TYPE: TIGHT — single self-contained unit.
-KNOWLEDGE GAP: YES — validation requires parse, type check, required field check, constraint check, aggregation — none stated.
+KNOWLEDGE GAP: YES — requires parse, type check, field check, constraint check, aggregation — none stated.
 
-STEP 3:
-Q1: Context volume — NO. Single manageable instruction.
+STEP 4 — INTER-ISLAND SYNTHESIS:
+Q1: Volume — NO. Single manageable instruction.
 Q2: Loose inter-island flow — NO. Single island.
-Q3: Knowledge gaps — YES. Steps entirely missing, must be inferred.
-Q4: Explicit wiring — NO. Steps not enumerated.
+Q3: Knowledge gaps — YES. Steps entirely missing.
+Q4: Explicit wiring — NO.
 Overall: 1 island. Volume: MANAGEABLE. Coupling: TIGHT. Gaps: YES. Explicit wiring ready: NO.
-
-STEP 4: Re-reading instruction and description only. Found: "Let [Schema_Version] = 3" in description. requires_data_extraction = true.
 
 STEP 5: Q3 YES → primary candidate: EXPAND.
 
-STEP 6: COMPUTE-AGENT does not qualify — steps not enumerated. DECOMPOSE does not qualify — single manageable island. No conflict. Route confirmed: EXPAND.
+STEP 6: No conflict. Route confirmed: EXPAND.
 === END SCRATCHPAD ===
 
 {
@@ -1026,6 +1072,79 @@ OUTPUT:
 
 Output ONLY a strictly valid JSON object. No markdown. No commentary.
 """
+
+DATA_EXTRACTOR_PROMPT="""
+You are the Fact Extractor Agent for a General Purpose DAG Engine.
+Your exclusive objective is to identify explicitly stated values, facts, and rule definitions in the user's input and extract them into discrete data nodes.
+
+COGNITIVE PROCESSING STEPS:
+
+STEP 1 — THREE-TARGET SCAN:
+Read the full input. Look exclusively for these three target types:
+
+TARGET A — Structured value assignments:
+  Patterns: "[ID] = value", "[ID] is value", "Set [ID] to value", "x=N y=N"
+  Use the provided bracketed ID if present. If no ID provided, infer a logical bracketed ID.
+
+TARGET B — Natural language value declarations:
+  Look for any named concept immediately paired with a concrete numeric or coordinate value.
+  Examples: "origin at row 0 col 0", "side length of 4", "starting point is (0,0)", "given length 4"
+  Infer a logical bracketed ID for each. Extract the exact value.
+
+TARGET C — Rule data nodes:
+  Look for any block containing "store this entire rule as a data node"
+  OR any named rule with INPUT/PROCESS/OUTPUT structure.
+  Extract the ENTIRE rule block verbatim as the content field.
+  Infer a logical bracketed ID from the rule name if not provided.
+
+STEP 2 — CONTENT EXTRACTION:
+For each finding across A, B, C:
+  Extract the exact value or full rule text into the content field.
+  Never summarize rule content — copy verbatim.
+
+STEP 3 — STRICT SCHEMA ENFORCEMENT:
+  NO EMPTY SHELLS: Every extracted node MUST have a populated content field.
+  NO SCHEMA FITTING: If a concept is merely referenced ("Apply Rule R1", "Use [Data_A]") 
+  but has no explicit value or definition in the input → DO NOT extract it.
+  If no findings across all three targets → output empty data_nodes array.
+
+OUTPUT SCHEMA:
+{
+  "data_nodes": [
+    {"id": "[Bracketed_ID]", "content": <exact value, coordinate object, or verbatim rule text>}
+  ]
+}
+
+EXAMPLE 1 — Structured assignments:
+USER: "The starting coordinates for [Point_A] are x=5, y=10. The length of the side is 4."
+{
+  "data_nodes": [
+    {"id": "[Point_A]", "content": {"x": 5, "y": 10}},
+    {"id": "[Side_Length]", "content": 4}
+  ]
+}
+
+EXAMPLE 2 — Natural language declarations + rule data node:
+USER: "I have an origin point at row 0, col 0 and a side length of 4.
+Rule R1: (ColExtension) store this entire rule as a data node.
+INPUT: A Point P, Integer L. OUTPUT: Q = (P.row, P.col + L)."
+{
+  "data_nodes": [
+    {"id": "[Origin_Point]", "content": {"row": 0, "col": 0}},
+    {"id": "[Side_Length]", "content": 4},
+    {"id": "[RULE_R1]", "content": "Rule R1 (ColExtension): INPUT: A Point P, Integer L. OUTPUT: Q = (P.row, P.col + L)."}
+  ]
+}
+
+EXAMPLE 3 — References only, no values (anti-bias):
+USER: "Phase 1: Apply RULE_R1 to Point A using given side length."
+{
+  "data_nodes": []
+}
+
+Output ONLY a strictly valid JSON object. No markdown. No commentary.
+
+"""
 # ============================================================================
 # 2. THE CAPACITY OVERLOAD TEST CASE
 # ============================================================================
@@ -1115,6 +1234,86 @@ OUTPUT: A JSON List of all derived Filled() objects.}}"
 """
 TEST_CASE_TERMINAL = f"""{TEST_CASE}\n -------------
 [SYS_FLAG: TERMINATE_DAG]"""
+
+TEST_CASE_SQUARE = """
+I have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.
+
+PHASE 1 — POINT DERIVATION (MANDATORY)
+Task 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.
+Task 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.
+Task 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.
+
+PHASE 2 — LINE DERIVATION (MANDATORY)
+Task 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.
+Task 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.
+Task 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.
+Task 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.
+
+PHASE 3 — LINE FILLING (STRICT)
+Task 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.
+Task 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.
+Task 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.
+Task 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.
+Once the square is successfully constructed, output a final status node.
+
+Rule R1 : (ColExtension) store this entire rule as a data node.
+This rule derives a new point by extending the col coordinate of a given point by a given length.
+{
+INPUT: A Point P with fields row and col. An Integer Length L.
+OUTPUT: A new Point Q = (row: P.row, col: P.col + L).}
+
+Rule R2 : (RowExtension) store this entire rule as a data node.
+This rule derives a new point by extending the row coordinate of a given point by a given length.
+{
+INPUT: A Point P with fields row and col. An Integer Length L.
+OUTPUT: A new Point Q = (row: P.row + L, col: P.col).}
+
+Rule R3 : (CornerCompletion) store this entire rule as a data node.
+This rule derives a third corner point given two existing points.
+{
+INPUT: Point B = (r1, c1), Point D = (r2, c2).
+OUTPUT: A new Point C = (row: r2, col: c1).}
+
+Rule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.
+This rule fills all points along a line where the row coordinate is constant.
+{
+INPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.
+PROCESS:
+1. Derive Filled(r, c_start)
+2. If c_start < c_end: Let step = +1 Else: Let step = -1
+3. Let current_c = c_start
+4. While current_c ≠ c_end:
+      a. current_c = current_c + step
+      b. Derive Filled(r, current_c)
+5. Stop ONLY after Filled(r, c_end) is derived.
+OUTPUT: A JSON List of all derived Filled() objects.}
+
+Rule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.
+This rule fills all points along a line where the col coordinate is constant.
+{
+INPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.
+PROCESS:
+1. Derive Filled(r_start, c)
+2. If r_start < r_end: Let step = +1 Else: Let step = -1
+3. Let current_r = r_start
+4. While current_r ≠ r_end:
+      a. current_r = current_r + step
+      b. Derive Filled(current_r, c)
+5. Stop ONLY after Filled(r_end, c) is derived.
+OUTPUT: A JSON List of all derived Filled() objects.}
+
+Rule CreateLine : (CreateLine) store this entire rule as a data node.
+This rule constructs a line object from two points, enforcing a canonical ordering.
+{
+INPUT: Two points START and END. Each point has fields: row (integer) and col (integer).
+PROCESS:
+1. Read both points exactly as provided. Do not rename or reinterpret fields.
+2. CANONICAL ORDERING:
+   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.
+   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.
+3. Construct the line object using the canonically ordered start_point and end_point only.
+OUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}
+"""
 
 TEST_CASE_1 = """
       "instruction": "Apply [RULE_R1] to [Origin_Point_A] using length [Side_Length_L]. Save the output to a point B. Apply [RULE_R2] to [Origin_Point_A] using length [Side_Length_L]. Save the output to a point D. Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to a point C.",
@@ -1325,7 +1524,7 @@ def run_diagnostic():
             model=MODEL_ID,
             messages=[
                 {"role": "system", "content": DECOMPOSE_SYSTEM_PROMPT},
-                {"role": "user", "content": TEST_CASE}
+                {"role": "user", "content": TEST_CASE_SQUARE}
             ],
             temperature=0.0,  # CRITICAL: 0.0 for deterministic routing
             # OpenRouter supports HTTP headers for app rankings (optional)
