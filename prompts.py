@@ -684,7 +684,8 @@ Then output ONLY a strictly valid JSON object:
       "task_type": "COMPUTE or DECOMPOSE",
       "dependencies": ["<validated shell IDs only>"],
       "instruction": "<verbatim phase text for DECOMPOSE / extraction instruction for DATA_NODE>",
-      "description": "<template sections>"
+      "description": "<template sections>",
+      "target_output": "<validated shell IDs only>"
     }
   ],
   "terminal_node": null or {
@@ -693,6 +694,7 @@ Then output ONLY a strictly valid JSON object:
     "dependencies": ["<terminal shells only>"],
     "instruction": "Finalize DAG execution.",
     "description": "<terminal template>"
+    "target_output": "[END_ORCHESTRATION]"
   }
 }
 No markdown. No commentary outside scratchpad and JSON.
@@ -822,6 +824,7 @@ Phase map complete. 2 phases identified. 2 DATA_NODEs to emit.
       "dependencies": [],
       "instruction": "Extract the anomaly threshold value from the input context. Store as [Anomaly_Threshold] with content: {threshold: 0.85}.",
       "description": "[INTENT]: Extract and store the anomaly threshold as a named shell for the filtering stage.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Anomaly_Threshold] | Type: named | Content: threshold value as float | Consumer: Stage_One_Filtering."
+      "target_output": "[Anomaly_Threshold]"
     },
     {
       "id": "Stage_One_Filtering",
@@ -836,6 +839,7 @@ Phase map complete. 2 phases identified. 2 DATA_NODEs to emit.
       "dependencies": [],
       "instruction": "Extract the aggregation window duration from the input context. Store as [Aggregation_Window] with content: {seconds: 60}.",
       "description": "[INTENT]: Extract and store the aggregation window as a named shell for the aggregation stage.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Aggregation_Window] | Type: named | Content: window duration in seconds as integer | Consumer: Stage_Two_Aggregation."
+      "target_output": "[Aggregation_Window]"
     },
     {
       "id": "Stage_Two_Aggregation",
@@ -851,6 +855,7 @@ Phase map complete. 2 phases identified. 2 DATA_NODEs to emit.
     "dependencies": ["[Ranked_Anomaly_Summary]"],
     "instruction": "Finalize DAG execution. Confirm [Ranked_Anomaly_Summary] is fully produced.",
     "description": "[INTENT]: Finalize the DAG execution. Graph topology identified as LINEAR — sequential pipeline with no parallel branches.\n\n[TERMINAL_LEDGER]:\n- [Ranked_Anomaly_Summary]: ranked table of sensor groups with mean anomaly scores — final pipeline output.\n\n[DEPENDENCY CONFIRMATION]: Only shell IDs in dependencies. No task node IDs. task_type is COMPUTE."
+    "target_output": "[END_ORCHESTRATION]"
   }
 }
 </EXAMPLE_TRIGGER>

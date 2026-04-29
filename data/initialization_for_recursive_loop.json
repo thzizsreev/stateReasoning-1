@@ -1,0 +1,1511 @@
+{
+  "meta": {
+    "created_at": "2026-04-29T17:39:03.591690+00:00",
+    "format": "stateReasoning-1.neo4j_snapshot.v1"
+  },
+  "nodes": [
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Line_AB]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Line_BC]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Line_DC]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Line_DA]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "Semaphore"
+      ],
+      "props": {
+        "pending_count": 18,
+        "id": "GLOBAL"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Decompose the square construction template into atomic tasks.",
+        "unresolved_deps": 2,
+        "name": "[Square_Construction_Decomp]",
+        "description": "\nI have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.\n\nPHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.\n\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.\n\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.\nOnce the square is successfully constructed, output a final status node.\n\nRule R1 : (ColExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}\n\nRule R2 : (RowExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}\n\nRule R3 : (CornerCompletion) store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}\n\nRule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule CreateLine : (CreateLine) store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}\n\n -------------\n[SYS_FLAG: TERMINATE_DAG]",
+        "id": "[Square_Construction_Decomp]",
+        "task_type": "DECOMPOSE",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Rule_R4A]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Point_C]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Point_D]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Extract the Strict Successor-Based Line Filling - Constant Row rule definition from the input context. Store as [Rule_R4A].",
+        "unresolved_deps": 0,
+        "name": "[Extract_Rule_R4A]",
+        "description": "[INTENT]: Extract and store the Strict Successor-Based Line Filling - Constant Row rule as a named shell for the line filling phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R4A] | Type: named | Content: Strict Successor-Based Line Filling - Constant Row rule definition | Consumer: PHASE 3",
+        "id": "[Extract_Rule_R4A]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Extract the Strict Successor-Based Line Filling - Constant Col rule definition from the input context. Store as [Rule_R4B].",
+        "unresolved_deps": 0,
+        "name": "[Extract_Rule_R4B]",
+        "description": "[INTENT]: Extract and store the Strict Successor-Based Line Filling - Constant Col rule as a named shell for the line filling phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R4B] | Type: named | Content: Strict Successor-Based Line Filling - Constant Col rule definition | Consumer: PHASE 3",
+        "id": "[Extract_Rule_R4B]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Rule_R4B]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "PHASE 3 — LINE FILLING\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.",
+        "unresolved_deps": 6,
+        "name": "[PHASE_3_Line_Filling]",
+        "description": "[INTENT]: Third processing phase. Fills lines AB, BC, DC, and DA using the given rules.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R4A to Line AB to get filled objects.\n- Apply RULE_R4B to Line BC to get filled objects.\n- Apply RULE_R4A to Line DC to get filled objects.\n- Apply RULE_R4B to Line DA to get filled objects.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_AB] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_BC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DA] | Type: named | Content: list of filled objects | Consumer: terminal node",
+        "id": "[PHASE_3_Line_Filling]",
+        "task_type": "DECOMPOSE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Filled_Objects_AB], [Filled_Objects_BC], [Filled_Objects_DC], [Filled_Objects_DA]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_A]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Data_L]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Extract the origin point coordinates from the input context. Store as [Origin_Point] with content: {row: 0, col: 0}.",
+        "unresolved_deps": 0,
+        "name": "[Extract_Origin_Point]",
+        "description": "[INTENT]: Extract and store the origin point as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Origin_Point] | Type: named | Content: origin point coordinates | Consumer: PHASE 1",
+        "id": "[Extract_Origin_Point]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Origin_Point]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Extract the side length value from the input context. Store as [Side_Length] with content: {length: 4}.",
+        "unresolved_deps": 0,
+        "name": "[Extract_Side_Length]",
+        "description": "[INTENT]: Extract and store the side length as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Side_Length] | Type: named | Content: side length value | Consumer: PHASE 1",
+        "id": "[Extract_Side_Length]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Side_Length]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Extract the ColExtension rule definition from the input context. Store as [Rule_R1].",
+        "unresolved_deps": 0,
+        "name": "[Extract_Rule_R1]",
+        "description": "[INTENT]: Extract and store the ColExtension rule as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R1] | Type: named | Content: ColExtension rule definition | Consumer: Task 1.1",
+        "id": "[Extract_Rule_R1]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Rule_R1]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Extract the RowExtension rule definition from the input context. Store as [Rule_R2].",
+        "unresolved_deps": 0,
+        "name": "[Extract_Rule_R2]",
+        "description": "[INTENT]: Extract and store the RowExtension rule as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R2] | Type: named | Content: RowExtension rule definition | Consumer: Task 1.2",
+        "id": "[Extract_Rule_R2]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Rule_R2]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Extract the CornerCompletion rule definition from the input context. Store as [Rule_R3].",
+        "unresolved_deps": 0,
+        "name": "[Extract_Rule_R3]",
+        "description": "[INTENT]: Extract and store the CornerCompletion rule as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R3] | Type: named | Content: CornerCompletion rule definition | Consumer: Task 1.3",
+        "id": "[Extract_Rule_R3]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Rule_R3]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "PHASE 1 — POINT DERIVATION\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.",
+        "unresolved_deps": 5,
+        "name": "[PHASE_1_Point_Derivation]",
+        "description": "[INTENT]: First processing phase. Derives points B, D, and C using the given rules and side length.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R1 to Point A to get Point B.\n- Apply RULE_R2 to Point A to get Point D.\n- Apply RULE_R3 to Point B and Point D to get Point C.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_D] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_C] | Type: named | Content: point coordinates | Consumer: PHASE 2",
+        "id": "[PHASE_1_Point_Derivation]",
+        "task_type": "DECOMPOSE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Point_B], [Point_D], [Point_C]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "Extract the CreateLine rule definition from the input context. Store as [Rule_CreateLine].",
+        "unresolved_deps": 0,
+        "name": "[Extract_Rule_CreateLine]",
+        "description": "[INTENT]: Extract and store the CreateLine rule as a named shell for the line derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_CreateLine] | Type: named | Content: CreateLine rule definition | Consumer: PHASE 2",
+        "id": "[Extract_Rule_CreateLine]",
+        "task_type": "COMPUTE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Rule_CreateLine]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "TaskNode"
+      ],
+      "props": {
+        "instruction": "PHASE 2 — LINE DERIVATION\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.",
+        "unresolved_deps": 5,
+        "name": "[PHASE_2_Line_Derivation]",
+        "description": "[INTENT]: Second processing phase. Derives lines AB, BC, DC, and DA using the given points and CreateLine rule.\n\n[DEFERRED LOGIC]:\n- Apply RULE_CREATE_LINE to Point A and Point B to get Line AB.\n- Apply RULE_CREATE_LINE to Point B and Point C to get Line BC.\n- Apply RULE_CREATE_LINE to Point D and Point C to get Line DC.\n- Apply RULE_CREATE_LINE to Point D and Point A to get Line DA.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_BC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DA] | Type: named | Content: line object | Consumer: PHASE 3",
+        "id": "[PHASE_2_Line_Derivation]",
+        "task_type": "DECOMPOSE",
+        "status": "PENDING"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Line_AB], [Line_BC], [Line_DC], [Line_DA]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Point_A]",
+        "status": "UNRESOLVED"
+      }
+    },
+    {
+      "labels": [
+        "DataNode"
+      ],
+      "props": {
+        "id": "[Point_B]",
+        "status": "UNRESOLVED"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_AB]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 6,
+          "name": "[PHASE_3_Line_Filling]",
+          "description": "[INTENT]: Third processing phase. Fills lines AB, BC, DC, and DA using the given rules.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R4A to Line AB to get filled objects.\n- Apply RULE_R4B to Line BC to get filled objects.\n- Apply RULE_R4A to Line DC to get filled objects.\n- Apply RULE_R4B to Line DA to get filled objects.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_AB] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_BC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DA] | Type: named | Content: list of filled objects | Consumer: terminal node",
+          "id": "[PHASE_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_BC]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 6,
+          "name": "[PHASE_3_Line_Filling]",
+          "description": "[INTENT]: Third processing phase. Fills lines AB, BC, DC, and DA using the given rules.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R4A to Line AB to get filled objects.\n- Apply RULE_R4B to Line BC to get filled objects.\n- Apply RULE_R4A to Line DC to get filled objects.\n- Apply RULE_R4B to Line DA to get filled objects.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_AB] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_BC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DA] | Type: named | Content: list of filled objects | Consumer: terminal node",
+          "id": "[PHASE_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_DC]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 6,
+          "name": "[PHASE_3_Line_Filling]",
+          "description": "[INTENT]: Third processing phase. Fills lines AB, BC, DC, and DA using the given rules.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R4A to Line AB to get filled objects.\n- Apply RULE_R4B to Line BC to get filled objects.\n- Apply RULE_R4A to Line DC to get filled objects.\n- Apply RULE_R4B to Line DA to get filled objects.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_AB] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_BC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DA] | Type: named | Content: list of filled objects | Consumer: terminal node",
+          "id": "[PHASE_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_DA]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 6,
+          "name": "[PHASE_3_Line_Filling]",
+          "description": "[INTENT]: Third processing phase. Fills lines AB, BC, DC, and DA using the given rules.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R4A to Line AB to get filled objects.\n- Apply RULE_R4B to Line BC to get filled objects.\n- Apply RULE_R4A to Line DC to get filled objects.\n- Apply RULE_R4B to Line DA to get filled objects.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_AB] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_BC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DA] | Type: named | Content: list of filled objects | Consumer: terminal node",
+          "id": "[PHASE_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Decompose the square construction template into atomic tasks.",
+          "unresolved_deps": 2,
+          "name": "[Square_Construction_Decomp]",
+          "description": "\nI have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.\n\nPHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.\n\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.\n\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.\nOnce the square is successfully constructed, output a final status node.\n\nRule R1 : (ColExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}\n\nRule R2 : (RowExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}\n\nRule R3 : (CornerCompletion) store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}\n\nRule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule CreateLine : (CreateLine) store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}\n\n -------------\n[SYS_FLAG: TERMINATE_DAG]",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the Strict Successor-Based Line Filling - Constant Row rule definition from the input context. Store as [Rule_R4A].",
+          "unresolved_deps": 0,
+          "name": "[Extract_Rule_R4A]",
+          "description": "[INTENT]: Extract and store the Strict Successor-Based Line Filling - Constant Row rule as a named shell for the line filling phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R4A] | Type: named | Content: Strict Successor-Based Line Filling - Constant Row rule definition | Consumer: PHASE 3",
+          "id": "[Extract_Rule_R4A]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Decompose the square construction template into atomic tasks.",
+          "unresolved_deps": 2,
+          "name": "[Square_Construction_Decomp]",
+          "description": "\nI have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.\n\nPHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.\n\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.\n\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.\nOnce the square is successfully constructed, output a final status node.\n\nRule R1 : (ColExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}\n\nRule R2 : (RowExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}\n\nRule R3 : (CornerCompletion) store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}\n\nRule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule CreateLine : (CreateLine) store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}\n\n -------------\n[SYS_FLAG: TERMINATE_DAG]",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the Strict Successor-Based Line Filling - Constant Col rule definition from the input context. Store as [Rule_R4B].",
+          "unresolved_deps": 0,
+          "name": "[Extract_Rule_R4B]",
+          "description": "[INTENT]: Extract and store the Strict Successor-Based Line Filling - Constant Col rule as a named shell for the line filling phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R4B] | Type: named | Content: Strict Successor-Based Line Filling - Constant Col rule definition | Consumer: PHASE 3",
+          "id": "[Extract_Rule_R4B]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Decompose the square construction template into atomic tasks.",
+          "unresolved_deps": 2,
+          "name": "[Square_Construction_Decomp]",
+          "description": "\nI have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.\n\nPHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.\n\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.\n\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.\nOnce the square is successfully constructed, output a final status node.\n\nRule R1 : (ColExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}\n\nRule R2 : (RowExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}\n\nRule R3 : (CornerCompletion) store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}\n\nRule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule CreateLine : (CreateLine) store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}\n\n -------------\n[SYS_FLAG: TERMINATE_DAG]",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 6,
+          "name": "[PHASE_3_Line_Filling]",
+          "description": "[INTENT]: Third processing phase. Fills lines AB, BC, DC, and DA using the given rules.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R4A to Line AB to get filled objects.\n- Apply RULE_R4B to Line BC to get filled objects.\n- Apply RULE_R4A to Line DC to get filled objects.\n- Apply RULE_R4B to Line DA to get filled objects.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_AB] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_BC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DA] | Type: named | Content: list of filled objects | Consumer: terminal node",
+          "id": "[PHASE_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Decompose the square construction template into atomic tasks.",
+          "unresolved_deps": 2,
+          "name": "[Square_Construction_Decomp]",
+          "description": "\nI have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.\n\nPHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.\n\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.\n\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.\nOnce the square is successfully constructed, output a final status node.\n\nRule R1 : (ColExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}\n\nRule R2 : (RowExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}\n\nRule R3 : (CornerCompletion) store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}\n\nRule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule CreateLine : (CreateLine) store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}\n\n -------------\n[SYS_FLAG: TERMINATE_DAG]",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the origin point coordinates from the input context. Store as [Origin_Point] with content: {row: 0, col: 0}.",
+          "unresolved_deps": 0,
+          "name": "[Extract_Origin_Point]",
+          "description": "[INTENT]: Extract and store the origin point as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Origin_Point] | Type: named | Content: origin point coordinates | Consumer: PHASE 1",
+          "id": "[Extract_Origin_Point]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Decompose the square construction template into atomic tasks.",
+          "unresolved_deps": 2,
+          "name": "[Square_Construction_Decomp]",
+          "description": "\nI have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.\n\nPHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.\n\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.\n\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.\nOnce the square is successfully constructed, output a final status node.\n\nRule R1 : (ColExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}\n\nRule R2 : (RowExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}\n\nRule R3 : (CornerCompletion) store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}\n\nRule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule CreateLine : (CreateLine) store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}\n\n -------------\n[SYS_FLAG: TERMINATE_DAG]",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the side length value from the input context. Store as [Side_Length] with content: {length: 4}.",
+          "unresolved_deps": 0,
+          "name": "[Extract_Side_Length]",
+          "description": "[INTENT]: Extract and store the side length as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Side_Length] | Type: named | Content: side length value | Consumer: PHASE 1",
+          "id": "[Extract_Side_Length]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Decompose the square construction template into atomic tasks.",
+          "unresolved_deps": 2,
+          "name": "[Square_Construction_Decomp]",
+          "description": "\nI have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.\n\nPHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.\n\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.\n\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.\nOnce the square is successfully constructed, output a final status node.\n\nRule R1 : (ColExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}\n\nRule R2 : (RowExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}\n\nRule R3 : (CornerCompletion) store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}\n\nRule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule CreateLine : (CreateLine) store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}\n\n -------------\n[SYS_FLAG: TERMINATE_DAG]",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the ColExtension rule definition from the input context. Store as [Rule_R1].",
+          "unresolved_deps": 0,
+          "name": "[Extract_Rule_R1]",
+          "description": "[INTENT]: Extract and store the ColExtension rule as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R1] | Type: named | Content: ColExtension rule definition | Consumer: Task 1.1",
+          "id": "[Extract_Rule_R1]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Decompose the square construction template into atomic tasks.",
+          "unresolved_deps": 2,
+          "name": "[Square_Construction_Decomp]",
+          "description": "\nI have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.\n\nPHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.\n\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.\n\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.\nOnce the square is successfully constructed, output a final status node.\n\nRule R1 : (ColExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}\n\nRule R2 : (RowExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}\n\nRule R3 : (CornerCompletion) store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}\n\nRule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule CreateLine : (CreateLine) store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}\n\n -------------\n[SYS_FLAG: TERMINATE_DAG]",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the RowExtension rule definition from the input context. Store as [Rule_R2].",
+          "unresolved_deps": 0,
+          "name": "[Extract_Rule_R2]",
+          "description": "[INTENT]: Extract and store the RowExtension rule as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R2] | Type: named | Content: RowExtension rule definition | Consumer: Task 1.2",
+          "id": "[Extract_Rule_R2]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Decompose the square construction template into atomic tasks.",
+          "unresolved_deps": 2,
+          "name": "[Square_Construction_Decomp]",
+          "description": "\nI have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.\n\nPHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.\n\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.\n\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.\nOnce the square is successfully constructed, output a final status node.\n\nRule R1 : (ColExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}\n\nRule R2 : (RowExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}\n\nRule R3 : (CornerCompletion) store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}\n\nRule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule CreateLine : (CreateLine) store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}\n\n -------------\n[SYS_FLAG: TERMINATE_DAG]",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the CornerCompletion rule definition from the input context. Store as [Rule_R3].",
+          "unresolved_deps": 0,
+          "name": "[Extract_Rule_R3]",
+          "description": "[INTENT]: Extract and store the CornerCompletion rule as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R3] | Type: named | Content: CornerCompletion rule definition | Consumer: Task 1.3",
+          "id": "[Extract_Rule_R3]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Decompose the square construction template into atomic tasks.",
+          "unresolved_deps": 2,
+          "name": "[Square_Construction_Decomp]",
+          "description": "\nI have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.\n\nPHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.\n\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.\n\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.\nOnce the square is successfully constructed, output a final status node.\n\nRule R1 : (ColExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}\n\nRule R2 : (RowExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}\n\nRule R3 : (CornerCompletion) store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}\n\nRule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule CreateLine : (CreateLine) store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}\n\n -------------\n[SYS_FLAG: TERMINATE_DAG]",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 1 — POINT DERIVATION\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.",
+          "unresolved_deps": 5,
+          "name": "[PHASE_1_Point_Derivation]",
+          "description": "[INTENT]: First processing phase. Derives points B, D, and C using the given rules and side length.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R1 to Point A to get Point B.\n- Apply RULE_R2 to Point A to get Point D.\n- Apply RULE_R3 to Point B and Point D to get Point C.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_D] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_C] | Type: named | Content: point coordinates | Consumer: PHASE 2",
+          "id": "[PHASE_1_Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Decompose the square construction template into atomic tasks.",
+          "unresolved_deps": 2,
+          "name": "[Square_Construction_Decomp]",
+          "description": "\nI have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.\n\nPHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.\n\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.\n\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.\nOnce the square is successfully constructed, output a final status node.\n\nRule R1 : (ColExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}\n\nRule R2 : (RowExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}\n\nRule R3 : (CornerCompletion) store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}\n\nRule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule CreateLine : (CreateLine) store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}\n\n -------------\n[SYS_FLAG: TERMINATE_DAG]",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the CreateLine rule definition from the input context. Store as [Rule_CreateLine].",
+          "unresolved_deps": 0,
+          "name": "[Extract_Rule_CreateLine]",
+          "description": "[INTENT]: Extract and store the CreateLine rule as a named shell for the line derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_CreateLine] | Type: named | Content: CreateLine rule definition | Consumer: PHASE 2",
+          "id": "[Extract_Rule_CreateLine]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Decompose the square construction template into atomic tasks.",
+          "unresolved_deps": 2,
+          "name": "[Square_Construction_Decomp]",
+          "description": "\nI have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.\n\nPHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.\n\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.\n\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.\nOnce the square is successfully constructed, output a final status node.\n\nRule R1 : (ColExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}\n\nRule R2 : (RowExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}\n\nRule R3 : (CornerCompletion) store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}\n\nRule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule CreateLine : (CreateLine) store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}\n\n -------------\n[SYS_FLAG: TERMINATE_DAG]",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      },
+      "type": "CREATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 2 — LINE DERIVATION\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.",
+          "unresolved_deps": 5,
+          "name": "[PHASE_2_Line_Derivation]",
+          "description": "[INTENT]: Second processing phase. Derives lines AB, BC, DC, and DA using the given points and CreateLine rule.\n\n[DEFERRED LOGIC]:\n- Apply RULE_CREATE_LINE to Point A and Point B to get Line AB.\n- Apply RULE_CREATE_LINE to Point B and Point C to get Line BC.\n- Apply RULE_CREATE_LINE to Point D and Point C to get Line DC.\n- Apply RULE_CREATE_LINE to Point D and Point A to get Line DA.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_BC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DA] | Type: named | Content: line object | Consumer: PHASE 3",
+          "id": "[PHASE_2_Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Rule_R4A]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 6,
+          "name": "[PHASE_3_Line_Filling]",
+          "description": "[INTENT]: Third processing phase. Fills lines AB, BC, DC, and DA using the given rules.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R4A to Line AB to get filled objects.\n- Apply RULE_R4B to Line BC to get filled objects.\n- Apply RULE_R4A to Line DC to get filled objects.\n- Apply RULE_R4B to Line DA to get filled objects.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_AB] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_BC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DA] | Type: named | Content: list of filled objects | Consumer: terminal node",
+          "id": "[PHASE_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Point_C]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 2 — LINE DERIVATION\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.",
+          "unresolved_deps": 5,
+          "name": "[PHASE_2_Line_Derivation]",
+          "description": "[INTENT]: Second processing phase. Derives lines AB, BC, DC, and DA using the given points and CreateLine rule.\n\n[DEFERRED LOGIC]:\n- Apply RULE_CREATE_LINE to Point A and Point B to get Line AB.\n- Apply RULE_CREATE_LINE to Point B and Point C to get Line BC.\n- Apply RULE_CREATE_LINE to Point D and Point C to get Line DC.\n- Apply RULE_CREATE_LINE to Point D and Point A to get Line DA.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_BC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DA] | Type: named | Content: line object | Consumer: PHASE 3",
+          "id": "[PHASE_2_Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Point_D]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 2 — LINE DERIVATION\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.",
+          "unresolved_deps": 5,
+          "name": "[PHASE_2_Line_Derivation]",
+          "description": "[INTENT]: Second processing phase. Derives lines AB, BC, DC, and DA using the given points and CreateLine rule.\n\n[DEFERRED LOGIC]:\n- Apply RULE_CREATE_LINE to Point A and Point B to get Line AB.\n- Apply RULE_CREATE_LINE to Point B and Point C to get Line BC.\n- Apply RULE_CREATE_LINE to Point D and Point C to get Line DC.\n- Apply RULE_CREATE_LINE to Point D and Point A to get Line DA.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_BC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DA] | Type: named | Content: line object | Consumer: PHASE 3",
+          "id": "[PHASE_2_Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the Strict Successor-Based Line Filling - Constant Row rule definition from the input context. Store as [Rule_R4A].",
+          "unresolved_deps": 0,
+          "name": "[Extract_Rule_R4A]",
+          "description": "[INTENT]: Extract and store the Strict Successor-Based Line Filling - Constant Row rule as a named shell for the line filling phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R4A] | Type: named | Content: Strict Successor-Based Line Filling - Constant Row rule definition | Consumer: PHASE 3",
+          "id": "[Extract_Rule_R4A]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Rule_R4A]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the Strict Successor-Based Line Filling - Constant Col rule definition from the input context. Store as [Rule_R4B].",
+          "unresolved_deps": 0,
+          "name": "[Extract_Rule_R4B]",
+          "description": "[INTENT]: Extract and store the Strict Successor-Based Line Filling - Constant Col rule as a named shell for the line filling phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R4B] | Type: named | Content: Strict Successor-Based Line Filling - Constant Col rule definition | Consumer: PHASE 3",
+          "id": "[Extract_Rule_R4B]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Rule_R4B]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Rule_R4B]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 6,
+          "name": "[PHASE_3_Line_Filling]",
+          "description": "[INTENT]: Third processing phase. Fills lines AB, BC, DC, and DA using the given rules.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R4A to Line AB to get filled objects.\n- Apply RULE_R4B to Line BC to get filled objects.\n- Apply RULE_R4A to Line DC to get filled objects.\n- Apply RULE_R4B to Line DA to get filled objects.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_AB] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_BC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DA] | Type: named | Content: list of filled objects | Consumer: terminal node",
+          "id": "[PHASE_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 3 — LINE FILLING\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.",
+          "unresolved_deps": 6,
+          "name": "[PHASE_3_Line_Filling]",
+          "description": "[INTENT]: Third processing phase. Fills lines AB, BC, DC, and DA using the given rules.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R4A to Line AB to get filled objects.\n- Apply RULE_R4B to Line BC to get filled objects.\n- Apply RULE_R4A to Line DC to get filled objects.\n- Apply RULE_R4B to Line DA to get filled objects.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_Objects_AB] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_BC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DC] | Type: named | Content: list of filled objects | Consumer: terminal node\n- Shell: [Filled_Objects_DA] | Type: named | Content: list of filled objects | Consumer: terminal node",
+          "id": "[PHASE_3_Line_Filling]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Filled_Objects_AB], [Filled_Objects_BC], [Filled_Objects_DC], [Filled_Objects_DA]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_A]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Decompose the square construction template into atomic tasks.",
+          "unresolved_deps": 2,
+          "name": "[Square_Construction_Decomp]",
+          "description": "\nI have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.\n\nPHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.\n\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.\n\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.\nOnce the square is successfully constructed, output a final status node.\n\nRule R1 : (ColExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}\n\nRule R2 : (RowExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}\n\nRule R3 : (CornerCompletion) store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}\n\nRule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule CreateLine : (CreateLine) store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}\n\n -------------\n[SYS_FLAG: TERMINATE_DAG]",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Data_L]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Decompose the square construction template into atomic tasks.",
+          "unresolved_deps": 2,
+          "name": "[Square_Construction_Decomp]",
+          "description": "\nI have an origin point at row 0, col 0 and a side length of 4. Construct a square from this data.\n\nPHASE 1 — POINT DERIVATION (MANDATORY)\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.\n\nPHASE 2 — LINE DERIVATION (MANDATORY)\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.\n\nPHASE 3 — LINE FILLING (STRICT)\nTask 3.1: Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID.\nTask 3.2: Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID.\nTask 3.3: Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID.\nTask 3.4: Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.\nOnce the square is successfully constructed, output a final status node.\n\nRule R1 : (ColExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the col coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row, col: P.col + L).}\n\nRule R2 : (RowExtension) store this entire rule as a data node.\nThis rule derives a new point by extending the row coordinate of a given point by a given length.\n{\nINPUT: A Point P with fields row and col. An Integer Length L.\nOUTPUT: A new Point Q = (row: P.row + L, col: P.col).}\n\nRule R3 : (CornerCompletion) store this entire rule as a data node.\nThis rule derives a third corner point given two existing points.\n{\nINPUT: Point B = (r1, c1), Point D = (r2, c2).\nOUTPUT: A new Point C = (row: r2, col: c1).}\n\nRule R4A : (Strict Successor-Based Line Filling - Constant Row) store this entire rule as a data node.\nThis rule fills all points along a line where the row coordinate is constant.\n{\nINPUT: A Line L with start_point(r, c_start) and end_point(r, c_end). Row r is the same for both points.\nPROCESS:\n1. Derive Filled(r, c_start)\n2. If c_start < c_end: Let step = +1 Else: Let step = -1\n3. Let current_c = c_start\n4. While current_c ≠ c_end:\n      a. current_c = current_c + step\n      b. Derive Filled(r, current_c)\n5. Stop ONLY after Filled(r, c_end) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule R4B : (Strict Successor-Based Line Filling - Constant Col) store this entire rule as a data node.\nThis rule fills all points along a line where the col coordinate is constant.\n{\nINPUT: A Line L with start_point(r_start, c) and end_point(r_end, c). Col c is the same for both points.\nPROCESS:\n1. Derive Filled(r_start, c)\n2. If r_start < r_end: Let step = +1 Else: Let step = -1\n3. Let current_r = r_start\n4. While current_r ≠ r_end:\n      a. current_r = current_r + step\n      b. Derive Filled(current_r, c)\n5. Stop ONLY after Filled(r_end, c) is derived.\nOUTPUT: A JSON List of all derived Filled() objects.}\n\nRule CreateLine : (CreateLine) store this entire rule as a data node.\nThis rule constructs a line object from two points, enforcing a canonical ordering.\n{\nINPUT: Two points START and END. Each point has fields: row (integer) and col (integer).\nPROCESS:\n1. Read both points exactly as provided. Do not rename or reinterpret fields.\n2. CANONICAL ORDERING:\n   a. If START.col == END.col (same col): assign the point with lesser row as start_point, the other as end_point.\n   b. If START.row == END.row (same row): assign the point with lesser col as start_point, the other as end_point.\n3. Construct the line object using the canonically ordered start_point and end_point only.\nOUTPUT: A record with exactly two fields: start_point: {row: integer, col: integer} and end_point: {row: integer, col: integer}. No other fields.}\n\n -------------\n[SYS_FLAG: TERMINATE_DAG]",
+          "id": "[Square_Construction_Decomp]",
+          "task_type": "DECOMPOSE",
+          "status": "COMPLETE"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the origin point coordinates from the input context. Store as [Origin_Point] with content: {row: 0, col: 0}.",
+          "unresolved_deps": 0,
+          "name": "[Extract_Origin_Point]",
+          "description": "[INTENT]: Extract and store the origin point as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Origin_Point] | Type: named | Content: origin point coordinates | Consumer: PHASE 1",
+          "id": "[Extract_Origin_Point]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Origin_Point]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Origin_Point]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 1 — POINT DERIVATION\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.",
+          "unresolved_deps": 5,
+          "name": "[PHASE_1_Point_Derivation]",
+          "description": "[INTENT]: First processing phase. Derives points B, D, and C using the given rules and side length.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R1 to Point A to get Point B.\n- Apply RULE_R2 to Point A to get Point D.\n- Apply RULE_R3 to Point B and Point D to get Point C.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_D] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_C] | Type: named | Content: point coordinates | Consumer: PHASE 2",
+          "id": "[PHASE_1_Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the side length value from the input context. Store as [Side_Length] with content: {length: 4}.",
+          "unresolved_deps": 0,
+          "name": "[Extract_Side_Length]",
+          "description": "[INTENT]: Extract and store the side length as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Side_Length] | Type: named | Content: side length value | Consumer: PHASE 1",
+          "id": "[Extract_Side_Length]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Side_Length]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Side_Length]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 1 — POINT DERIVATION\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.",
+          "unresolved_deps": 5,
+          "name": "[PHASE_1_Point_Derivation]",
+          "description": "[INTENT]: First processing phase. Derives points B, D, and C using the given rules and side length.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R1 to Point A to get Point B.\n- Apply RULE_R2 to Point A to get Point D.\n- Apply RULE_R3 to Point B and Point D to get Point C.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_D] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_C] | Type: named | Content: point coordinates | Consumer: PHASE 2",
+          "id": "[PHASE_1_Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the ColExtension rule definition from the input context. Store as [Rule_R1].",
+          "unresolved_deps": 0,
+          "name": "[Extract_Rule_R1]",
+          "description": "[INTENT]: Extract and store the ColExtension rule as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R1] | Type: named | Content: ColExtension rule definition | Consumer: Task 1.1",
+          "id": "[Extract_Rule_R1]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Rule_R1]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Rule_R1]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 1 — POINT DERIVATION\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.",
+          "unresolved_deps": 5,
+          "name": "[PHASE_1_Point_Derivation]",
+          "description": "[INTENT]: First processing phase. Derives points B, D, and C using the given rules and side length.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R1 to Point A to get Point B.\n- Apply RULE_R2 to Point A to get Point D.\n- Apply RULE_R3 to Point B and Point D to get Point C.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_D] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_C] | Type: named | Content: point coordinates | Consumer: PHASE 2",
+          "id": "[PHASE_1_Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the RowExtension rule definition from the input context. Store as [Rule_R2].",
+          "unresolved_deps": 0,
+          "name": "[Extract_Rule_R2]",
+          "description": "[INTENT]: Extract and store the RowExtension rule as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R2] | Type: named | Content: RowExtension rule definition | Consumer: Task 1.2",
+          "id": "[Extract_Rule_R2]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Rule_R2]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Rule_R2]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 1 — POINT DERIVATION\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.",
+          "unresolved_deps": 5,
+          "name": "[PHASE_1_Point_Derivation]",
+          "description": "[INTENT]: First processing phase. Derives points B, D, and C using the given rules and side length.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R1 to Point A to get Point B.\n- Apply RULE_R2 to Point A to get Point D.\n- Apply RULE_R3 to Point B and Point D to get Point C.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_D] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_C] | Type: named | Content: point coordinates | Consumer: PHASE 2",
+          "id": "[PHASE_1_Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the CornerCompletion rule definition from the input context. Store as [Rule_R3].",
+          "unresolved_deps": 0,
+          "name": "[Extract_Rule_R3]",
+          "description": "[INTENT]: Extract and store the CornerCompletion rule as a named shell for the point derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_R3] | Type: named | Content: CornerCompletion rule definition | Consumer: Task 1.3",
+          "id": "[Extract_Rule_R3]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Rule_R3]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Rule_R3]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 1 — POINT DERIVATION\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.",
+          "unresolved_deps": 5,
+          "name": "[PHASE_1_Point_Derivation]",
+          "description": "[INTENT]: First processing phase. Derives points B, D, and C using the given rules and side length.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R1 to Point A to get Point B.\n- Apply RULE_R2 to Point A to get Point D.\n- Apply RULE_R3 to Point B and Point D to get Point C.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_D] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_C] | Type: named | Content: point coordinates | Consumer: PHASE 2",
+          "id": "[PHASE_1_Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 1 — POINT DERIVATION\nTask 1.1: Apply RULE_R1 to Point A using given side length. Save the output to Point B.\nTask 1.2: Apply RULE_R2 to Point A using given side length. Save the output to Point D.\nTask 1.3: Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.",
+          "unresolved_deps": 5,
+          "name": "[PHASE_1_Point_Derivation]",
+          "description": "[INTENT]: First processing phase. Derives points B, D, and C using the given rules and side length.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R1 to Point A to get Point B.\n- Apply RULE_R2 to Point A to get Point D.\n- Apply RULE_R3 to Point B and Point D to get Point C.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_D] | Type: named | Content: point coordinates | Consumer: PHASE 2\n- Shell: [Point_C] | Type: named | Content: point coordinates | Consumer: PHASE 2",
+          "id": "[PHASE_1_Point_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Point_B], [Point_D], [Point_C]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "Extract the CreateLine rule definition from the input context. Store as [Rule_CreateLine].",
+          "unresolved_deps": 0,
+          "name": "[Extract_Rule_CreateLine]",
+          "description": "[INTENT]: Extract and store the CreateLine rule as a named shell for the line derivation phase.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Rule_CreateLine] | Type: named | Content: CreateLine rule definition | Consumer: PHASE 2",
+          "id": "[Extract_Rule_CreateLine]",
+          "task_type": "COMPUTE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Rule_CreateLine]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Rule_CreateLine]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 2 — LINE DERIVATION\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.",
+          "unresolved_deps": 5,
+          "name": "[PHASE_2_Line_Derivation]",
+          "description": "[INTENT]: Second processing phase. Derives lines AB, BC, DC, and DA using the given points and CreateLine rule.\n\n[DEFERRED LOGIC]:\n- Apply RULE_CREATE_LINE to Point A and Point B to get Line AB.\n- Apply RULE_CREATE_LINE to Point B and Point C to get Line BC.\n- Apply RULE_CREATE_LINE to Point D and Point C to get Line DC.\n- Apply RULE_CREATE_LINE to Point D and Point A to get Line DA.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_BC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DA] | Type: named | Content: line object | Consumer: PHASE 3",
+          "id": "[PHASE_2_Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 2 — LINE DERIVATION\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.",
+          "unresolved_deps": 5,
+          "name": "[PHASE_2_Line_Derivation]",
+          "description": "[INTENT]: Second processing phase. Derives lines AB, BC, DC, and DA using the given points and CreateLine rule.\n\n[DEFERRED LOGIC]:\n- Apply RULE_CREATE_LINE to Point A and Point B to get Line AB.\n- Apply RULE_CREATE_LINE to Point B and Point C to get Line BC.\n- Apply RULE_CREATE_LINE to Point D and Point C to get Line DC.\n- Apply RULE_CREATE_LINE to Point D and Point A to get Line DA.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_BC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DA] | Type: named | Content: line object | Consumer: PHASE 3",
+          "id": "[PHASE_2_Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      },
+      "type": "GENERATES",
+      "props": {},
+      "end": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Line_AB], [Line_BC], [Line_DC], [Line_DA]",
+          "status": "UNRESOLVED"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Point_A]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 2 — LINE DERIVATION\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.",
+          "unresolved_deps": 5,
+          "name": "[PHASE_2_Line_Derivation]",
+          "description": "[INTENT]: Second processing phase. Derives lines AB, BC, DC, and DA using the given points and CreateLine rule.\n\n[DEFERRED LOGIC]:\n- Apply RULE_CREATE_LINE to Point A and Point B to get Line AB.\n- Apply RULE_CREATE_LINE to Point B and Point C to get Line BC.\n- Apply RULE_CREATE_LINE to Point D and Point C to get Line DC.\n- Apply RULE_CREATE_LINE to Point D and Point A to get Line DA.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_BC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DA] | Type: named | Content: line object | Consumer: PHASE 3",
+          "id": "[PHASE_2_Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "start": {
+        "labels": [
+          "DataNode"
+        ],
+        "props": {
+          "id": "[Point_B]",
+          "status": "UNRESOLVED"
+        }
+      },
+      "type": "REQUIRES",
+      "props": {},
+      "end": {
+        "labels": [
+          "TaskNode"
+        ],
+        "props": {
+          "instruction": "PHASE 2 — LINE DERIVATION\nTask 2.1: Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB.\nTask 2.2: Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC.\nTask 2.3: Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC.\nTask 2.4: Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.",
+          "unresolved_deps": 5,
+          "name": "[PHASE_2_Line_Derivation]",
+          "description": "[INTENT]: Second processing phase. Derives lines AB, BC, DC, and DA using the given points and CreateLine rule.\n\n[DEFERRED LOGIC]:\n- Apply RULE_CREATE_LINE to Point A and Point B to get Line AB.\n- Apply RULE_CREATE_LINE to Point B and Point C to get Line BC.\n- Apply RULE_CREATE_LINE to Point D and Point C to get Line DC.\n- Apply RULE_CREATE_LINE to Point D and Point A to get Line DA.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_BC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DC] | Type: named | Content: line object | Consumer: PHASE 3\n- Shell: [Line_DA] | Type: named | Content: line object | Consumer: PHASE 3",
+          "id": "[PHASE_2_Line_Derivation]",
+          "task_type": "DECOMPOSE",
+          "status": "PENDING"
+        }
+      }
+    }
+  ]
+}

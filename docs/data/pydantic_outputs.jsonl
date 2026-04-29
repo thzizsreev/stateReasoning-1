@@ -1,79 +1,27 @@
 {
-  "ts": "2026-04-29T13:00:02.509044+00:00",
-  "label": "RouterDecision",
-  "type": "RouterDecision",
+  "ts": "2026-04-29T17:39:30.721069+00:00",
+  "label": "DataNode",
+  "type": "DataNode",
   "data": {
-    "requires_data_extraction": false,
-    "route_to_decompose": true,
-    "route_to_expand": false,
-    "route_to_compute_agent": false
+    "id": "[Origin_Point]",
+    "content": {
+      "row": 0,
+      "col": 0
+    },
+    "status": "READY"
   }
 }
 
 {
-  "ts": "2026-04-29T13:02:05.683087+00:00",
-  "label": "TaskNodesList.decomposer",
-  "type": "TaskNodesList",
+  "ts": "2026-04-29T17:39:34.714917+00:00",
+  "label": "DataNode",
+  "type": "DataNode",
   "data": {
-    "task_nodes": [
-      {
-        "id": "Point_Derivation",
-        "dependencies": [
-          "Origin_Point",
-          "Side_Length"
-        ],
-        "instruction": "Apply RULE_R1 to Point A using given side length. Save the output to Point B. Apply RULE_R2 to Point A using given side length. Save the output to Point D. Apply RULE_R3 using outputs from Task 1.1 and Task 1.2. Save output to Point C.",
-        "description": "[INTENT]: Derive points B, C, and D from the origin point and side length.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R1 to origin point (0,0) with side length 4 to get Point B.\n- Apply RULE_R2 to origin point (0,0) with side length 4 to get Point D.\n- Apply RULE_R3 to Point B and Point D to get Point C.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Point_B] | Type: named shell | Content: point coordinates (row, col) | Consumer: Line Derivation Phase.\n- Shell: [Point_C] | Type: named shell | Content: point coordinates (row, col) | Consumer: Line Derivation Phase.\n- Shell: [Point_D] | Type: named shell | Content: point coordinates (row, col) | Consumer: Line Derivation Phase.",
-        "target_output": null,
-        "task_type": "DECOMPOSE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "Line_Derivation",
-        "dependencies": [
-          "Point_B",
-          "Point_C",
-          "Point_D"
-        ],
-        "instruction": "Apply RULE_CREATE_LINE to Point A and Point B. Save output to Line AB. Apply RULE_CREATE_LINE to Point B and Point C. Save output to Line BC. Apply RULE_CREATE_LINE to Point D and Point C. Save output to Line DC. Apply RULE_CREATE_LINE to Point D and Point A. Save output to Line DA.",
-        "description": "[INTENT]: Derive lines AB, BC, DC, and DA from points A, B, C, and D.\n\n[DEFERRED LOGIC]:\n- Apply RULE_CREATE_LINE to Point A (origin) and Point B to get Line AB.\n- Apply RULE_CREATE_LINE to Point B and Point C to get Line BC.\n- Apply RULE_CREATE_LINE to Point D and Point C to get Line DC.\n- Apply RULE_CREATE_LINE to Point D and Point A (origin) to get Line DA.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Line_AB] | Type: named shell | Content: line object with start and end points | Consumer: Line Filling Phase.\n- Shell: [Line_BC] | Type: named shell | Content: line object with start and end points | Consumer: Line Filling Phase.\n- Shell: [Line_DC] | Type: named shell | Content: line object with start and end points | Consumer: Line Filling Phase.\n- Shell: [Line_DA] | Type: named shell | Content: line object with start and end points | Consumer: Line Filling Phase.",
-        "target_output": null,
-        "task_type": "DECOMPOSE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "Line_Filling",
-        "dependencies": [
-          "Line_AB",
-          "Line_BC",
-          "Line_DC",
-          "Line_DA"
-        ],
-        "instruction": "Apply RULE_R4A to Line AB. Save the List of Filled objects to a new node ID. Apply RULE_R4B to Line BC. Save the List of Filled objects to a new node ID. Apply RULE_R4A to Line DC. Save the List of Filled objects to a new node ID. Apply RULE_R4B to Line DA. Save the List of Filled objects to a new node ID.",
-        "description": "[INTENT]: Fill lines AB, BC, DC, and DA according to their respective rules.\n\n[DEFERRED LOGIC]:\n- Apply RULE_R4A to Line AB to fill points along the line with constant row.\n- Apply RULE_R4B to Line BC to fill points along the line with constant column.\n- Apply RULE_R4A to Line DC to fill points along the line with constant row.\n- Apply RULE_R4B to Line DA to fill points along the line with constant column.\n\n[SHELL ARCHITECTURE]:\n- Shell: [Filled_AB] | Type: named shell | Content: list of filled point objects along Line AB | Consumer: Terminal Node.\n- Shell: [Filled_BC] | Type: named shell | Content: list of filled point objects along Line BC | Consumer: Terminal Node.\n- Shell: [Filled_DC] | Type: named shell | Content: list of filled point objects along Line DC | Consumer: Terminal Node.\n- Shell: [Filled_DA] | Type: named shell | Content: list of filled point objects along Line DA | Consumer: Terminal Node.",
-        "target_output": null,
-        "task_type": "DECOMPOSE",
-        "status": "PENDING",
-        "parent_task": null
-      },
-      {
-        "id": "[END_ORCHESTRATION]",
-        "dependencies": [
-          "Filled_AB",
-          "Filled_BC",
-          "Filled_DC",
-          "Filled_DA"
-        ],
-        "instruction": "Finalize DAG execution. Confirm all lines have been filled according to their respective rules.",
-        "description": "[INTENT]: Finalize the DAG execution. Graph topology identified as LINEAR — each phase depends on the output of the previous phase.\n\n[TERMINAL_LEDGER]:\n- [Filled_AB]: list of filled point objects along Line AB.\n- [Filled_BC]: list of filled point objects along Line BC.\n- [Filled_DC]: list of filled point objects along Line DC.\n- [Filled_DA]: list of filled point objects along Line DA.\n\n[DEPENDENCY CONFIRMATION]: Only shell IDs appear in dependencies. No task node IDs included. task_type is COMPUTE.",
-        "target_output": null,
-        "task_type": "COMPUTE",
-        "status": "PENDING",
-        "parent_task": null
-      }
-    ]
+    "id": "[Side_Length]",
+    "content": {
+      "length": 4
+    },
+    "status": "READY"
   }
 }
 

@@ -2,10 +2,17 @@ import json
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+import sys
 
 from cognitive_tasks import DATA_EXTRACTOR_PROMPT
 
 load_dotenv()
+
+# Ensure UTF-8 output on Windows consoles (prevents UnicodeEncodeError)
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 
 # ============================================================================
 # CONFIGURATION
@@ -1803,7 +1810,7 @@ def run_diagnostic():
         #     print("Model output did not match expected node structures. Review manually.")
 
     except Exception as e:
-        print(f"\n❌ FATAL ERROR: {str(e)}")
+        print(f"\n[FATAL ERROR] {str(e)}")
 
 if __name__ == "__main__":
     run_diagnostic()

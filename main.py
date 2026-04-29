@@ -341,47 +341,47 @@ if __name__ == "__main__":
     _clear_pydantic_log(PYDANTIC_LOG_PATH)
 
 
-    db._clear_db()
-    # query = """construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively"""
-    # datanodes = asyncio.run(process_query(query, my_llm))
-    # datanodes = process_datanodes_output(datanodes)
-    # insert_datanodes_into_graph(datanodes, db)
-    #init_square_inputs(db)
+    # db._clear_db()
+    # # query = """construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively"""
+    # # datanodes = asyncio.run(process_query(query, my_llm))
+    # # datanodes = process_datanodes_output(datanodes)
+    # # insert_datanodes_into_graph(datanodes, db)
+    # #init_square_inputs(db)
     
         
-    # ========================================================================
-    # 2. RAG RETRIEVAL & PRIMITIVE INJECTION
-    # ========================================================================
-    print("\n=== STAGE 2: FETCHING EXPERIENTIAL MEMORY ===")   
-    template_text = mock_RAG(db)
+    # # ========================================================================
+    # # 2. RAG RETRIEVAL & PRIMITIVE INJECTION
+    # # ========================================================================
+    # print("\n=== STAGE 2: FETCHING EXPERIENTIAL MEMORY ===")   
+    # template_text = mock_RAG(db)
 
-    print("\n=== STAGE 3: DECOMPOSING TEMPLATE & BUILDING HIERARCHY ===")
+    # print("\n=== STAGE 3: DECOMPOSING TEMPLATE & BUILDING HIERARCHY ===")
    
-    # Create + upsert an explicit root DECOMPOSE node for this stage.
-    root_task = TaskNode(
-        id=_normalize_id("[Square_Construction_Decomp]"),
-        task_type="DECOMPOSE",
-        dependencies=[_normalize_id("[Data_A]"), _normalize_id("[Data_L]")],
-        instruction="Decompose the square construction template into atomic tasks.",
-        description=template_text,
-        target_output=None,
-        status="PENDING",
-        parent_task=None,
-    )
-    insert_datanodes_into_graph(FinalPipelinePayload(data_nodes=[], task_nodes=[root_task]), db)
-    root_task_id = root_task.id
-    print(f"root_task_id: {root_task_id}")
-    plan_payload = asyncio.run(process_and_upsert_query(template_text, my_llm, db, parent_task_id=root_task_id))
+    # # Create + upsert an explicit root DECOMPOSE node for this stage.
+    # root_task = TaskNode(
+    #     id=_normalize_id("[Square_Construction_Decomp]"),
+    #     task_type="DECOMPOSE",
+    #     dependencies=[_normalize_id("[Data_A]"), _normalize_id("[Data_L]")],
+    #     instruction="Decompose the square construction template into atomic tasks.",
+    #     description=template_text,
+    #     target_output=None,
+    #     status="PENDING",
+    #     parent_task=None,
+    # )
+    # insert_datanodes_into_graph(FinalPipelinePayload(data_nodes=[], task_nodes=[root_task]), db)
+    # root_task_id = root_task.id
+    # print(f"root_task_id: {root_task_id}")
+    # plan_payload = asyncio.run(process_and_upsert_query(template_text, my_llm, db, parent_task_id=root_task_id))
     
-    # ========================================================================
-    # 4. ADVANCE STATE
-    # ========================================================================
-    with db.driver.session() as session:
-        session.run("""
-            MATCH (t:TaskNode {id: $id}) 
-            SET t.status = 'COMPLETE'
-        """, id=db._normalize_id(root_task_id))
-        print(f"\n🟢 ROOT TASK '{root_task_id}' COMPLETED (Successfully decomposed).")
+    # # ========================================================================
+    # # 4. ADVANCE STATE
+    # # ========================================================================
+    # with db.driver.session() as session:
+    #     session.run("""
+    #         MATCH (t:TaskNode {id: $id}) 
+    #         SET t.status = 'COMPLETE'
+    #     """, id=db._normalize_id(root_task_id))
+    #     print(f"\n🟢 ROOT TASK '{root_task_id}' COMPLETED (Successfully decomposed).")
 
-    print("\n✅ Setup Complete. Open Neo4j Browser and run: MATCH (n) RETURN n")
-    #asyncio.run(run_execution_engine(db, my_llm))
+    # print("\n✅ Setup Complete. Open Neo4j Browser and run: MATCH (n) RETURN n")
+    asyncio.run(run_execution_engine(db, my_llm))

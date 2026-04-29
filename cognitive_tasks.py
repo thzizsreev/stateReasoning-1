@@ -147,22 +147,30 @@ async def run_task_decomposer(user_query: str, llm) -> TaskNodesList:
         raw_json_dict = llm.generate_json(DECOMPOSER_PROMPT, user_prompt)
         print(f"Raw JSON Dictionary: {raw_json_dict}")
 
-        # Minimal pre-processing for the expected format:
-        # {
-        #   "task_nodes": [...],
-        #   "terminal_node": null OR {...}
-        # }
-        if not isinstance(raw_json_dict, dict):
-            raise TypeError(f"Expected dict from decomposer, got {type(raw_json_dict).__name__}")
+        # Normalization:
+        # The model may return:
+        # - a dict: {"task_nodes": [...], "terminal_node": {...}}
+        # - a bare list: [{task...}, {task...}, ...]
+        task_nodes_raw: list[Any] = []
+        terminal_node_raw: Any = None
+        if isinstance(raw_json_dict, list):
+            task_nodes_raw = raw_json_dict
+        elif isinstance(raw_json_dict, dict):
+            task_nodes_raw = raw_json_dict.get("task_nodes") or []
+            terminal_node_raw = raw_json_dict.get("terminal_node")
+        else:
+            task_nodes_raw = []
 
-        task_nodes_raw = raw_json_dict.get("task_nodes") or []
         if not isinstance(task_nodes_raw, list):
-            raise TypeError("Expected 'task_nodes' to be a list")
+            task_nodes_raw = []
 
         validated_tasks: list[TaskNode] = []
         for t in task_nodes_raw:
             if not isinstance(t, dict):
                 continue
+            # Some prompts emit plural target_outputs; map to schema's singular target_output.
+            if "target_output" not in t and isinstance(t.get("target_outputs"), list) and t["target_outputs"]:
+                t = {**t, "target_output": t["target_outputs"][0]}
             # Model sometimes emits STATUS; map to OUTPUT to satisfy TaskNode.task_type Literal.
             if t.get("task_type") == "STATUS":
                 t = {**t, "task_type": "OUTPUT"}
@@ -170,7 +178,6 @@ async def run_task_decomposer(user_query: str, llm) -> TaskNodesList:
                 t = {**t, "description": ""}
             validated_tasks.append(TaskNode.model_validate(t))
 
-        terminal_node_raw = raw_json_dict.get("terminal_node")
         if terminal_node_raw is not None:
             if not isinstance(terminal_node_raw, dict):
                 print(f"no terminal node found")
@@ -240,7 +247,7 @@ async def run_compute_agent(user_query: str, llm) -> TaskNodesList:
 async def process_query(user_query: str, llm) -> FinalPipelinePayload:
     # 1. Get the routing decision and snippets
     decision = await run_semantic_router(user_query, llm)
-    print(f"  [Router Flags] Data: {decision.requires_data_extraction} | Decompose: {decision.route_to_decompose} | Compute: {decision.route_to_compute_agent} | Expand: {decision.route_to_expand}")
+    print(f"  [Router Flags] Decompose: {decision.route_to_decompose} | Compute: {decision.route_to_compute_agent} | Expand: {decision.route_to_expand}")
 
     pending_tasks = []
     final_payload = FinalPipelinePayload()
