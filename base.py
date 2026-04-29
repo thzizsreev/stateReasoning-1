@@ -170,13 +170,27 @@ class Neo4jOrchestrator:
         parent_task = self._normalize_id(task.parent_task) if getattr(task, "parent_task", None) else None
 
         query = """
-        // 1) Upsert TaskNode and basic properties
+        // 1) Upsert TaskNode with Type-Mutation State Reset
         MERGE (t:TaskNode {id: $task_id})
+        
+        ON CREATE SET 
+            t.status = $status,
+            t.task_type = $task_type
+            
+        ON MATCH SET 
+            // CRITICAL: If the LLM changed the task_type (e.g., DECOMPOSE -> COMPUTE),
+            // treat it as a new override and force reset to PENDING.
+            // Otherwise, preserve its existing status (so we don't overwrite completed nodes).
+            t.status = CASE 
+                WHEN coalesce(t.task_type, '') <> coalesce($task_type, '') THEN 'PENDING' 
+                ELSE coalesce(t.status, $status) 
+            END,
+            t.task_type = $task_type
+
+        // Always update volatile payload fields
         SET t.name = $task_id,
             t.instruction = $instruction,
-            t.description = $description,
-            t.task_type = $task_type,
-            t.status = $status
+            t.description = $description
 
         // 2) Output DataNode shell + GENERATES edge (Only triggers if target_output exists)
         WITH t

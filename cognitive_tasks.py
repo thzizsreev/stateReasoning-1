@@ -139,8 +139,9 @@ async def run_task_decomposer(user_query: str, llm) -> TaskNodesList:
     # )
     # print("  <- [Task Decomposer] Complete.")
     # return response.choices[0].message.parsed
+    print("Decomposition task initiated...")
     user_prompt = f"INSTRUCTIONS TO DECOMPOSE:\n{user_query}"
-    print("Sending prompt to LLM...")
+    print(f"Sending prompt to LLM: {user_prompt}")
     
     try:
         raw_json_dict = llm.generate_json(DECOMPOSER_PROMPT, user_prompt)
@@ -193,8 +194,9 @@ async def run_task_decomposer(user_query: str, llm) -> TaskNodesList:
 
 async def run_compute_agent(user_query: str, llm) -> TaskNodesList:
     """Child 3: Builds atomic COMPUTE tasks."""
+    print("Compute agent task initiated...")
     user_prompt = f"INSTRUCTIONS TO DECOMPOSE:\n{user_query}"
-    print("Sending prompt to LLM...")
+    print(f"Sending prompt to LLM: {user_prompt}")
     
     try:
         raw_json_dict = llm.generate_json(COMPUTE_AGENT_PROMPT, user_prompt)
@@ -301,6 +303,7 @@ async def execute_compute_node(task: dict, dependencies_data: list | dict, db, l
     """
     task_id = task['id']
     instruction = task['instruction']
+    description = task['description']
     target_id = task.get('target_output')
 
     print(f"\n⚙️ [COMPUTE WORKER] Initializing execution for {task_id}")
@@ -315,8 +318,8 @@ async def execute_compute_node(task: dict, dependencies_data: list | dict, db, l
 
     # 1. Construct the Tunnel-Vision Prompt
     # We place the pre-fetched dependencies at the top as ground truth.
-    user_prompt = f"DEPENDENCIES:\n{json.dumps(dependencies_data, indent=2)}\n\nINSTRUCTION:\n{instruction}"
-    print("  -> Sending prompt to LLM Compute Agent...")
+    user_prompt = f"DEPENDENCIES:\n{json.dumps(dependencies_data, indent=2)}\n\nINSTRUCTION:\n{instruction}\nDESCRIPTION:\n{description}"
+    print(f"  -> Sending prompt to LLM Compute Agent... {user_prompt}")
 
     # 2. Execute using your exact standard pattern
     try:

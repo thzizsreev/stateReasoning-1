@@ -108,7 +108,7 @@ class OpenRouterClient:
         timeout: float = 60.0,
     ):
         self.base_url = base_url or os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-        self.model_name = model_name or os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct")
+        self.model_name = model_name or os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.1-405b")
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.timeout = timeout
@@ -116,6 +116,7 @@ class OpenRouterClient:
         # Pull and strip the key to prevent header injection errors
         #self.api_key = (api_key or os.environ.get("OPENROUTER_API_KEY", "")).strip()
         self.api_key ="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"
+        print(f"Model name: {self.model_name}")
         print(f"API key: {self.api_key}")
         if not self.api_key:
             raise RuntimeError(
@@ -204,4 +205,136 @@ def test_openrouter():
 
 if __name__ == "__main__":
     test = OpenRouterClient()
+    resp = """
+    ```json
+{
+  "termination_flag_detected": false,
+  "task_nodes": [
+    {
+      "id": "Point_Derivation",
+      "task_type": "DECOMPOSE",
+      "dependencies": ["[Origin_Point_A]", "[Side_Length_L]", "[RULE_R1]", "[RULE_R2]", "[RULE_R3]"],
+      "instruction": "Apply [RULE_R1] to [Origin_Point_A] using length [Side_Length_L]. Save the output to a point B. Apply [RULE_R2] to [Origin_Point_A] using length [Side_Length_L]. Save the output to a point D. Apply [RULE_R3] using the outputs generated from Task 1.1 and Task 1.2. Save the output to a point C.",
+      "description": "[INTENT]: Derive three new points (B, C, D) using the given rules and origin point.
+
+[DEFERRED LOGIC]:
+- Apply [RULE_R1] to [Origin_Point_A] with length [Side_Length_L] to get point B.
+- Apply [RULE_R2] to [Origin_Point_A] with length [Side_Length_L] to get point D.
+- Apply [RULE_R3] to points B and D to get point C.
+
+[SHELL ARCHITECTURE]:
+- Shell: [Point_B] | Type: named shell | Content: point B coordinates | Consumer: PHASE 2 — LINE DERIVATION.
+- Shell: [Point_C] | Type: named shell | Content: point C coordinates | Consumer: PHASE 2 — LINE DERIVATION.
+- Shell: [Point_D] | Type: named shell | Content: point D coordinates | Consumer: PHASE 2 — LINE DERIVATION.
+
+[PRUNED DEPENDENCIES]:
+- [Origin_Point_A]: origin point coordinates — required as primary input for point derivation.
+- [Side_Length_L]: side length value — required as primary input for point derivation.
+- [RULE_R1]: rule for horizontal extension — required for point B derivation.
+- [RULE_R2]: rule for vertical extension — required for point D derivation.
+- [RULE_R3]: rule for corner completion — required for point C derivation."
+    },
+    {
+      "id": "Line_Derivation",
+      "task_type": "DECOMPOSE",
+      "dependencies": ["[Point_B]", "[Point_C]", "[Point_D]"],
+      "instruction": "Create a Horizontal Line from [Origin_Point_A] to the point B. Save output to a new Line AB. Create a Vertical Line from the point B to the point C. Save output to a new Line BC. Create a Horizontal Line from the point D to the point C. Save output to a new Line DC. Create a Vertical Line from the point D to the [Origin_Point_A]. Save output to a new Line DA.",
+      "description": "[INTENT]: Derive four new lines (AB, BC, DC, DA) using the points derived in PHASE 1.
+
+[DEFERRED LOGIC]:
+- Create a horizontal line from [Origin_Point_A] to point B to get line AB.
+- Create a vertical line from point B to point C to get line BC.
+- Create a horizontal line from point D to point C to get line DC.
+- Create a vertical line from point D to [Origin_Point_A] to get line DA.
+
+[SHELL ARCHITECTURE]:
+- Shell: [Line_AB] | Type: named shell | Content: line AB coordinates | Consumer: PHASE 3 — LINE FILLING.
+- Shell: [Line_BC] | Type: named shell | Content: line BC coordinates | Consumer: PHASE 3 — LINE FILLING.
+- Shell: [Line_DC] | Type: named shell | Content: line DC coordinates | Consumer: PHASE 3 — LINE FILLING.
+- Shell: [Line_DA] | Type: named shell | Content: line DA coordinates | Consumer: PHASE 3 — LINE FILLING.
+
+[PRUNED DEPENDENCIES]:
+- [Point_B]: point B coordinates — required as primary input for line AB derivation.
+- [Point_C]: point C coordinates — required as primary input for lines BC and DC derivation.
+- [Point_D]: point D coordinates — required as primary input for lines DC and DA derivation."
+    },
+    {
+      "id": "Line_Fill_Horizontal_AB",
+      "task_type": "DECOMPOSE",
+      "dependencies": ["[Line_AB]", "[RULE_R4_HORIZONTAL]"],
+      "instruction": "Apply [RULE_R4_HORIZONTAL] to the first horizontal line generated in PHASE 2. Save the List of Filled objects to a new node ID.",
+      "description": "[INTENT]: Fill the horizontal line AB using [RULE_R4_HORIZONTAL].
+
+[DEFERRED LOGIC]:
+- Apply [RULE_R4_HORIZONTAL] to line AB to get a list of filled objects.
+
+[SHELL ARCHITECTURE]:
+- Shell: [Line_Fill_Collection] | Type: collection shell | Content: list of filled objects for line AB | Consumer: Terminal node if SYS_FLAG present, else open-ended.
+- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each filled object into [Line_Fill_Collection]. Do not create new shells for individual filled objects.
+
+[PRUNED DEPENDENCIES]:
+- [Line_AB]: line AB coordinates — required as primary input for line filling.
+- [RULE_R4_HORIZONTAL]: rule for horizontal line filling — required for filling line AB."
+    },
+    {
+      "id": "Line_Fill_Vertical_BC",
+      "task_type": "DECOMPOSE",
+      "dependencies": ["[Line_BC]", "[RULE_R4_VERTICAL]"],
+      "instruction": "Apply [RULE_R4_VERTICAL] to the first vertical line generated in PHASE 2. Save the List of Filled objects to a new node ID.",
+      "description": "[INTENT]: Fill the vertical line BC using [RULE_R4_VERTICAL].
+
+[DEFERRED LOGIC]:
+- Apply [RULE_R4_VERTICAL] to line BC to get a list of filled objects.
+
+[SHELL ARCHITECTURE]:
+- Shell: [Line_Fill_Collection] | Type: collection shell | Content: list of filled objects for line BC | Consumer: Terminal node if SYS_FLAG present, else open-ended.
+- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each filled object into [Line_Fill_Collection]. Do not create new shells for individual filled objects.
+
+[PRUNED DEPENDENCIES]:
+- [Line_BC]: line BC coordinates — required as primary input for line filling.
+- [RULE_R4_VERTICAL]: rule for vertical line filling — required for filling line BC."
+    },
+    {
+      "id": "Line_Fill_Horizontal_DC",
+      "task_type": "DECOMPOSE",
+      "dependencies": ["[Line_DC]", "[RULE_R4_HORIZONTAL]"],
+      "instruction": "Apply [RULE_R4_HORIZONTAL] to the second horizontal line generated in PHASE 2. Save the List of Filled objects to a new node ID.",
+      "description": "[INTENT]: Fill the horizontal line DC using [RULE_R4_HORIZONTAL].
+
+[DEFERRED LOGIC]:
+- Apply [RULE_R4_HORIZONTAL] to line DC to get a list of filled objects.
+
+[SHELL ARCHITECTURE]:
+- Shell: [Line_Fill_Collection] | Type: collection shell | Content: list of filled objects for line DC | Consumer: Terminal node if SYS_FLAG present, else open-ended.
+- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each filled object into [Line_Fill_Collection]. Do not create new shells for individual filled objects.
+
+[PRUNED DEPENDENCIES]:
+- [Line_DC]: line DC coordinates — required as primary input for line filling.
+- [RULE_R4_HORIZONTAL]: rule for horizontal line filling — required for filling line DC."
+    },
+    {
+      "id": "Line_Fill_Vertical_DA",
+      "task_type": "DECOMPOSE",
+      "dependencies": ["[Line_DA]", "[RULE_R4_VERTICAL]"],
+      "instruction": "Apply [RULE_R4_VERTICAL] to the second vertical line generated in PHASE 2. Save the List of Filled objects to a new node ID.",
+      "description": "[INTENT]: Fill the vertical line DA using [RULE_R4_VERTICAL].
+
+[DEFERRED LOGIC]:
+- Apply [RULE_R4_VERTICAL] to line DA to get a list of filled objects.
+
+[SHELL ARCHITECTURE]:
+- Shell: [Line_Fill_Collection] | Type: collection shell | Content: list of filled objects for line DA | Consumer: Terminal node if SYS_FLAG present, else open-ended.
+- DOWNSTREAM INSTRUCTION: Downstream agent MUST append each filled object into [Line_Fill_Collection]. Do not create new shells for individual filled objects.
+
+[PRUNED DEPENDENCIES]:
+- [Line_DA]: line DA coordinates — required as primary input for line filling.
+- [RULE_R4_VERTICAL]: rule for vertical line filling — required for filling line DA."
+    }
+  ],
+  "terminal_node": null
+}
+```
+"""
+    json_resp = parse_llm_json_response(resp)
+    print(json_resp)
     #test_openrouter()

@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from base import Neo4jOrchestrator
 
 
-DEFAULT_SNAPSHOT_PATH = Path(__file__).resolve().parent / "data" / "stage3.json"
+DEFAULT_SNAPSHOT_PATH = Path(__file__).resolve().parent / "data" / "stage2.json"
 
 
 def export_neo4j_snapshot(

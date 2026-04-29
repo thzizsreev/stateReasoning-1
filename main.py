@@ -75,6 +75,42 @@ def insert_datanodes_into_graph(plan: FinalPipelinePayload, db: Neo4jOrchestrato
     #     db.upsert_task(plan.task_nodes)
     #     db.recompute_semaphore()
 
+def init_square_inputs(
+    db: Neo4jOrchestrator,
+    *,
+    point_a: Dict[str, Any] | None = None,
+    side_length: int | float = 4,
+    point_id: str = "[Data_A]",
+    length_id: str = "[Data_L]",
+    root_task_id: str = "[Square_Construction_Decomp]",
+) -> FinalPipelinePayload:
+    """
+    Initialize the two required input DataNodes for square construction and upsert them:
+    - [Data_A]: point A (default {x:0, y:0})
+    - [Data_L]: side length L (default 4)
+
+    This bypasses any LLM-based data extraction.
+    """
+    a_id = _normalize_id(point_id)
+    l_id = _normalize_id(length_id)
+    a = DataNode(id=a_id, content=point_a or {"x": 0, "y": 0}, status="READY")
+    l = DataNode(id=l_id, content=side_length, status="READY")
+
+    root_task = TaskNode(
+        id=_normalize_id(root_task_id),
+        task_type="DECOMPOSE",
+        dependencies=[a_id, l_id],
+        instruction="Construct a square using [Data_A] and [Data_L].",
+        description="Root task for square construction. Decompose into phases and atomic compute steps.",
+        target_output=None,
+        status="PENDING",
+        parent_task=None,
+    )
+
+    payload = FinalPipelinePayload(data_nodes=[a, l], task_nodes=[root_task])
+    insert_datanodes_into_graph(payload, db)
+    return payload
+
 "----------------------------- execution engine -----------------------------"
 
 def check_terminal_state(db: Neo4jOrchestrator, terminal_id: str) -> bool:
@@ -305,46 +341,47 @@ if __name__ == "__main__":
     _clear_pydantic_log(PYDANTIC_LOG_PATH)
 
 
-    # db._clear_db()
+    db._clear_db()
     # query = """construct a square with the point A(0,0) and side length 4. name the nodes as Data_A and Data_L for point A and side length respectively"""
     # datanodes = asyncio.run(process_query(query, my_llm))
     # datanodes = process_datanodes_output(datanodes)
     # insert_datanodes_into_graph(datanodes, db)
+    init_square_inputs(db)
     
         
-    # # ========================================================================
-    # # 2. RAG RETRIEVAL & PRIMITIVE INJECTION
-    # # ========================================================================
-    # print("\n=== STAGE 2: FETCHING EXPERIENTIAL MEMORY ===")
+    # ========================================================================
+    # 2. RAG RETRIEVAL & PRIMITIVE INJECTION
+    # ========================================================================
+    print("\n=== STAGE 2: FETCHING EXPERIENTIAL MEMORY ===")
     
 
-    # mock_RAG(db)
-#     template_text = mock_RAG(db)
-# #     template_text = f"""{PROMPTS["SQUARE_CONSTRUCTION"]}\n dependencies: {deps}\n -------------
-# # [SYS_FLAG: TERMINATE_DAG]"""
-#     # ========================================================================
-#     # 3. TEMPLATE CHUNKING & HIERARCHY CONJUNCTION
-#     # ========================================================================
-#     print("\n=== STAGE 3: DECOMPOSING TEMPLATE & BUILDING HIERARCHY ===")
-#     # Process the returned template, passing the root_task_id so the function 
-#     # natively draws the [:CREATES] edges from the root to these new sub-tasks.
-#     root_task = fetch_first_decompose_task(db)
-#     print(root_task)
-#     # if root_task is None:
-#     #     raise RuntimeError("No DECOMPOSE TaskNode found in graph; cannot set root_task.")
-#     root_task_id = root_task.id
-#     print(f"root_task_id: {root_task_id}")
-#     plan_payload = asyncio.run(process_and_upsert_query(template_text, my_llm, db, parent_task_id=root_task_id))
+    mock_RAG(db)
+    template_text = mock_RAG(db)
+#     template_text = f"""{PROMPTS["SQUARE_CONSTRUCTION"]}\n dependencies: {deps}\n -------------
+# [SYS_FLAG: TERMINATE_DAG]"""
+    # ========================================================================
+    # 3. TEMPLATE CHUNKING & HIERARCHY CONJUNCTION
+    # ========================================================================
+    print("\n=== STAGE 3: DECOMPOSING TEMPLATE & BUILDING HIERARCHY ===")
+    # Process the returned template, passing the root_task_id so the function 
+    # natively draws the [:CREATES] edges from the root to these new sub-tasks.
+    root_task = fetch_first_decompose_task(db)
+    print(root_task)
+    # if root_task is None:
+    #     raise RuntimeError("No DECOMPOSE TaskNode found in graph; cannot set root_task.")
+    root_task_id = root_task.id
+    print(f"root_task_id: {root_task_id}")
+    plan_payload = asyncio.run(process_and_upsert_query(template_text, my_llm, db, parent_task_id=root_task_id))
     
-#     # ========================================================================
-#     # 4. ADVANCE STATE
-#     # ========================================================================
-#     with db.driver.session() as session:
-#         session.run("""
-#             MATCH (t:TaskNode {id: $id}) 
-#             SET t.status = 'COMPLETE'
-#         """, id=db._normalize_id(root_task_id))
-#         print(f"\n🟢 ROOT TASK '{root_task_id}' COMPLETED (Successfully decomposed).")
+    # ========================================================================
+    # 4. ADVANCE STATE
+    # ========================================================================
+    with db.driver.session() as session:
+        session.run("""
+            MATCH (t:TaskNode {id: $id}) 
+            SET t.status = 'COMPLETE'
+        """, id=db._normalize_id(root_task_id))
+        print(f"\n🟢 ROOT TASK '{root_task_id}' COMPLETED (Successfully decomposed).")
 
-#     print("\n✅ Setup Complete. Open Neo4j Browser and run: MATCH (n) RETURN n")
-    asyncio.run(run_execution_engine(db, my_llm))
+    print("\n✅ Setup Complete. Open Neo4j Browser and run: MATCH (n) RETURN n")
+    #asyncio.run(run_execution_engine(db, my_llm))
