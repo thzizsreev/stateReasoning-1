@@ -1,8 +1,12 @@
 import json
 
-from neo4j import GraphDatabase
-#import networkx as nx
-from typing import List, Any
+from neo4j import GraphDatabase, AsyncGraphDatabase
+
+try:
+    import networkx as nx  # type: ignore
+except Exception:
+    nx = None
+from typing import List, Any, Dict, Optional
 from pydantic import BaseModel
 
 from schema import TaskNode, DataNode
@@ -25,6 +29,8 @@ class TaskDecomposition(BaseModel):
 # ==========================================
 class DynamicTaskGraph:
     def __init__(self):
+        if nx is None:
+            raise RuntimeError("networkx is required for DynamicTaskGraph but is not installed.")
         self.G = nx.DiGraph()
 
     def add_data_node(self, node_id: str, content: Any):
@@ -74,7 +80,27 @@ class DynamicTaskGraph:
 class Neo4jOrchestrator:
     def __init__(self, uri="neo4j://localhost:7687", user="neo4j", password="password"):
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
+        self.async_driver = AsyncGraphDatabase.driver(uri, auth=(user, password))
+        self._ensure_task_claim_constraint()
         #self._clear_db()
+
+    def _ensure_task_claim_constraint(self) -> None:
+        """
+        Ensures a uniqueness constraint that makes claims truly atomic under concurrency.
+        Two workers cannot create a claim for the same task_id simultaneously.
+        """
+        query = """
+        CREATE CONSTRAINT task_claim_unique IF NOT EXISTS
+        FOR (c:TaskClaim)
+        REQUIRE c.task_id IS UNIQUE
+        """
+        try:
+            with self.driver.session() as session:
+                session.run(query)
+        except Exception:
+            # If the server/user doesn't allow DDL, the engine will still run,
+            # but atomic claim safety will degrade.
+            return
 
     def _clear_db(self):
         with self.driver.session() as session:
@@ -83,6 +109,20 @@ class Neo4jOrchestrator:
 
     def close(self) -> None:
         self.driver.close()
+        try:
+            # If the caller is running async code, prefer `await db.aclose()`.
+            self.async_driver.close()
+        except Exception:
+            pass
+
+    async def aclose(self) -> None:
+        try:
+            await self.async_driver.close()
+        except Exception:
+            try:
+                self.async_driver.close()
+            except Exception:
+                pass
 
     @staticmethod
     def _normalize_id(x: str) -> str:
@@ -156,6 +196,147 @@ class Neo4jOrchestrator:
             
         self.recompute_semaphore() 
         print(f"[DATA] Injected & cascaded: {node_id}")
+
+    # =====================================================================
+    # ASYNC EXECUTION ENGINE PRIMITIVES (Atomic Claim & Wake pattern)
+    # =====================================================================
+
+    async def async_claim_next_task(self, worker_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Atomically claims exactly one runnable task:
+        PENDING + unresolved_deps=0  ->  PROCESSING
+        Returns the claimed task fields or None if no work is available.
+        """
+        query = """
+        MATCH (t:TaskNode)
+        WHERE t.status = 'PENDING' AND coalesce(t.unresolved_deps, 0) = 0
+        WITH t ORDER BY id(t) LIMIT 1
+        CREATE (c:TaskClaim {task_id: t.id, worker_id: $worker_id, ts: timestamp()})
+        SET t.status = 'PROCESSING',
+            t.claimed_at = c.ts,
+            t.claimed_by = $worker_id
+        OPTIONAL MATCH (t)-[:GENERATES]->(out:DataNode)
+        RETURN t.id AS task_id,
+               t.task_type AS task_type,
+               t.instruction AS instruction,
+               t.description AS description,
+               out.id AS target_output
+        """
+        async with self.async_driver.session() as session:
+            try:
+                rec = await session.run(query, worker_id=worker_id)
+                row = await rec.single()
+            except Exception:
+                # Most likely a uniqueness constraint race on TaskClaim.task_id.
+                return None
+            if not row:
+                return None
+            return {
+                "task_id": row["task_id"],
+                "task_type": row["task_type"],
+                "instruction": row["instruction"],
+                "description": row.get("description"),
+                "target_output": row.get("target_output"),
+            }
+
+    async def async_fetch_resolved_dependencies_for_task(self, task_id: str) -> List[Dict[str, Any]]:
+        """
+        Fetch COMPLETE dependency DataNodes for a task (async variant).
+        Returns JSON-serializable list of {id, content}.
+        """
+        task_id_n = self._normalize_id(task_id)
+        query = """
+        MATCH (d:DataNode)-[:REQUIRES]->(t:TaskNode {id: $task_id})
+        WHERE coalesce(d.status, 'UNRESOLVED') = 'COMPLETE'
+        RETURN d.id AS id, d.content AS content
+        ORDER BY d.id
+        """
+        deps: List[Dict[str, Any]] = []
+        async with self.async_driver.session() as session:
+            result = await session.run(query, task_id=task_id_n)
+            async for record in result:
+                content_raw = record["content"]
+                try:
+                    content = json.loads(content_raw) if isinstance(content_raw, str) else content_raw
+                except Exception:
+                    content = content_raw
+                deps.append({"id": record["id"], "content": content})
+        return deps
+
+    async def async_mark_complete_and_resolve_children(self, task_id: str) -> None:
+        """
+        Mark task COMPLETE and recompute unresolved_deps for affected children (async).
+        Uses a safe recompute instead of decrement-by-1.
+        """
+        task_id_n = self._normalize_id(task_id)
+        query = """
+        MATCH (t:TaskNode {id: $task_id})
+        SET t.status = 'COMPLETE'
+        WITH t
+        OPTIONAL MATCH (c:TaskClaim {task_id: t.id})
+        DETACH DELETE c
+
+        WITH t
+        OPTIONAL MATCH (t)-[:GENERATES]->(:DataNode)-[:REQUIRES]->(child:TaskNode)
+        WITH collect(distinct child) AS children
+        UNWIND children AS c
+        OPTIONAL MATCH (dep:DataNode)-[:REQUIRES]->(c)
+        WITH c, sum(CASE WHEN coalesce(dep.status,'UNRESOLVED') = 'COMPLETE' THEN 0 ELSE 1 END) AS unresolved
+        SET c.unresolved_deps = unresolved
+        """
+        async with self.async_driver.session() as session:
+            await session.run(query, task_id=task_id_n)
+
+    async def async_release_task_to_pending(self, task_id: str, *, error: str | None = None) -> None:
+        task_id_n = self._normalize_id(task_id)
+        query = """
+        MATCH (t:TaskNode {id: $task_id})
+        SET t.status = 'PENDING'
+        REMOVE t.claimed_at
+        REMOVE t.claimed_by
+        WITH t
+        OPTIONAL MATCH (c:TaskClaim {task_id: t.id})
+        DETACH DELETE c
+        WITH t
+        FOREACH (_ IN CASE WHEN $error IS NULL THEN [] ELSE [1] END |
+          SET t.last_error = $error
+        )
+        """
+        async with self.async_driver.session() as session:
+            await session.run(query, task_id=task_id_n, error=error)
+
+    async def async_check_terminal_state(self, terminal_id: str) -> bool:
+        terminal_id_n = self._normalize_id(terminal_id)
+        query = """
+        MATCH (d:DataNode {id: $id, status: 'COMPLETE'})
+        RETURN count(d) > 0 AS is_done
+        """
+        async with self.async_driver.session() as session:
+            res = await session.run(query, id=terminal_id_n)
+            row = await res.single()
+            return bool(row and row["is_done"])
+
+    async def async_recover_stuck_processing(self, *, timeout_ms: int = 10 * 60 * 1000) -> int:
+        """
+        Revert tasks stuck in PROCESSING back to PENDING if claimed_at is too old.
+        Returns number of tasks reset.
+        """
+        query = """
+        MATCH (t:TaskNode)
+        WHERE t.status = 'PROCESSING'
+          AND coalesce(t.claimed_at, 0) < (timestamp() - $timeout_ms)
+        SET t.status = 'PENDING'
+        REMOVE t.claimed_at
+        REMOVE t.claimed_by
+        WITH t
+        OPTIONAL MATCH (c:TaskClaim {task_id: t.id})
+        DETACH DELETE c
+        RETURN count(t) AS reset_count
+        """
+        async with self.async_driver.session() as session:
+            res = await session.run(query, timeout_ms=timeout_ms)
+            row = await res.single()
+            return int(row["reset_count"] if row else 0)
 
     def upsert_task(self, task) -> None:
         """

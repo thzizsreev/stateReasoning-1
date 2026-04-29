@@ -30,7 +30,7 @@ class TaskNode(BaseModel):
         description="The isolated prompt for the Worker LLM, preserving bracketed IDs."
     )
     description: str = Field(
-        default=None,
+        default="",
         description="A description of the Task node."
     )
     target_output: Optional[str] = Field(
@@ -49,7 +49,7 @@ class TaskNode(BaseModel):
     # By setting a default, the LLM NEVER has to write "status": "PENDING" in its JSON.
     # Pydantic will automatically inject it for you when it parses the dictionary.
     
-    status: Literal["PENDING", "COMPLETE"] = Field(default="PENDING")
+    status: Literal["PENDING", "PROCESSING", "COMPLETE"] = Field(default="PENDING")
     
     # Optional field: If a task gets DECOMPOSED later, you can track where the sub-tasks came from.
     parent_task: Optional[str] = Field(default=None)

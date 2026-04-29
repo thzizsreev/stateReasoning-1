@@ -23,6 +23,9 @@ from pathlib import Path
 
 task_list : List[TaskNode] = []
 
+# Wake-up signal for the concurrent engine (no polling thrash).
+graph_updated_event = asyncio.Event()
+
 
 def _normalize_id(x: str) -> str:
     x = (x or "").strip()
@@ -238,49 +241,91 @@ def fetch_resolved_dependencies_for_task(db: Neo4jOrchestrator, task_id: str) ->
         return deps
 
 
-async def run_execution_engine(db: Neo4jOrchestrator, llm, terminal_node: str = "[END_ORCHESTRATION]"):
-    print("\n🚀 [ENGINE] Booting Runtime Execution Engine...")
-    
+async def execution_worker(worker_id: int, db: Neo4jOrchestrator, llm) -> None:
+    print(f"[WORKER {worker_id}] booted")
     while True:
-        # 1. The Halting Problem (Target Satisfaction)
-        if check_terminal_state(db, terminal_node):
-            print(f"\n🏁 [ENGINE] HALTING: Terminal state {terminal_node} successfully resolved.")
-            break
+        task_id: Optional[str] = None
+        try:
+            # Opportunistic recovery to avoid permanent deadlocks (cheap query).
+            await db.async_recover_stuck_processing(timeout_ms=10 * 60 * 1000)
 
-        # 2. Fetch the Frontier
-        executable_tasks = fetch_executable_tasks(db)
+            task = await db.async_claim_next_task(worker_id)
+            if not task:
+                graph_updated_event.clear()
+                await graph_updated_event.wait()
+                continue
 
-        if not executable_tasks:
-            # Prevent CPU thrashing while waiting for external LLM/Compute calls to finish
-            print("  [ENGINE] Graph is blocked or processing. Waiting for semaphore updates...")
-            await asyncio.sleep(2)
-            continue
+            task_id = task["task_id"]
+            task_type = task["task_type"]
+            print(f"[WORKER {worker_id}] claimed {task_id} ({task_type})")
 
-        # 3. Process the Frontier Concurrently
-        for task in executable_tasks:
-            print(f"\n⚡ [ENGINE] Executing Node: {task['id']} (Type: {task['task_type']})")
-            deps = fetch_resolved_dependencies_for_task(db, task["id"])
-            if task['task_type'] == 'DECOMPOSE':
-                # Route to Cognitive Pipeline
-                print(f"  -> Passing instruction to Compiler...")
-                # Note: This is the recursive expansion of the graph
-                framed_prompt = f"""instruction: {task['instruction']}
-                description: {task['description']}
-                dependencies: {deps}
-                """
-                print(f"framed_prompt: {framed_prompt}")
-                await process_and_upsert_query(framed_prompt, llm, db, parent_task_id=task['id'])
-                db.mark_task_complete(task['id'])
-                
-            elif task['task_type'] == 'COMPUTE':
-                # Route to Physical Execution Worker
-                print(f"  -> Passing to Math Worker...")
-                
-                deps = fetch_resolved_dependencies_for_task(db, task["id"])
-                await execute_compute_node(task, deps, db, llm)
+            if task_type == "DECOMPOSE":
+                deps = await db.async_fetch_resolved_dependencies_for_task(task_id)
+                framed_prompt = (
+                    f"instruction: {task.get('instruction')}\n"
+                    f"description: {task.get('description')}\n"
+                    f"dependencies: {deps}\n"
+                )
+                await process_and_upsert_query(framed_prompt, llm, db, parent_task_id=task_id)
+                await db.async_mark_complete_and_resolve_children(task_id)
 
-        # Sleep briefly to let the graph transactions settle and recompute semaphores
-        await asyncio.sleep(1)    
+            elif task_type == "COMPUTE":
+                deps = await db.async_fetch_resolved_dependencies_for_task(task_id)
+                await execute_compute_node(
+                    {
+                        "id": task_id,
+                        "task_type": task_type,
+                        "instruction": task.get("instruction"),
+                        "description": task.get("description"),
+                        "target_output": task.get("target_output"),
+                    },
+                    deps,
+                    db,
+                    llm,
+                )
+                await db.async_mark_complete_and_resolve_children(task_id)
+
+            else:
+                # Unknown task types should not stall the engine forever.
+                print(f"[WORKER {worker_id}] unknown task_type={task_type} for {task_id}; marking complete")
+                await db.async_mark_complete_and_resolve_children(task_id)
+
+            print(f"[WORKER {worker_id}] completed {task_id}; waking others")
+            graph_updated_event.set()
+
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            print(f"[WORKER {worker_id}] error: {type(e).__name__}: {e}")
+            if task_id:
+                try:
+                    await db.async_release_task_to_pending(task_id, error=f"{type(e).__name__}: {e}")
+                except Exception:
+                    pass
+            graph_updated_event.set()
+
+
+async def run_execution_engine(
+    db: Neo4jOrchestrator,
+    llm,
+    terminal_node: str = "[END_ORCHESTRATION]",
+    *,
+    num_workers: int = 5,
+) -> None:
+    print("\n[ENGINE] Booting concurrent Runtime Execution Engine...")
+    graph_updated_event.set()  # kickstart: let workers attempt initial claims
+
+    workers = [asyncio.create_task(execution_worker(i, db, llm)) for i in range(num_workers)]
+    try:
+        while True:
+            if await db.async_check_terminal_state(terminal_node):
+                print(f"\n[ENGINE] HALTING: terminal state {terminal_node} resolved.")
+                break
+            await asyncio.sleep(0.5)
+    finally:
+        for w in workers:
+            w.cancel()
+        await asyncio.gather(*workers, return_exceptions=True)
 
 
 
