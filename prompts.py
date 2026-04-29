@@ -623,6 +623,7 @@ Phase map complete. 4 phases identified.
     "dependencies": ["[Doc_Keywords_Collection]", "[Unified_Summary]"],
     "instruction": "Finalize DAG execution. Confirm [Doc_Keywords_Collection] is fully populated across all extraction batches and [Unified_Summary] has been produced from the complete collection.",
     "description": "[INTENT]: Finalize the DAG execution. Graph topology identified as CONVERGENCE — Island 2 summarizer depends on three parallel extraction branches all writing into [Doc_Keywords_Collection] before [Unified_Summary] can be produced. Terminal node waits for both convergence signal and final synthesis output.\n\n[TERMINAL_LEDGER]:\n- [Doc_Keywords_Collection]: fully accumulated list of keyword-description records from all 6 documents across 3 parallel extraction batches — intermediate convergence signal confirming all parallel branches resolved.\n- [Unified_Summary]: structured theme-grouped summary synthesized from complete collection — final pipeline output.\n\n[DEPENDENCY CONFIRMATION]: Only shell IDs appear in dependencies. No task node IDs included. task_type is COMPUTE."
+    "target_outputs": ["[END_ORCHESTRATION]"]
   }
 }
 </EXAMPLE_TRIGGER>
