@@ -115,7 +115,7 @@ class OpenRouterClient:
         
         # Pull and strip the key to prevent header injection errors
         #self.api_key = (api_key or os.environ.get("OPENROUTER_API_KEY", "")).strip()
-        self.api_key ="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"
+        self.api_key =""
         print(f"Model name: {self.model_name}")
         print(f"API key: {self.api_key}")
         if not self.api_key:
